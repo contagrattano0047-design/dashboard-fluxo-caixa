@@ -78,10 +78,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 
 /* RECORTE TAG */
 .recorte-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--navy);color:var(--gold-light);border-radius:20px;font-size:11px;font-weight:600}
-/* EMPRESA SELECTOR */
-.emp-selector{display:flex;gap:4px;background:rgba(10,22,40,.08);padding:4px;border-radius:var(--radius-sm)}
-.emp-pill{padding:5px 14px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray-600);transition:all .2s;border:none;background:none;font-family:'DM Sans',sans-serif}
-.emp-pill:hover{color:var(--navy)}.emp-pill.active{background:var(--gold);color:var(--navy)}
 
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:13px;margin-bottom:20px}
@@ -177,6 +173,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 .legend-item{display:flex;align-items:center;gap:8px;font-size:12px}
 .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .legend-label{flex:1;color:var(--gray-600)}.legend-val{font-weight:700;color:var(--navy)}.legend-pct{font-size:11px;color:var(--gray-400);margin-left:3px}
+
+
+/* FLOW TREE */
+.toolbar-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.tree-table .name-cell{display:flex;align-items:center;gap:8px;min-width:260px}
+.tree-toggle{width:22px;height:22px;border:none;border-radius:6px;background:var(--gray-100);cursor:pointer;font-weight:700;color:var(--navy)}
+.tree-toggle:hover{background:var(--gray-200)}
+.tree-spacer{display:inline-block;width:22px;height:22px}
+.level-0 .row-label{font-weight:800}
+.level-1 .row-label{font-weight:700}
+.level-2 .row-label{font-weight:500}
+.row-label{white-space:nowrap}
+.tree-table tr.hidden-row{display:none}
+.tree-table tr.group-row td{background:var(--gray-50)}
+.tree-table tr.total-row td{background:#fffbe6;font-weight:800}
+.mode-note{font-size:11px;color:var(--gray-400)}
 
 /* RESPONSIVE */
 @media(max-width:1100px){
@@ -326,16 +338,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 <!-- ══════════════════════════════════════════
      2. FLUXO DE CAIXA
 ══════════════════════════════════════════ -->
+
 <div class="view" id="view-fluxo">
   <div class="section-header">
     <div>
-      <div class="section-title" id="tituloFluxo">Fluxo de Caixa — Consolidado</div>
-      <div class="section-subtitle" id="subtituloFluxo">Realizado vs. Previsto · 2026</div>
+      <div class="section-title">Fluxo de Caixa Consolidado</div>
+      <div class="section-subtitle">Realizado vs. cenário previsto · Empresas consolidadas</div>
     </div>
-    <div class="emp-selector" id="empFluxo">
-      <button class="emp-pill active" onclick="setEmpresa('fluxo','emp',this)">Consolidado</button>
-      <button class="emp-pill" onclick="setEmpresa('fluxo','marck',this)">Marck</button>
-      <button class="emp-pill" onclick="setEmpresa('fluxo','grattano',this)">Grattano</button>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="pill-group" id="scenarioPills">
+        <button class="pill active" data-scenario="Atual" onclick="setScenario('Atual', this)">Atual</button>
+        <button class="pill" data-scenario="Pessimista" onclick="setScenario('Pessimista', this)">Pessimista</button>
+        <button class="pill" data-scenario="Realista" onclick="setScenario('Realista', this)">Realista</button>
+        <button class="pill" data-scenario="Otimista" onclick="setScenario('Otimista', this)">Otimista</button>
+      </div>
+      <div class="recorte-tag" id="tagScenario">📅 2026 · Cenário Atual</div>
     </div>
   </div>
 
@@ -343,8 +360,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 
   <div class="card" style="margin-bottom:16px">
     <div class="card-header">
-      <div><div class="card-title">Saldo Mensal — Realizado vs. Previsto</div><div class="card-subtitle">Resultado líquido (Receita − Despesas) por mês</div></div>
-      <div class="recorte-tag">📅 2026</div>
+      <div><div class="card-title">Saldo Mensal — Realizado vs. Previsto</div><div class="card-subtitle" id="subSaldoScenario">Resultado líquido (Receita − Despesas) por mês</div></div>
+      <div class="recorte-tag" id="tagFluxoAno">📅 2026</div>
     </div>
     <div class="chart-wrap" style="height:280px"><canvas id="chartSaldo"></canvas></div>
   </div>
@@ -355,17 +372,34 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
       <div class="chart-wrap" style="height:260px"><canvas id="chartRecDesp"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-title">Composição do Saldo Acumulado</div><div class="card-subtitle">2026 YTD</div></div>
+      <div class="card-header"><div class="card-title">Composição do Saldo Acumulado</div><div class="card-subtitle" id="subComposicao">2026 YTD</div></div>
       <div class="chart-wrap" style="height:200px;padding-bottom:0"><canvas id="chartComposicao"></canvas></div>
       <div class="donut-legend" id="legendComposicao"></div>
     </div>
   </div>
 
-  <!-- Tabela detalhada -->
   <div class="card">
-    <div class="card-header"><div class="card-title">Demonstrativo Mensal Detalhado</div><div class="card-subtitle">Realizado vs. Previsto · 2026</div></div>
+    <div class="card-header">
+      <div>
+        <div class="card-title">Demonstrativo Mensal por Categoria</div>
+        <div class="card-subtitle">Todas as categorias do fluxo com expandir e recolher</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="toolbar-row">
+        <div class="pill-group" id="tableModePills">
+          <button class="pill active" data-mode="real" onclick="setFlowTableMode('real', this)">Realizado</button>
+          <button class="pill" data-mode="prev" onclick="setFlowTableMode('prev', this)">Previsto</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-ghost" style="background:var(--gray-100);color:var(--navy);border-color:var(--gray-200)" onclick="expandAllFlow()">Expandir tudo</button>
+          <button class="btn btn-ghost" style="background:var(--gray-100);color:var(--navy);border-color:var(--gray-200)" onclick="collapseAllFlow()">Recolher tudo</button>
+          <div class="mode-note" id="flowModeNote">Mostrando realizado.</div>
+        </div>
+      </div>
+    </div>
     <div style="overflow-x:auto">
-      <table class="data-table" id="tabelaFluxo">
+      <table class="data-table tree-table" id="tabelaFluxo">
         <thead>
           <tr>
             <th>Categoria</th>
@@ -382,20 +416,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
   </div>
 </div>
 
+
 <!-- ══════════════════════════════════════════
      3. RECEITAS
 ══════════════════════════════════════════ -->
 <div class="view" id="view-receitas">
   <div class="section-header">
     <div>
-      <div class="section-title" id="tituloReceitas">Receitas — Consolidado</div>
+      <div class="section-title">Receitas</div>
       <div class="section-subtitle">Faturamento, recebimentos e composição · 2026</div>
     </div>
-    <div class="emp-selector" id="empReceitas">
-      <button class="emp-pill active" onclick="setEmpresa('receitas','emp',this)">Consolidado</button>
-      <button class="emp-pill" onclick="setEmpresa('receitas','marck',this)">Marck</button>
-      <button class="emp-pill" onclick="setEmpresa('receitas','grattano',this)">Grattano</button>
-    </div>
+    <div class="recorte-tag">📅 2026 — Consolidado</div>
   </div>
 
   <div class="kpi-grid" id="kpiReceitas"></div>
@@ -424,14 +455,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 <div class="view" id="view-despesas">
   <div class="section-header">
     <div>
-      <div class="section-title" id="tituloDespesas">Despesas — Consolidado</div>
+      <div class="section-title">Despesas</div>
       <div class="section-subtitle">Composição e evolução das despesas · 2026</div>
     </div>
-    <div class="emp-selector" id="empDespesas">
-      <button class="emp-pill active" onclick="setEmpresa('despesas','emp',this)">Consolidado</button>
-      <button class="emp-pill" onclick="setEmpresa('despesas','marck',this)">Marck</button>
-      <button class="emp-pill" onclick="setEmpresa('despesas','grattano',this)">Grattano</button>
-    </div>
+    <div class="recorte-tag">📅 2026 — Consolidado</div>
   </div>
 
   <div class="kpi-grid" id="kpiDespesas"></div>
@@ -459,14 +486,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 <div class="view" id="view-resultado">
   <div class="section-header">
     <div>
-      <div class="section-title" id="tituloResultado">Resultado — Consolidado</div>
-      <div class="section-subtitle">Visão executiva · 2026</div>
+      <div class="section-title">Resultado Consolidado</div>
+      <div class="section-subtitle">Visão executiva · Marck &amp; Grattano · 2026</div>
     </div>
-    <div class="emp-selector" id="empResultado">
-      <button class="emp-pill active" onclick="setEmpresa('resultado','emp',this)">Consolidado</button>
-      <button class="emp-pill" onclick="setEmpresa('resultado','marck',this)">Marck</button>
-      <button class="emp-pill" onclick="setEmpresa('resultado','grattano',this)">Grattano</button>
-    </div>
+    <div class="recorte-tag">📅 2026 — Consolidado</div>
   </div>
 
   <div class="kpi-grid" id="kpiResultado"></div>
@@ -531,10 +554,8 @@ const DEFAULT_DATA = {
   },
   hist_saldos: {marck:[], grattano:[]},
   data_atualizacao: '19/03/2026',
-  // Per-empresa data (filled by parseCashFlow or stays same as consolidated)
-  monthly_marck: null, acum_marck: null,
-  monthly_grattano: null, acum_grattano: null,
 };
+
 
 // ═══════════════════════════════════════════════════════
 // STATE
@@ -543,37 +564,207 @@ let D = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let charts = {};
 let msalInstance = null;
 let _msalToken = null;
+let currentScenario = 'Atual';
+let flowTableMode = 'real';
+let flowExpandState = {};
+const SCENARIO_FACTORS = {Atual:1, Pessimista:1, Realista:1.17, Otimista:1.3};
+const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-// Empresa state per tab
-const _emp = {fluxo:'emp', receitas:'emp', despesas:'emp', resultado:'emp'};
-const EMP_LABEL = {emp:'Consolidado', marck:'Marck', grattano:'Grattano'};
+const FLOW_ROWS = [
+  {id:'receita_total',label:'Receita Total',row:7,level:0,type:'summary',children:['clientes_revenda','devol_compra','outras_receitas']},
+  {id:'clientes_revenda',label:'Clientes - Revenda de Mercadoria',row:9,level:1,type:'summary',source:'recebimentos',children:['federal','petrobras','privado','sms','rio_saude']},
+  {id:'federal',label:'FEDERAL',row:10,level:2,type:'leaf',source:'recebimentos',match:'FEDERAL'},
+  {id:'petrobras',label:'PETROBRÁS',row:11,level:2,type:'leaf',source:'recebimentos',match:'PETROBRÁS'},
+  {id:'privado',label:'PRIVADO',row:12,level:2,type:'leaf',source:'recebimentos',match:'PRIVADO'},
+  {id:'sms',label:'SMS',row:13,level:2,type:'leaf',source:'recebimentos',match:'SMS'},
+  {id:'rio_saude',label:'RIO SAÚDE',row:14,level:2,type:'leaf',source:'recebimentos',match:'RIO SAÚDE'},
+  {id:'devol_compra',label:'Devoluções de Compra de Mercadoria de Revenda',row:15,level:1,type:'leaf',source:'recebimentos',match:'Devoluções de Compra de Mercadoria de Revenda'},
+  {id:'despesa_venda',label:'Despesa Relativas a Venda',row:17,level:0,type:'summary',source:'pagamentos',children:['compras_revenda','adiant_fornec','frete','comissoes']},
+  {id:'compras_revenda',label:'Compras de Mercadorias para Revenda',row:18,level:1,type:'leaf',source:'pagamentos',match:'Compras de Mercadorias para Revenda'},
+  {id:'adiant_fornec',label:'Adiantamento a Fornecedores',row:19,level:1,type:'leaf',source:'pagamentos',match:'Adiantamento a Fornecedores'},
+  {id:'frete',label:'Frete',row:20,level:1,type:'leaf',source:'pagamentos',match:'Frete'},
+  {id:'comissoes',label:'Comissões',row:21,level:1,type:'leaf',source:'pagamentos',match:'Comissões'},
+  {id:'impostos',label:'Impostos',row:23,level:0,type:'summary',source:'pagamentos',children:['icms','difal','pis','cofins','irpj','csll']},
+  {id:'icms',label:'ICMS',row:24,level:1,type:'leaf',source:'pagamentos',match:'ICMS'},
+  {id:'difal',label:'DIFAL',row:25,level:1,type:'leaf',source:'pagamentos',match:'DIFAL'},
+  {id:'pis',label:'PIS',row:26,level:1,type:'leaf',source:'pagamentos',match:'PIS'},
+  {id:'cofins',label:'COFINS',row:27,level:1,type:'leaf',source:'pagamentos',match:'COFINS'},
+  {id:'irpj',label:'IRPJ',row:28,level:1,type:'leaf',source:'pagamentos',match:'IRPJ'},
+  {id:'csll',label:'CSLL',row:29,level:1,type:'leaf',source:'pagamentos',match:'CSLL'},
+  {id:'outras_receitas',label:'Outras Receitas',row:31,level:0,type:'summary',source:'recebimentos',children:['venda_ativos','reembolso_operacional','reembolso_despesas','adiant_clientes','indenizacao','rendimentos_aplic','dividendos_recebidos','limite_credito','emprestimos_bancarios']},
+  {id:'venda_ativos',label:'Venda de Ativos',row:32,level:1,type:'leaf',source:'recebimentos',match:'Venda de Ativos'},
+  {id:'reembolso_operacional',label:'Reembolso Operacional',row:33,level:1,type:'leaf',source:'recebimentos',match:'Reembolso Operacional'},
+  {id:'reembolso_despesas',label:'Reembolso de Despesas',row:34,level:1,type:'leaf',source:'recebimentos',match:'Reembolso de Despesas'},
+  {id:'adiant_clientes',label:'Adiantamento de Clientes',row:35,level:1,type:'leaf',source:'recebimentos',match:'Adiantamento de Clientes'},
+  {id:'indenizacao',label:'Indenização',row:36,level:1,type:'leaf',source:'recebimentos',match:'Indenização'},
+  {id:'rendimentos_aplic',label:'Rendimentos de Aplicações',row:37,level:1,type:'leaf',source:'recebimentos',match:'Rendimentos de Aplicações'},
+  {id:'dividendos_recebidos',label:'Dividendos Recebidos',row:38,level:1,type:'leaf',source:'recebimentos',match:'Dividendos Recebidos'},
+  {id:'limite_credito',label:'Limite de Crédito Bancário',row:39,level:1,type:'leaf',source:'recebimentos',match:'Limite de Crédito Bancário'},
+  {id:'emprestimos_bancarios',label:'Empréstimos Bancários',row:40,level:1,type:'leaf',source:'recebimentos',match:'Empréstimos Bancários'},
+  {id:'despesa_total',label:'Despesa Total',row:42,level:0,type:'summary',children:['fixa','pessoal_grp','variavel','consultoria_grp','despesa_comercial_grp','despesa_logistica_grp','despesa_socios_grp','despesa_financeira_grp','outras_despesas_grp','imobilizado_grp']},
+  {id:'fixa',label:'Fixa',row:43,level:1,type:'summary',source:'pagamentos',children:['aluguel_galpao','contabilidade','portal_admin','legisvisa_servico','legisvisa_rt','certificacao_licenca','juridico','energia_eletrica','iptu_galpao','aluguel_grattano','agua_esgoto','aluguel_marck','telefonia','taxa_bombeiros','internet','ia','monitoramento_seguranca','anvisa','cartorio','dominio_email','iptu']},
+  {id:'aluguel_galpao',label:'Aluguel Galpão',row:44,level:2,type:'leaf',source:'pagamentos',match:'Aluguel Galpão'},
+  {id:'contabilidade',label:'Contabilidade',row:45,level:2,type:'leaf',source:'pagamentos',match:'Contabilidade'},
+  {id:'portal_admin',label:'Portal/Sistemas Administrativos',row:46,level:2,type:'leaf',source:'pagamentos',match:'Portal/Sistemas Administrativos'},
+  {id:'legisvisa_servico',label:'Legisvisa Serviço',row:47,level:2,type:'leaf',source:'pagamentos',match:'Legisvisa Serviço'},
+  {id:'legisvisa_rt',label:'Legisvisa - RT',row:48,level:2,type:'leaf',source:'pagamentos',match:'Legisvisa - RT'},
+  {id:'certificacao_licenca',label:'Certificação e Licença',row:49,level:2,type:'leaf',source:'pagamentos',match:'Certificação e Licença'},
+  {id:'juridico',label:'Jurídico',row:50,level:2,type:'leaf',source:'pagamentos',match:'Jurídico'},
+  {id:'energia_eletrica',label:'Energia Elétrica',row:51,level:2,type:'leaf',source:'pagamentos',match:'Energia Elétrica'},
+  {id:'iptu_galpao',label:'IPTU Galpão',row:52,level:2,type:'leaf',source:'pagamentos',match:'IPTU Galpão'},
+  {id:'aluguel_grattano',label:'Aluguel Grattano',row:53,level:2,type:'leaf',source:'pagamentos',match:'Aluguel Grattano'},
+  {id:'agua_esgoto',label:'Água e Esgoto',row:54,level:2,type:'leaf',source:'pagamentos',match:'Água e Esgoto'},
+  {id:'aluguel_marck',label:'Aluguel Marck',row:55,level:2,type:'leaf',source:'pagamentos',match:'Aluguel Marck'},
+  {id:'telefonia',label:'Telefonia',row:56,level:2,type:'leaf',source:'pagamentos',match:'Telefonia'},
+  {id:'taxa_bombeiros',label:'Taxa Bombeiros',row:57,level:2,type:'leaf',source:'pagamentos',match:'Taxa Bombeiros'},
+  {id:'internet',label:'Internet',row:58,level:2,type:'leaf',source:'pagamentos',match:'Internet'},
+  {id:'ia',label:'I.A.',row:59,level:2,type:'leaf',source:'pagamentos',match:'I.A.'},
+  {id:'monitoramento_seguranca',label:'Monitoramento e Segurança',row:60,level:2,type:'leaf',source:'pagamentos',match:'Monitoramento e Segurança'},
+  {id:'anvisa',label:'ANVISA',row:61,level:2,type:'leaf',source:'pagamentos',match:'ANVISA'},
+  {id:'cartorio',label:'Cartório',row:62,level:2,type:'leaf',source:'pagamentos',match:'Cartório'},
+  {id:'dominio_email',label:'Domínio/E-mail',row:63,level:2,type:'leaf',source:'pagamentos',match:'Domínio/E-mail'},
+  {id:'iptu',label:'IPTU',row:64,level:2,type:'leaf',source:'pagamentos',match:'IPTU'},
 
-function setEmpresa(tab, emp, el){
-  _emp[tab] = emp;
-  // Update active pill
-  const group = document.getElementById('emp'+tab.charAt(0).toUpperCase()+tab.slice(1));
-  if(group) group.querySelectorAll('.emp-pill').forEach(p=>p.classList.remove('active'));
-  if(el) el.classList.add('active');
-  // Update title
-  const titulo = document.getElementById('titulo'+tab.charAt(0).toUpperCase()+tab.slice(1));
-  const labels = {fluxo:'Fluxo de Caixa', receitas:'Receitas', despesas:'Despesas', resultado:'Resultado'};
-  if(titulo) titulo.textContent = (labels[tab]||tab) + ' — ' + EMP_LABEL[emp];
-  // Re-render that tab
-  if(tab==='fluxo') renderFluxo();
-  else if(tab==='receitas') renderReceitas();
-  else if(tab==='despesas') renderDespesas();
-  else if(tab==='resultado') renderResultado();
-}
+  {id:'pessoal_grp',label:'Pessoal',row:65,level:1,type:'summary',source:'pagamentos',children:['folha_pagamento','ferias','decimo_terceiro','rescisoes','fgts','inss','grrf','assist_medica','vale_transporte','vale_refeicao','gympass','uniformes','endomarketing','outros_beneficios','capacitacao_pessoal','exame_adm','exame_periodico','exame_retorno','transp_alt_pessoal']},
+  {id:'folha_pagamento',label:'Folha de Pagamento',row:66,level:2,type:'leaf',source:'pagamentos',match:'Folha de Pagamento'},
+  {id:'ferias',label:'Férias',row:67,level:2,type:'leaf',source:'pagamentos',match:'Férias'},
+  {id:'decimo_terceiro',label:'13º Salário',row:68,level:2,type:'leaf',source:'pagamentos',match:'13º Salário'},
+  {id:'rescisoes',label:'Rescisões',row:69,level:2,type:'leaf',source:'pagamentos',match:'Rescisões'},
+  {id:'fgts',label:'FGTS',row:70,level:2,type:'leaf',source:'pagamentos',match:'FGTS'},
+  {id:'inss',label:'INSS',row:71,level:2,type:'leaf',source:'pagamentos',match:'INSS'},
+  {id:'grrf',label:'GRRF',row:72,level:2,type:'leaf',source:'pagamentos',match:'GRRF'},
+  {id:'assist_medica',label:'Assistência Médica',row:73,level:2,type:'leaf',source:'pagamentos',match:'Assistência Médica'},
+  {id:'vale_transporte',label:'Vale Transporte',row:74,level:2,type:'leaf',source:'pagamentos',match:'Vale Transporte'},
+  {id:'vale_refeicao',label:'Vale Refeição',row:75,level:2,type:'leaf',source:'pagamentos',match:'Vale Refeição'},
+  {id:'gympass',label:'Gympass',row:76,level:2,type:'leaf',source:'pagamentos',match:'Gympass'},
+  {id:'uniformes',label:'Uniformes',row:77,level:2,type:'leaf',source:'pagamentos',match:'Uniformes'},
+  {id:'endomarketing',label:'Endomarketing',row:78,level:2,type:'leaf',source:'pagamentos',match:'Endomarketing'},
+  {id:'outros_beneficios',label:'Outros Benefícios',row:79,level:2,type:'leaf',source:'pagamentos',match:'Outros Benefícios'},
+  {id:'capacitacao_pessoal',label:'Capacitação de Pessoal',row:80,level:2,type:'leaf',source:'pagamentos',match:'Capacitação de Pessoal'},
+  {id:'exame_adm',label:'Exame Admissional/Demissional',row:81,level:2,type:'leaf',source:'pagamentos',match:'Exame Admissional/Demissional'},
+  {id:'exame_periodico',label:'Exame Periódico',row:82,level:2,type:'leaf',source:'pagamentos',match:'Exame Periódico'},
+  {id:'exame_retorno',label:'Exame de Retorno ao Trabalho',row:83,level:2,type:'leaf',source:'pagamentos',match:'Exame de Retorno ao Trabalho'},
+  {id:'transp_alt_pessoal',label:'Transporte Alternativo - Pessoal',row:84,level:2,type:'leaf',source:'pagamentos',match:'Transporte Alternativo - Pessoal'},
 
-// Helper: get monthly data for a given empresa and key
-function getM(emp, key){
-  if(emp==='emp') return D.monthly[key]||{real:D.months.map(()=>0),prev:D.months.map(()=>0)};
-  return D['monthly_'+emp]?.[key]||D.monthly[key]||{real:D.months.map(()=>0),prev:D.months.map(()=>0)};
-}
-function getA(emp, key){
-  if(emp==='emp') return D.acum[key]||0;
-  return D['acum_'+emp]?.[key]||D.acum[key]||0;
-}
+  {id:'variavel',label:'Variável',row:85,level:1,type:'summary',source:'pagamentos',children:['material_uso_consumo','prestador_servicos','obras','manut_imobilizado','manut_reparos','material_escritorio','reembolso_despesas_pag','ti','multas','grerj','moveis_utensilios','hospedagem_var','passagem_var','reembolso_var','seguros']},
+  {id:'material_uso_consumo',label:'Material de Uso e Consumo',row:86,level:2,type:'leaf',source:'pagamentos',match:'Material de Uso e Consumo'},
+  {id:'prestador_servicos',label:'Prestador de Serviços',row:87,level:2,type:'leaf',source:'pagamentos',match:'Prestador de Serviços'},
+  {id:'obras',label:'Obras',row:88,level:2,type:'leaf',source:'pagamentos',match:'Obras'},
+  {id:'manut_imobilizado',label:'Manutenção de Imobilizado',row:89,level:2,type:'leaf',source:'pagamentos',match:'Manutenção de Imobilizado'},
+  {id:'manut_reparos',label:'Manutenção e Reparos',row:90,level:2,type:'leaf',source:'pagamentos',match:'Manutenção e Reparos'},
+  {id:'material_escritorio',label:'Material de Escritório',row:91,level:2,type:'leaf',source:'pagamentos',match:'Material de Escritório'},
+  {id:'reembolso_despesas_pag',label:'Reembolso de Despesas',row:92,level:2,type:'leaf',source:'pagamentos',match:'Reembolso de Despesas'},
+  {id:'ti',label:'T.I.',row:93,level:2,type:'leaf',source:'pagamentos',match:'T.I.'},
+  {id:'multas',label:'Multas',row:94,level:2,type:'leaf',source:'pagamentos',match:'Multas'},
+  {id:'grerj',label:'GRERJ',row:95,level:2,type:'leaf',source:'pagamentos',match:'GRERJ'},
+  {id:'moveis_utensilios',label:'Móveis e Utensílios',row:96,level:2,type:'leaf',source:'pagamentos',match:'Móveis e Utensílios'},
+  {id:'hospedagem_var',label:'Hospedagem',row:97,level:2,type:'leaf',source:'pagamentos',match:'Hospedagem'},
+  {id:'passagem_var',label:'Passagem',row:98,level:2,type:'leaf',source:'pagamentos',match:'Passagem'},
+  {id:'reembolso_var',label:'Reembolso',row:99,level:2,type:'leaf',source:'pagamentos',match:'Reembolso'},
+  {id:'seguros',label:'Seguros',row:100,level:2,type:'leaf',source:'pagamentos',match:'Seguros'},
+
+  {id:'consultoria_grp',label:'Consultoria',row:101,level:1,type:'summary',source:'pagamentos',children:['consultoria_leaf','multiplier','hospedagem_consult','passagem_consult','estacionamento_socios_consult','refeicao_socios_consult','transp_alt_comercial_consult','transp_alt_socios_consult']},
+  {id:'consultoria_leaf',label:'Consultoria',row:102,level:2,type:'leaf',source:'pagamentos',match:'Consultoria'},
+  {id:'multiplier',label:'Multiplier',row:103,level:2,type:'leaf',source:'pagamentos',match:'Multiplier'},
+  {id:'hospedagem_consult',label:'Hospedagem',row:104,level:2,type:'leaf',source:'pagamentos',match:'Hospedagem'},
+  {id:'passagem_consult',label:'Passagem',row:105,level:2,type:'leaf',source:'pagamentos',match:'Passagem'},
+  {id:'estacionamento_socios_consult',label:'Estacionamento Sócios',row:106,level:2,type:'leaf',source:'pagamentos',match:'Estacionamento Sócios'},
+  {id:'refeicao_socios_consult',label:'Refeição Sócios',row:107,level:2,type:'leaf',source:'pagamentos',match:'Refeição Sócios'},
+  {id:'transp_alt_comercial_consult',label:'Transporte Alternativo - Comercial',row:108,level:2,type:'leaf',source:'pagamentos',match:'Transporte Alternativo - Comercial'},
+  {id:'transp_alt_socios_consult',label:'Transporte Alternativo - Sócios',row:109,level:2,type:'leaf',source:'pagamentos',match:'Transporte Alternativo - Sócios'},
+
+  {id:'despesa_comercial_grp',label:'Despesa Comercial',row:110,level:1,type:'summary',source:'pagamentos',children:['portal_comercial','amostra','brindes','marketing','feiras_eventos','seguro_licitatorio','gestao_trafego','multa_petrobras','transp_alt_comercial']},
+  {id:'portal_comercial',label:'Portal/Sistemas Comercial',row:111,level:2,type:'leaf',source:'pagamentos',match:'Portal/Sistemas Comercial'},
+  {id:'amostra',label:'Amostra',row:112,level:2,type:'leaf',source:'pagamentos',match:'Amostra'},
+  {id:'brindes',label:'Brindes',row:113,level:2,type:'leaf',source:'pagamentos',match:'Brindes'},
+  {id:'marketing',label:'Marketing',row:114,level:2,type:'leaf',source:'pagamentos',match:'Marketing'},
+  {id:'feiras_eventos',label:'Feiras e Eventos Comerciais',row:115,level:2,type:'leaf',source:'pagamentos',match:'Feiras e Eventos Comerciais'},
+  {id:'seguro_licitatorio',label:'Seguro Licitatório',row:116,level:2,type:'leaf',source:'pagamentos',match:'Seguro Licitatório'},
+  {id:'gestao_trafego',label:'Gestão de Trafego',row:117,level:2,type:'leaf',source:'pagamentos',match:'Gestão de Trafego'},
+  {id:'multa_petrobras',label:'Multa Petrobrás',row:118,level:2,type:'leaf',source:'pagamentos',match:'Multa Petrobrás'},
+  {id:'transp_alt_comercial',label:'Transporte Alternativo - Comercial',row:119,level:2,type:'leaf',source:'pagamentos',match:'Transporte Alternativo - Comercial'},
+
+  {id:'despesa_logistica_grp',label:'Despesa Logística',row:120,level:1,type:'summary',source:'pagamentos',children:['empilhadeira','gas_empilhadeira','gasolina_rkm','gasolina_tta','gasolina_kvk','ipva_rkm','licenciamento_rkm','ipva_tta','licenciamento_tta','ipva_kvk','licenciamento_kvk','seguro_fiorino_rkm','seguro_bongo_tta','seguro_fiorino_kvk','rastreador_kvk','rastreador_rkm','rastreador_tta','manut_fiorino_rkm','manut_bongo_tta','manut_fiorino_kvk','pedagio','estacionamento_operacional','multa_carro_operacional','aluguel_automovel_operacao']},
+  {id:'empilhadeira',label:'Empilhadeira/Paleteira',row:121,level:2,type:'leaf',source:'pagamentos',match:'Empilhadeira/Paleteira'},
+  {id:'gas_empilhadeira',label:'Gás Empilhadeira',row:122,level:2,type:'leaf',source:'pagamentos',match:'Gás Empilhadeira'},
+  {id:'gasolina_rkm',label:'Gasolina RKM',row:123,level:2,type:'leaf',source:'pagamentos',match:'Gasolina RKM'},
+  {id:'gasolina_tta',label:'Gasolina TTA',row:124,level:2,type:'leaf',source:'pagamentos',match:'Gasolina TTA'},
+  {id:'gasolina_kvk',label:'Gasolina KVK',row:125,level:2,type:'leaf',source:'pagamentos',match:'Gasolina KVK'},
+  {id:'ipva_rkm',label:'IPVA RKM',row:126,level:2,type:'leaf',source:'pagamentos',match:'IPVA RKM'},
+  {id:'licenciamento_rkm',label:'Licenciamento RKM',row:127,level:2,type:'leaf',source:'pagamentos',match:'Licenciamento RKM'},
+  {id:'ipva_tta',label:'IPVA TTA',row:128,level:2,type:'leaf',source:'pagamentos',match:'IPVA TTA'},
+  {id:'licenciamento_tta',label:'Licenciamento TTA',row:129,level:2,type:'leaf',source:'pagamentos',match:'Licenciamento TTA'},
+  {id:'ipva_kvk',label:'IPVA KVK',row:130,level:2,type:'leaf',source:'pagamentos',match:'IPVA KVK'},
+  {id:'licenciamento_kvk',label:'Licenciamento KVK',row:131,level:2,type:'leaf',source:'pagamentos',match:'Licenciamento KVK'},
+  {id:'seguro_fiorino_rkm',label:'Seguro Fiorino RKM',row:132,level:2,type:'leaf',source:'pagamentos',match:'Seguro Fiorino RKM'},
+  {id:'seguro_bongo_tta',label:'Seguro Bongo TTA',row:133,level:2,type:'leaf',source:'pagamentos',match:'Seguro Bongo TTA'},
+  {id:'seguro_fiorino_kvk',label:'Seguro Fiorino KVK',row:134,level:2,type:'leaf',source:'pagamentos',match:'Seguro Fiorino KVK'},
+  {id:'rastreador_kvk',label:'Rastreador Fiorino KVK',row:135,level:2,type:'leaf',source:'pagamentos',match:'Rastreador Fiorino KVK'},
+  {id:'rastreador_rkm',label:'Rastreador Fiorino RKM',row:136,level:2,type:'leaf',source:'pagamentos',match:'Rastreador Fiorino RKM'},
+  {id:'rastreador_tta',label:'Rastreador Bongo TTA',row:137,level:2,type:'leaf',source:'pagamentos',match:'Rastreador Bongo TTA'},
+  {id:'manut_fiorino_rkm',label:'Manutenção Fiorino RKM',row:138,level:2,type:'leaf',source:'pagamentos',match:'Manutenção Fiorino RKM'},
+  {id:'manut_bongo_tta',label:'Manutenção Bongo TTA',row:139,level:2,type:'leaf',source:'pagamentos',match:'Manutenção Bongo TTA'},
+  {id:'manut_fiorino_kvk',label:'Manutenção Fiorino KVK',row:140,level:2,type:'leaf',source:'pagamentos',match:'Manutenção Fiorino KVK'},
+  {id:'pedagio',label:'Pedágio',row:141,level:2,type:'leaf',source:'pagamentos',match:'Pedágio'},
+  {id:'estacionamento_operacional',label:'Estacionamento Operacional',row:142,level:2,type:'leaf',source:'pagamentos',match:'Estacionamento Operacional'},
+  {id:'multa_carro_operacional',label:'Multa Carro Operacional',row:143,level:2,type:'leaf',source:'pagamentos',match:'Multa Carro Operacional'},
+  {id:'aluguel_automovel_operacao',label:'Aluguel Automóvel - Operação',row:144,level:2,type:'leaf',source:'pagamentos',match:'Aluguel Automóvel - Operação'},
+
+  {id:'despesa_socios_grp',label:'Despesa de Sócios',row:145,level:1,type:'summary',source:'pagamentos',children:['pro_labore','retirada_gloria','aluguel_automovel_socios','telefone_socios','refeicao_socios','capacitacao_diretoria','assist_medica_socios','estacionamento_socios','gasolina_andre','gasolina_marcela','gasolina_rafael','ipva_socios','retirada_andre','retirada_marcela','retirada_rafael','manut_veiculo_socios','multa_carro_socios','transp_alt_socios']},
+  {id:'pro_labore',label:'Pró-labore',row:146,level:2,type:'leaf',source:'pagamentos',match:'Pró-labore'},
+  {id:'retirada_gloria',label:'Retirada Glória',row:147,level:2,type:'leaf',source:'pagamentos',match:'Retirada Glória'},
+  {id:'aluguel_automovel_socios',label:'Aluguel Automóvel - Sócios',row:148,level:2,type:'leaf',source:'pagamentos',match:'Aluguel Automóvel - Sócios'},
+  {id:'telefone_socios',label:'Telefone Sócios',row:149,level:2,type:'leaf',source:'pagamentos',match:'Telefone Sócios'},
+  {id:'refeicao_socios',label:'Refeição Sócios',row:150,level:2,type:'leaf',source:'pagamentos',match:'Refeição Sócios'},
+  {id:'capacitacao_diretoria',label:'Capacitação da Diretoria',row:151,level:2,type:'leaf',source:'pagamentos',match:'Capacitação da Diretoria'},
+  {id:'assist_medica_socios',label:'Assistência Médica Sócios',row:152,level:2,type:'leaf',source:'pagamentos',match:'Assistência Médica Sócios'},
+  {id:'estacionamento_socios',label:'Estacionamento Sócios',row:153,level:2,type:'leaf',source:'pagamentos',match:'Estacionamento Sócios'},
+  {id:'gasolina_andre',label:'Gasolina André',row:154,level:2,type:'leaf',source:'pagamentos',match:'Gasolina André'},
+  {id:'gasolina_marcela',label:'Gasolina Marcela',row:155,level:2,type:'leaf',source:'pagamentos',match:'Gasolina Marcela'},
+  {id:'gasolina_rafael',label:'Gasolina Rafael',row:156,level:2,type:'leaf',source:'pagamentos',match:'Gasolina Rafael'},
+  {id:'ipva_socios',label:'IPVA Sócios',row:157,level:2,type:'leaf',source:'pagamentos',match:'IPVA Sócios'},
+  {id:'retirada_andre',label:'Retirada André',row:158,level:2,type:'leaf',source:'pagamentos',match:'Retirada André'},
+  {id:'retirada_marcela',label:'Retirada Marcela',row:159,level:2,type:'leaf',source:'pagamentos',match:'Retirada Marcela'},
+  {id:'retirada_rafael',label:'Retirada Rafael',row:160,level:2,type:'leaf',source:'pagamentos',match:'Retirada Rafael'},
+  {id:'manut_veiculo_socios',label:'Manutenção Veículo Sócios',row:161,level:2,type:'leaf',source:'pagamentos',match:'Manutenção Veículo Sócios'},
+  {id:'multa_carro_socios',label:'Multa Carro Sócios',row:162,level:2,type:'leaf',source:'pagamentos',match:'Multa Carro Sócios'},
+  {id:'transp_alt_socios',label:'Transporte Alternativo - Sócios',row:163,level:2,type:'leaf',source:'pagamentos',match:'Transporte Alternativo - Sócios'},
+
+  {id:'despesa_financeira_grp',label:'Despesa Financeira',row:164,level:1,type:'summary',source:'pagamentos',children:['pagto_emprestimos','consorcio','tarifas_bancarias','tarifa_cartao','juros_emprestimos','iof','emprestimos_terceiros','devolucao_emprestimo_terceiros']},
+  {id:'pagto_emprestimos',label:'Pagamento de Empréstimos',row:165,level:2,type:'leaf',source:'pagamentos',match:'Pagamento de Empréstimos'},
+  {id:'consorcio',label:'Consorcio',row:166,level:2,type:'leaf',source:'pagamentos',match:'Consorcio'},
+  {id:'tarifas_bancarias',label:'Tarifas Bancárias',row:167,level:2,type:'leaf',source:'pagamentos',match:'Tarifas Bancárias'},
+  {id:'tarifa_cartao',label:'Tarifa Cartão de Crédito',row:168,level:2,type:'leaf',source:'pagamentos',match:'Tarifa Cartão de Crédito'},
+  {id:'juros_emprestimos',label:'Juros sobre Empréstimos',row:169,level:2,type:'leaf',source:'pagamentos',match:'Juros sobre Empréstimos'},
+  {id:'iof',label:'IOF',row:170,level:2,type:'leaf',source:'pagamentos',match:'IOF'},
+  {id:'emprestimos_terceiros',label:'Empréstimos a Terceiros',row:171,level:2,type:'leaf',source:'pagamentos',match:'Empréstimos a Terceiros'},
+  {id:'devolucao_emprestimo_terceiros',label:'Devolução Empréstimo Terceiros',row:172,level:2,type:'leaf',source:'pagamentos',match:'Devolução Empréstimo Terceiros'},
+
+  {id:'outras_despesas_grp',label:'Outras Despesas',row:173,level:1,type:'summary',source:'pagamentos',children:['nao_identificado']},
+  {id:'nao_identificado',label:'Não Identificado',row:174,level:2,type:'leaf',source:'pagamentos',match:'Não Identificado'},
+
+  {id:'imobilizado_grp',label:'Imobilizado',row:175,level:1,type:'summary',source:'pagamentos',children:['equip_eletronicos','instalacoes_ativo','veiculos']},
+  {id:'equip_eletronicos',label:'Equipamentos Eletrônicos',row:176,level:2,type:'leaf',source:'pagamentos',match:'Equipamentos Eletrônicos'},
+  {id:'instalacoes_ativo',label:'Instalações de Ativo Imobilizado',row:177,level:2,type:'leaf',source:'pagamentos',match:'Instalações de Ativo Imobilizado'},
+  {id:'veiculos',label:'Veículos',row:178,level:2,type:'leaf',source:'pagamentos',match:'Veículos'},
+
+  {id:'saldo',label:'Saldo',row:180,level:0,type:'formula'},
+  {id:'mov_total',label:'Movimentação Financeira Total',row:182,level:0,type:'summary',children:['entradas_fin','saidas_fin']},
+  {id:'entradas_fin',label:'Entradas Financeiras',row:184,level:1,type:'summary',source:'recebimentos',children:['entrada_capital','entrada_aporte','resgate_investimentos']},
+  {id:'entrada_capital',label:'Entrada de Capital',row:185,level:2,type:'leaf',source:'recebimentos',match:'Entrada de Capital'},
+  {id:'entrada_aporte',label:'Entrada Aporte',row:186,level:2,type:'leaf',source:'recebimentos',match:'Entrada Aporte'},
+  {id:'resgate_investimentos',label:'Resgate de Investimentos',row:187,level:2,type:'leaf',source:'recebimentos',match:'Resgate de Investimentos'},
+  {id:'saidas_fin',label:'Saídas Financeiras',row:189,level:1,type:'summary',source:'pagamentos',children:['retirada_aporte','retirada_investimento','saida_capital']},
+  {id:'retirada_aporte',label:'Retirada Aporte',row:190,level:2,type:'leaf',source:'pagamentos',match:'Retirada Aporte'},
+  {id:'retirada_investimento',label:'Retirada Investimento',row:191,level:2,type:'leaf',source:'pagamentos',match:'Retirada Investimento'},
+  {id:'saida_capital',label:'Saída de Capital',row:192,level:2,type:'leaf',source:'pagamentos',match:'Saída de Capital'},
+  {id:'fat_bruto',label:'Faturamento Bruto',row:195,level:0,type:'summary',children:['faturado','cancelado','devolvido']},
+  {id:'faturado',label:'Faturado',row:196,level:1,type:'leaf',source:'faturamento',status:'Faturado'},
+  {id:'cancelado',label:'Cancelado',row:197,level:1,type:'leaf',source:'faturamento',status:'Cancelado'},
+  {id:'devolvido',label:'Devolvido',row:198,level:1,type:'leaf',source:'faturamento',status:'Devolvido'},
+  {id:'fat_liquido',label:'Faturamento Líquido',row:199,level:0,type:'formula'},
+];
+const FLOW_MAP = Object.fromEntries(FLOW_ROWS.map(r=>[r.id,r]));
 
 // ═══════════════════════════════════════════════════════
 // FORMATTERS
@@ -709,112 +900,145 @@ function renderSaldos(){
 // ════════════════════════════════════════
 // 2. FLUXO
 // ════════════════════════════════════════
-function renderFluxo(){
-  const emp = _emp.fluxo;
-  const m = {
-    saldo: getM(emp,'saldo'), receita_total: getM(emp,'receita_total'),
-    despesa_venda: getM(emp,'despesa_venda'), despesa_total: getM(emp,'despesa_total'),
-    impostos: getM(emp,'impostos'), outras_receitas: getM(emp,'outras_receitas'),
-    pessoal: getM(emp,'pessoal'), comercial: getM(emp,'comercial'), financeira: getM(emp,'financeira'),
-  };
-  const a = {
-    saldo: getA(emp,'saldo'), receita_total: getA(emp,'receita_total'),
-    despesa_venda: getA(emp,'despesa_venda'), despesa_total: getA(emp,'despesa_total'),
-    impostos: getA(emp,'impostos'), outras_receitas: getA(emp,'outras_receitas'),
-    pessoal: getA(emp,'pessoal'), comercial: getA(emp,'comercial'), financeira: getA(emp,'financeira'),
-  };
-  const months = D.months;
 
-  // KPIs
+function getScenarioData(){
+  return (D.scenarios && D.scenarios[currentScenario]) ? D.scenarios[currentScenario] : {monthly:{},acum:{}};
+}
+
+function setScenario(scenario, el){
+  currentScenario = scenario;
+  document.querySelectorAll('#scenarioPills .pill').forEach(p=>p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderAll();
+}
+
+function setFlowTableMode(mode, el){
+  flowTableMode = mode;
+  document.querySelectorAll('#tableModePills .pill').forEach(p=>p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderFluxoTreeTable();
+}
+
+function hasExpandedAncestor(node){
+  let lvl = node.level;
+  for(let i=FLOW_ROWS.indexOf(node)-1;i>=0;i--){
+    const prev = FLOW_ROWS[i];
+    if(prev.level < lvl){
+      if(flowExpandState[prev.id]===false) return false;
+      lvl = prev.level;
+    }
+  }
+  return true;
+}
+function expandAllFlow(){ FLOW_ROWS.filter(r=>r.children&&r.children.length).forEach(r=>flowExpandState[r.id]=true); renderFluxoTreeTable(); }
+function collapseAllFlow(){ FLOW_ROWS.filter(r=>r.children&&r.children.length).forEach(r=>flowExpandState[r.id]=false); renderFluxoTreeTable(); }
+function toggleFlowNode(id){ flowExpandState[id]=!flowExpandState[id]; renderFluxoTreeTable(); }
+
+function renderFluxoTreeTable(){
+  const tbody = document.getElementById('tabelaFluxoBody');
+  const sData = getScenarioData();
+  const monthlySource = flowTableMode==='real' ? D.monthly : sData.monthly;
+  const acumSource = flowTableMode==='real' ? D.acum : sData.acum;
+  document.getElementById('flowModeNote').textContent = flowTableMode==='real' ? 'Mostrando realizado.' : `Mostrando previsto · cenário ${currentScenario}.`;
+
+  tbody.innerHTML = FLOW_ROWS.map(node=>{
+    const vals = (monthlySource[node.id]||{real:Array(12).fill(0),prev:Array(12).fill(0)})[flowTableMode==='real'?'real':'prev'] || Array(12).fill(0);
+    const acc = acumSource[node.id] ?? vals.reduce((a,b)=>a+(+b||0),0);
+    const hasChildren = !!(node.children && node.children.length);
+    const expanded = flowExpandState[node.id] !== false;
+    const hidden = node.level>0 && !hasExpandedAncestor(node) ? 'hidden-row' : '';
+    const rowClass = `${hidden} level-${node.level} ${(node.level===0?'group-row ':'')}${node.id==='saldo' || node.id==='fat_liquido' ? 'total-row':''}`;
+    const indent = node.level*18;
+    const btn = hasChildren ? `<button class="tree-toggle" onclick="toggleFlowNode('${node.id}')">${expanded?'−':'+'}</button>` : `<span class="tree-spacer"></span>`;
+    const cells = D.months.map((_,i)=>{
+      const v = +vals[i]||0;
+      const cls = v>0 ? 'pos' : v<0 ? 'neg' : '';
+      return `<td class="num ${cls}">${v===0?'—':fmtS(v)}</td>`;
+    }).join('');
+    const accCls = acc>0 ? 'pos' : acc<0 ? 'neg' : '';
+    return `<tr class="${rowClass}">
+      <td>
+        <div class="name-cell" style="padding-left:${indent}px">
+          ${btn}
+          <span class="row-label">${node.label}</span>
+        </div>
+      </td>
+      ${cells}
+      <td class="num ${accCls}">${acc===0?'—':fmtS(acc)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderFluxo(){
+  const m = D.monthly;
+  const a = D.acum;
+  const sData = getScenarioData();
+  const sp = sData.monthly || {};
+  const sa = sData.acum || {};
+
   const saldoAcum = a.saldo;
   const recAcum = a.receita_total;
-  const despAcum = a.despesa_venda + a.despesa_total;
-  const saldoMes = m.saldo.real.filter(v=>v>0);
-  const ultimoSaldo = saldoMes[saldoMes.length-1]||0;
+  const despAcum = a.despesa_venda + a.despesa_total + a.impostos;
+  const saldoPrevAcum = sa.saldo || 0;
+  const ultimoSaldo = (m.saldo.real||[]).filter(v=>v!==0).slice(-1)[0]||0;
+
+  document.getElementById('tagScenario').textContent = `📅 ${D.target_year||2026} · Cenário ${currentScenario}`;
+  document.getElementById('tagFluxoAno').textContent = `📅 ${D.target_year||2026}`;
+  document.getElementById('subSaldoScenario').textContent = `Resultado líquido por mês · previsto: ${currentScenario}`;
+  document.getElementById('subComposicao').textContent = `${D.target_year||2026} · cenário ${currentScenario}`;
 
   document.getElementById('kpiFluxo').innerHTML =
-    kpiCard('gold','⚖️','Saldo Acumulado',fmtS(saldoAcum),'2026 YTD','badge-pos',fmtS(saldoAcum)) +
+    kpiCard('gold','⚖️','Saldo Acumulado Realizado',fmtS(saldoAcum),'2026 YTD','badge-pos',fmtS(saldoAcum)) +
     kpiCard('green','📥','Receita Acumulada',fmtS(recAcum),'Recebimentos realizados') +
-    kpiCard('red','📤','Despesas Acumuladas',fmtS(despAcum),'Total saídas realizadas') +
-    kpiCard('teal','📅','Último Saldo Mensal',fmtS(ultimoSaldo),'Resultado do mês mais recente');
+    kpiCard('red','📤','Despesas Acumuladas',fmtS(despAcum),'Saídas + impostos') +
+    kpiCard('teal','🔮','Saldo Previsto',fmtS(saldoPrevAcum),`Cenário ${currentScenario}`);
 
-  // Saldo chart
-  const saldoReal = m.saldo.real;
-  const saldoPrev = m.saldo.prev;
   killChart('chartSaldo');
   charts.chartSaldo = new Chart(document.getElementById('chartSaldo'),{
     type:'bar',
-    data:{labels:months,datasets:[
-      {label:'Realizado',data:saldoReal,backgroundColor:saldoReal.map(v=>v>0?C.green+'cc':C.red+'cc'),borderRadius:5,order:2},
-      {label:'Previsto',data:saldoPrev,type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:4,pointBackgroundColor:C.gold,order:1},
+    data:{labels:D.months,datasets:[
+      {label:'Realizado',data:m.saldo.real,backgroundColor:m.saldo.real.map(v=>v>0?C.green+'cc':C.red+'cc'),borderRadius:5,order:2},
+      {label:`Previsto · ${currentScenario}`,data:(sp.saldo?.prev)||Array(12).fill(0),type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:4,pointBackgroundColor:C.gold,order:1},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
   });
 
-  // Receita vs Despesa
-  const despReal = months.map((_,i)=>(m.despesa_venda.real[i]||0)+(m.despesa_total.real[i]||0)+(m.impostos.real[i]||0));
+  const despReal = D.months.map((_,i)=>(m.despesa_venda.real[i]||0)+(m.despesa_total.real[i]||0)+(m.impostos.real[i]||0));
   killChart('chartRecDesp');
   charts.chartRecDesp = new Chart(document.getElementById('chartRecDesp'),{
     type:'bar',
-    data:{labels:months,datasets:[
+    data:{labels:D.months,datasets:[
       {label:'Receita',data:m.receita_total.real,backgroundColor:C.green+'aa',borderRadius:4},
       {label:'Despesas',data:despReal,backgroundColor:C.red+'aa',borderRadius:4},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
   });
 
-  // Composição donut
+  const totalRecPrev = sa.receita_total || 0;
+  const totalDespPrev = (sa.despesa_venda||0) + (sa.despesa_total||0) + (sa.impostos||0);
+  const totalSaldoPrev = sa.saldo || 0;
   killChart('chartComposicao');
   charts.chartComposicao = new Chart(document.getElementById('chartComposicao'),{
     type:'doughnut',
-    data:{labels:['Receita','Despesas','Saldo Líquido'],datasets:[{data:[recAcum,despAcum,Math.max(0,saldoAcum)],backgroundColor:[C.green,C.red,C.gold],borderWidth:3,borderColor:'#fff'}]},
+    data:{labels:['Receita Prevista','Despesas Previstas','Saldo Previsto'],datasets:[{data:[totalRecPrev,totalDespPrev,Math.max(0,totalSaldoPrev)],backgroundColor:[C.green,C.red,C.gold],borderWidth:3,borderColor:'#fff'}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.label+': '+fmtS(ctx.raw)}}}}
   });
   document.getElementById('legendComposicao').innerHTML=[
-    {l:'Receita',v:recAcum,c:C.green},{l:'Despesas',v:despAcum,c:C.red},{l:'Saldo Líquido',v:saldoAcum,c:C.gold}
+    {l:'Receita Prevista',v:totalRecPrev,c:C.green},{l:'Despesas Previstas',v:totalDespPrev,c:C.red},{l:'Saldo Previsto',v:totalSaldoPrev,c:C.gold}
   ].map(x=>`<div class="legend-item"><div class="legend-dot" style="background:${x.c}"></div><div class="legend-label">${x.l}</div><div class="legend-val">${fmtS(x.v)}</div></div>`).join('');
 
-  // Tabela detalhada
-  const rows = [
-    {label:'📥 Receita Total',key:'receita_total',bold:true},
-    {label:'  · Outras Receitas',key:'outras_receitas'},
-    {label:'📤 Desp. Relativas a Venda',key:'despesa_venda',bold:true,neg:true},
-    {label:'💼 Impostos',key:'impostos',neg:true},
-    {label:'🏢 Despesa Total',key:'despesa_total',bold:true,neg:true},
-    {label:'  · Pessoal',key:'pessoal',neg:true},
-    {label:'  · Comercial',key:'comercial',neg:true},
-    {label:'  · Financeira',key:'financeira',neg:true},
-    {label:'⚖️ Saldo',key:'saldo',bold:true},
-  ];
-  document.getElementById('tabelaFluxoBody').innerHTML = rows.map(row=>{
-    const real = m[row.key].real;
-    const style = row.bold?'font-weight:700':'';
-    const bgStyle = row.key==='saldo'?'background:#fffbe6':row.bold?'background:var(--gray-50)':'';
-    const cells = months.map((_,i)=>{
-      const v = real[i];
-      const cls = row.key==='saldo'?(v>0?'pos':'neg'):(row.neg&&v>0?'neg':'');
-      return `<td class="num ${cls}" style="${style}">${v===0?'—':fmtS(v)}</td>`;
-    }).join('');
-    return `<tr style="${bgStyle}"><td style="${style}">${row.label}</td>${cells}<td class="num ${row.key==='saldo'?(a[row.key]>0?'pos':'neg'):''}" style="${style}">${fmtS(a[row.key])}</td></tr>`;
-  }).join('');
+  renderFluxoTreeTable();
 }
 
 // ════════════════════════════════════════
 // 3. RECEITAS
 // ════════════════════════════════════════
 function renderReceitas(){
-  const emp = _emp.receitas;
-  const m = {
-    receita_total: getM(emp,'receita_total'),
-    fat_bruto: getM(emp,'fat_bruto'),
-    fat_liquido: getM(emp,'fat_liquido'),
-  };
-  const a = {
-    receita_total: getA(emp,'receita_total'),
-    fat_bruto: getA(emp,'fat_bruto'),
-    fat_liquido: getA(emp,'fat_liquido'),
-    outras_receitas: getA(emp,'outras_receitas'),
-  };
+  const m = D.monthly;
+  const a = D.acum;
+  const sData = getScenarioData();
+  const sp = sData.monthly || {};
+  const sa = sData.acum || {};
 
   const recAcum = a.receita_total;
   const fatBruto = a.fat_bruto;
@@ -835,7 +1059,7 @@ function renderReceitas(){
     type:'bar',
     data:{labels:D.months,datasets:[
       {label:'Realizado',data:m.receita_total.real,backgroundColor:C.green+'bb',borderRadius:5,order:2},
-      {label:'Previsto',data:m.receita_total.prev,type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:3,pointBackgroundColor:C.gold,order:1},
+      {label:`Previsto · ${currentScenario}`,data:(sp.receita_total?.prev)||m.receita_total.prev,type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:3,pointBackgroundColor:C.gold,order:1},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
   });
@@ -869,23 +1093,10 @@ function renderReceitas(){
 // 4. DESPESAS
 // ════════════════════════════════════════
 function renderDespesas(){
-  const emp = _emp.despesas;
-  const m = {
-    despesa_venda: getM(emp,'despesa_venda'),
-    despesa_total: getM(emp,'despesa_total'),
-    impostos: getM(emp,'impostos'),
-    pessoal: getM(emp,'pessoal'),
-    financeira: getM(emp,'financeira'),
-    comercial: getM(emp,'comercial'),
-  };
-  const a = {
-    despesa_venda: getA(emp,'despesa_venda'),
-    despesa_total: getA(emp,'despesa_total'),
-    impostos: getA(emp,'impostos'),
-    pessoal: getA(emp,'pessoal'),
-    financeira: getA(emp,'financeira'),
-    comercial: getA(emp,'comercial'),
-  };
+  const m = D.monthly;
+  const a = D.acum;
+  const sData = getScenarioData();
+  const sp = sData.monthly || {};
 
   const despVendaAcum = a.despesa_venda;
   const despTotalAcum = a.despesa_total;
@@ -918,7 +1129,7 @@ function renderDespesas(){
 
   // Despesa total mensal
   const despMensal = D.months.map((_,i)=>(m.despesa_venda.real[i]||0)+(m.despesa_total.real[i]||0)+(m.impostos.real[i]||0));
-  const despPrevMensal = D.months.map((_,i)=>(m.despesa_venda.prev[i]||0)+(m.despesa_total.prev[i]||0));
+  const despPrevMensal = D.months.map((_,i)=>((sp.despesa_venda?.prev?.[i])||0)+((sp.despesa_total?.prev?.[i])||0)+((sp.impostos?.prev?.[i])||0));
   killChart('chartDespMensal');
   charts.chartDespMensal = new Chart(document.getElementById('chartDespMensal'),{
     type:'bar',
@@ -948,25 +1159,11 @@ function renderDespesas(){
 // 5. RESULTADO
 // ════════════════════════════════════════
 function renderResultado(){
-  const emp = _emp.resultado;
-  const m = {
-    saldo: getM(emp,'saldo'),
-    receita_total: getM(emp,'receita_total'),
-    despesa_venda: getM(emp,'despesa_venda'),
-    despesa_total: getM(emp,'despesa_total'),
-    impostos: getM(emp,'impostos'),
-    pessoal: getM(emp,'pessoal'),
-    financeira: getM(emp,'financeira'),
-  };
-  const a = {
-    saldo: getA(emp,'saldo'),
-    receita_total: getA(emp,'receita_total'),
-    despesa_venda: getA(emp,'despesa_venda'),
-    despesa_total: getA(emp,'despesa_total'),
-    impostos: getA(emp,'impostos'),
-    pessoal: getA(emp,'pessoal'),
-    financeira: getA(emp,'financeira'),
-  };
+  const m = D.monthly;
+  const a = D.acum;
+  const sData = getScenarioData();
+  const sp = sData.monthly || {};
+  const sa = sData.acum || {};
 
   const saldoAcum = a.saldo;
   const recAcum = a.receita_total;
@@ -995,7 +1192,7 @@ function renderResultado(){
   });
 
   // Gap realizado vs previsto
-  const gaps = D.months.map((_,i)=>m.saldo.real[i]-m.saldo.prev[i]);
+  const gaps = D.months.map((_,i)=>m.saldo.real[i]-(((sp.saldo?.prev)||m.saldo.prev)[i]||0));
   killChart('chartGapPrevisto');
   charts.chartGapPrevisto = new Chart(document.getElementById('chartGapPrevisto'),{
     type:'bar',
@@ -1008,13 +1205,13 @@ function renderResultado(){
 
   // Tabela resumo
   const tRows = [
-    {label:'Receita Total',real:a.receita_total,prev:m.receita_total.prev.reduce((s,v)=>s+v,0)},
-    {label:'Desp. c/ Mercadoria',real:a.despesa_venda,prev:m.despesa_venda.prev.reduce((s,v)=>s+v,0),neg:true},
+    {label:'Receita Total',real:a.receita_total,prev:sa.receita_total ?? m.receita_total.prev.reduce((s,v)=>s+v,0)},
+    {label:'Desp. c/ Mercadoria',real:a.despesa_venda,prev:sa.despesa_venda ?? m.despesa_venda.prev.reduce((s,v)=>s+v,0),neg:true},
     {label:'Impostos',real:a.impostos,prev:0,neg:true},
-    {label:'Despesa Operacional',real:a.despesa_total,prev:m.despesa_total.prev.reduce((s,v)=>s+v,0),neg:true},
-    {label:'→ Pessoal',real:a.pessoal,prev:m.pessoal.prev.reduce((s,v)=>s+v,0),neg:true},
+    {label:'Despesa Operacional',real:a.despesa_total,prev:sa.despesa_total ?? m.despesa_total.prev.reduce((s,v)=>s+v,0),neg:true},
+    {label:'→ Pessoal',real:a.pessoal,prev:sa.pessoal ?? m.pessoal.prev.reduce((s,v)=>s+v,0),neg:true},
     {label:'→ Financeira',real:a.financeira,prev:0,neg:true},
-    {label:'Saldo Líquido',real:a.saldo,prev:m.saldo.prev.reduce((s,v)=>s+v,0),bold:true},
+    {label:'Saldo Líquido',real:a.saldo,prev:sa.saldo ?? m.saldo.prev.reduce((s,v)=>s+v,0),bold:true},
   ];
   document.getElementById('tabelaResultado').innerHTML = tRows.map(row=>{
     const diff = row.real - row.prev;
@@ -1146,106 +1343,141 @@ function usePreloaded(){
 // ═══════════════════════════════════════════════════════
 // PARSE CASH FLOW EXCEL
 // ═══════════════════════════════════════════════════════
+
+function sumByMonth(rows, monthKey, yearKey, categoryKey, amountKey, targetYear, filterFn){
+  const out = Array(12).fill(0);
+  rows.forEach(r=>{
+    if(!r) return;
+    const month = parseInt(r[monthKey],10);
+    const year = parseInt(r[yearKey],10);
+    if(!month || !year || year!==targetYear) return;
+    if(filterFn && !filterFn(r)) return;
+    const amt = parseFloat(r[amountKey])||0;
+    out[month-1] += amt;
+  });
+  return out.map(v=>Math.round(v*100)/100);
+}
+function addSeries(a,b){ return a.map((v,i)=>(+v||0)+(+b[i]||0)); }
+function sumChildrenSeries(result, node){
+  if(!node.children) return Array(12).fill(0);
+  return node.children.reduce((acc,id)=> addSeries(acc, result[id]||Array(12).fill(0)), Array(12).fill(0));
+}
+function normalizeDateLabel(dt){
+  try{
+    if(dt instanceof Date) return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    return String(dt||'').substring(0,5);
+  }catch(e){ return ''; }
+}
+
 function parseCashFlow(buf){
   const wb = XLSX.read(buf,{type:'array',cellDates:true,cellNF:false});
 
-  // ── Fluxo de Caixa Empresas ──
   const wsFC = wb.Sheets['Fluxo de Caixa Empresas'];
   if(!wsFC) return D;
   const fc = XLSX.utils.sheet_to_json(wsFC,{header:1,defval:null});
+  const target_year = parseInt(fc?.[3]?.[1],10)||2026;
+  const base_year = parseInt(fc?.[0]?.[3],10)||target_year-1;
 
   const COL_MAP = {Jan:[6,9],Fev:[12,15],Mar:[18,21],Abr:[24,27],Mai:[30,33],Jun:[36,39],Jul:[42,45],Ago:[48,51],Set:[54,57],Out:[60,63],Nov:[66,69],Dez:[72,75]};
   const MONTHS = Object.keys(COL_MAP);
+  const v=(row,col)=>{if(!fc[row]||col>=fc[row].length)return 0;const x=fc[row][col];if(x===null||x===undefined)return 0;const n=parseFloat(x);return isNaN(n)?0:n;};
 
-  const v=(row,col)=>{if(!fc[row]||col>=fc[row].length)return 0;const x=fc[row][col];if(x===null||x===undefined)return 0;const n=parseFloat(x);return isNaN(n)||n===-1?0:n;};
-
-  const KEY_ROWS={receita_total:6,despesa_venda:16,impostos:22,outras_receitas:30,despesa_total:41,pessoal:64,comercial:109,financeira:163,saldo:179,fat_bruto:194,fat_liquido:198};
-  const monthly={};const acum={};
-  for(const[k,row] of Object.entries(KEY_ROWS)){
-    monthly[k]={real:[],prev:[]};
-    acum[k]=v(row,2);
+  const monthly={}, acum={};
+  FLOW_ROWS.forEach(node=>{
+    monthly[node.id]={real:Array(12).fill(0), prev:Array(12).fill(0)};
+    acum[node.id]=v(node.row-1,2);
     for(const m of MONTHS){
-      const[rc,pc]=COL_MAP[m];
-      monthly[k].real.push(Math.round(v(row,rc)*100)/100);
-      monthly[k].prev.push(Math.round(v(row,pc)*100)/100);
+      const [rc,pc]=COL_MAP[m];
+      monthly[node.id].real[MONTHS.indexOf(m)] = Math.round(v(node.row-1,rc)*100)/100;
+      monthly[node.id].prev[MONTHS.indexOf(m)] = Math.round(v(node.row-1,pc)*100)/100;
     }
-  }
+  });
 
-  // ── Saldos das Contas ──
   const wsSC = wb.Sheets['Saldos das Contas'];
   const sc = wsSC?XLSX.utils.sheet_to_json(wsSC,{header:1,defval:null}):[];
-
   const sv=(r,c)=>{if(!sc[r])return 0;const x=sc[r][c];if(x===null||x===undefined||x==='-')return 0;const n=parseFloat(x);return isNaN(n)?0:n;};
-
   const saldos_hoje={
     marck:{Santander:sv(3,4),Bradesco:sv(4,4),Itaú:sv(5,4),'Banco do Brasil':sv(6,4)},
     grattano:{Santander:sv(3,8),Bradesco:sv(4,8),Itaú:sv(5,8),Caixa:sv(6,8),'Banco do Brasil':sv(7,8)},
   };
-  const saldo_dia={marck:sv(7,4),grattano:sv(8,4)};
+  const saldo_dia={marck:sv(7,4),grattano:sv(8,8)};
   const projecao={
     marck:{despesas_mes:sv(12,4),recebimentos_mes:sv(13,4),projecao_caixa:sv(14,4)},
     grattano:{despesas_mes:sv(12,8),recebimentos_mes:sv(13,8),projecao_caixa:sv(14,8)},
   };
 
-  // Historical saldos
   const hist_saldos={marck:[],grattano:[]};
   for(let i=22;i<sc.length;i++){
     const row=sc[i];
-    if(!row||!row[0])continue;
-    const dt=row[0];
-    if(!(dt instanceof Date)&&typeof dt!=='string')continue;
-    const ms=row[2],gs=row[7];
-    if(!ms||String(ms).includes('EXPEDIENTE')||String(ms).includes('FERIADO'))continue;
-    try{
-      const mT=[2,3,4,5].reduce((a,c)=>{const x=parseFloat(row[c]);return a+(isNaN(x)?0:x);},0);
-      const gT=[7,8,9,10,11].reduce((a,c)=>{const x=parseFloat(row[c]);return a+(isNaN(x)?0:x);},0);
-      const label=dt instanceof Date?dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):String(dt).substring(0,5);
-      if(mT>0)hist_saldos.marck.push({dt:label,total:Math.round(mT*100)/100});
-      if(gT>0)hist_saldos.grattano.push({dt:label,total:Math.round(gT*100)/100});
-    }catch(e){}
+    if(!row||!row[0]) continue;
+    const ms=row[2], gs=row[7];
+    if(String(ms).includes('EXPEDIENTE') || String(ms).includes('FERIADO')) continue;
+    const mT=[2,3,4,5].reduce((a,c)=>a+(parseFloat(row[c])||0),0);
+    const gT=[7,8,9,10,11].reduce((a,c)=>a+(parseFloat(row[c])||0),0);
+    const label=normalizeDateLabel(row[0]);
+    if(mT>0) hist_saldos.marck.push({dt:label,total:Math.round(mT*100)/100});
+    if(gT>0) hist_saldos.grattano.push({dt:label,total:Math.round(gT*100)/100});
   }
-  hist_saldos.marck=hist_saldos.marck.slice(-45);
-  hist_saldos.grattano=hist_saldos.grattano.slice(-45);
 
-  // Data de atualização
   let data_atualizacao = new Date().toLocaleDateString('pt-BR');
   try{
-    const d=sc[0]&&sc[0][3];
+    const d=sc[0]&&sc[0][4];
     if(d instanceof Date) data_atualizacao=d.toLocaleDateString('pt-BR');
+    else if(d) data_atualizacao=String(d);
   }catch(e){}
 
-  // ── Read Marck + Grattano sheets ──
-  function readSheet(sheetName){
-    const ws2 = wb.Sheets[sheetName]; if(!ws2) return null;
-    const fc2 = XLSX.utils.sheet_to_json(ws2,{header:1,defval:null});
-    const monthly2={}, acum2={};
-    for(const[k,row] of Object.entries(KEY_ROWS)){
-      monthly2[k]={real:[],prev:[]};
-      acum2[k]=v2(fc2,row,2);
-      for(const m of MONTHS){
-        const[rc,pc]=COL_MAP[m];
-        monthly2[k].real.push(Math.round(v2(fc2,row,rc)*100)/100);
-        monthly2[k].prev.push(Math.round(v2(fc2,row,pc)*100)/100);
+  const receb = XLSX.utils.sheet_to_json(wb.Sheets['Base Recebimentos']||{}, {defval:null});
+  const pag = XLSX.utils.sheet_to_json(wb.Sheets['Base Pagamentos']||{}, {defval:null});
+  const recebPrev = XLSX.utils.sheet_to_json(wb.Sheets['Base Recebimentos Previstos']||{}, {defval:null});
+  const pagPrev = XLSX.utils.sheet_to_json(wb.Sheets['Base Pagamentos Previstos']||{}, {defval:null});
+  const fat = XLSX.utils.sheet_to_json(wb.Sheets['Base Faturamentos']||{}, {defval:null});
+
+  const scenarios = {};
+  ['Atual','Pessimista','Realista','Otimista'].forEach(scenario=>{
+    const factor = SCENARIO_FACTORS[scenario] || 1;
+    const pred = {};
+    FLOW_ROWS.forEach(node=>{
+      if(node.type==='leaf'){
+        let vals = Array(12).fill(0);
+        if(node.source==='recebimentos'){
+          if(scenario==='Atual'){
+            vals = sumByMonth(recebPrev,'Mês Ref.','Ano Ref.','Categoria','A Receber',target_year,r=>String(r['Categoria']||'')===String(node.match||''));
+          }else{
+            vals = sumByMonth(receb,'Ref. Mês','Ref. Ano','Categoria','Recebido',base_year,r=>String(r['Categoria']||'')===String(node.match||'')).map(v=>Math.round(v*factor*100)/100);
+          }
+        }else if(node.source==='pagamentos'){
+          if(scenario==='Atual'){
+            vals = sumByMonth(pagPrev,'Mês Ref.','Ano Ref.','Categoria','A Pagar',target_year,r=>String(r['Categoria']||'')===String(node.match||''));
+          }else{
+            vals = sumByMonth(pag,'Mês Ref.','Ano Ref.','Categoria','Pago ou Recebido',base_year,r=>String(r['Categoria']||'')===String(node.match||'')).map(v=>Math.round(v*factor*100)/100);
+          }
+        }else if(node.source==='faturamento'){
+          vals = sumByMonth(fat,'Mês','Ano','Status','Total da Nota Fiscal', scenario==='Atual'?target_year:base_year, r=>String(r['Status']||'')===String(node.status||'')).map(v=>Math.round((scenario==='Atual'?v:v*factor)*100)/100);
+        }
+        pred[node.id]=vals;
       }
-    }
-    function v2(fc,row,col){if(!fc[row]||col>=fc[row].length)return 0;const x=fc[row][col];if(x===null||x===undefined)return 0;const n=parseFloat(x);return isNaN(n)||n===-1?0:n;}
-    return {monthly:monthly2, acum:acum2};
-  }
+    });
 
-  const marckData    = readSheet('Fluxo de Caixa Marck');
-  const grattanoData = readSheet('Fluxo de Caixa Grattano');
+    // summaries bottom-up
+    FLOW_ROWS.slice().reverse().forEach(node=>{
+      if(node.type==='summary'){
+        pred[node.id]=sumChildrenSeries(pred,node);
+      }
+    });
+    pred.saldo = D.months.map((_,i)=>((pred.receita_total?.[i]||0)+(pred.entradas_fin?.[i]||0)) - ((pred.despesa_venda?.[i]||0)+(pred.impostos?.[i]||0)+(pred.despesa_total?.[i]||0)+(pred.saidas_fin?.[i]||0)));
+    pred.mov_total = D.months.map((_,i)=>(pred.entradas_fin?.[i]||0)+(pred.saidas_fin?.[i]||0));
+    pred.fat_bruto = D.months.map((_,i)=>(pred.faturado?.[i]||0)+(pred.cancelado?.[i]||0));
+    pred.fat_liquido = D.months.map((_,i)=>(pred.faturado?.[i]||0)+(pred.cancelado?.[i]||0)+(pred.devolvido?.[i]||0));
 
-  const monthly_marck    = marckData?.monthly    || monthly;
-  const acum_marck       = marckData?.acum        || acum;
-  const monthly_grattano = grattanoData?.monthly  || monthly;
-  const acum_grattano    = grattanoData?.acum      || acum;
+    const scenMonthly={}, scenAcum={};
+    FLOW_ROWS.forEach(node=>{
+      scenMonthly[node.id]={real:monthly[node.id]?.real||Array(12).fill(0), prev:pred[node.id]||Array(12).fill(0)};
+      scenAcum[node.id]=(pred[node.id]||[]).reduce((a,b)=>a+(+b||0),0);
+    });
+    scenarios[scenario]={monthly:scenMonthly,acum:scenAcum};
+  });
 
-  // Fix Grattano saldo_dia (correct column)
-  const saldo_dia_fixed = {marck:sv(7,4), grattano:sv(8,8)};
-
-  return {months:MONTHS,monthly,acum,saldos_hoje,
-    saldo_dia:saldo_dia_fixed,projecao,hist_saldos,data_atualizacao,
-    monthly_marck,acum_marck,monthly_grattano,acum_grattano};
+  return {months:MONTHS,monthly,acum,saldos_hoje,saldo_dia,projecao,hist_saldos,data_atualizacao,target_year,base_year,scenarios};
 }
 
 // ═══════════════════════════════════════════════════════
