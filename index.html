@@ -78,6 +78,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 
 /* RECORTE TAG */
 .recorte-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--navy);color:var(--gold-light);border-radius:20px;font-size:11px;font-weight:600}
+/* EMPRESA SELECTOR */
+.emp-selector{display:flex;gap:4px;background:rgba(10,22,40,.08);padding:4px;border-radius:var(--radius-sm)}
+.emp-pill{padding:5px 14px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray-600);transition:all .2s;border:none;background:none;font-family:'DM Sans',sans-serif}
+.emp-pill:hover{color:var(--navy)}.emp-pill.active{background:var(--gold);color:var(--navy)}
 
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:13px;margin-bottom:20px}
@@ -325,10 +329,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 <div class="view" id="view-fluxo">
   <div class="section-header">
     <div>
-      <div class="section-title">Fluxo de Caixa Consolidado</div>
-      <div class="section-subtitle">Realizado vs. Previsto · 2026 · Empresas consolidadas</div>
+      <div class="section-title" id="tituloFluxo">Fluxo de Caixa — Consolidado</div>
+      <div class="section-subtitle" id="subtituloFluxo">Realizado vs. Previsto · 2026</div>
     </div>
-    <div class="recorte-tag">📅 2026 — Consolidado</div>
+    <div class="emp-selector" id="empFluxo">
+      <button class="emp-pill active" onclick="setEmpresa('fluxo','emp',this)">Consolidado</button>
+      <button class="emp-pill" onclick="setEmpresa('fluxo','marck',this)">Marck</button>
+      <button class="emp-pill" onclick="setEmpresa('fluxo','grattano',this)">Grattano</button>
+    </div>
   </div>
 
   <div class="kpi-grid" id="kpiFluxo"></div>
@@ -380,10 +388,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 <div class="view" id="view-receitas">
   <div class="section-header">
     <div>
-      <div class="section-title">Receitas</div>
+      <div class="section-title" id="tituloReceitas">Receitas — Consolidado</div>
       <div class="section-subtitle">Faturamento, recebimentos e composição · 2026</div>
     </div>
-    <div class="recorte-tag">📅 2026 — Consolidado</div>
+    <div class="emp-selector" id="empReceitas">
+      <button class="emp-pill active" onclick="setEmpresa('receitas','emp',this)">Consolidado</button>
+      <button class="emp-pill" onclick="setEmpresa('receitas','marck',this)">Marck</button>
+      <button class="emp-pill" onclick="setEmpresa('receitas','grattano',this)">Grattano</button>
+    </div>
   </div>
 
   <div class="kpi-grid" id="kpiReceitas"></div>
@@ -412,10 +424,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 <div class="view" id="view-despesas">
   <div class="section-header">
     <div>
-      <div class="section-title">Despesas</div>
+      <div class="section-title" id="tituloDespesas">Despesas — Consolidado</div>
       <div class="section-subtitle">Composição e evolução das despesas · 2026</div>
     </div>
-    <div class="recorte-tag">📅 2026 — Consolidado</div>
+    <div class="emp-selector" id="empDespesas">
+      <button class="emp-pill active" onclick="setEmpresa('despesas','emp',this)">Consolidado</button>
+      <button class="emp-pill" onclick="setEmpresa('despesas','marck',this)">Marck</button>
+      <button class="emp-pill" onclick="setEmpresa('despesas','grattano',this)">Grattano</button>
+    </div>
   </div>
 
   <div class="kpi-grid" id="kpiDespesas"></div>
@@ -443,10 +459,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 <div class="view" id="view-resultado">
   <div class="section-header">
     <div>
-      <div class="section-title">Resultado Consolidado</div>
-      <div class="section-subtitle">Visão executiva · Marck &amp; Grattano · 2026</div>
+      <div class="section-title" id="tituloResultado">Resultado — Consolidado</div>
+      <div class="section-subtitle">Visão executiva · 2026</div>
     </div>
-    <div class="recorte-tag">📅 2026 — Consolidado</div>
+    <div class="emp-selector" id="empResultado">
+      <button class="emp-pill active" onclick="setEmpresa('resultado','emp',this)">Consolidado</button>
+      <button class="emp-pill" onclick="setEmpresa('resultado','marck',this)">Marck</button>
+      <button class="emp-pill" onclick="setEmpresa('resultado','grattano',this)">Grattano</button>
+    </div>
   </div>
 
   <div class="kpi-grid" id="kpiResultado"></div>
@@ -511,6 +531,9 @@ const DEFAULT_DATA = {
   },
   hist_saldos: {marck:[], grattano:[]},
   data_atualizacao: '19/03/2026',
+  // Per-empresa data (filled by parseCashFlow or stays same as consolidated)
+  monthly_marck: null, acum_marck: null,
+  monthly_grattano: null, acum_grattano: null,
 };
 
 // ═══════════════════════════════════════════════════════
@@ -520,6 +543,37 @@ let D = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let charts = {};
 let msalInstance = null;
 let _msalToken = null;
+
+// Empresa state per tab
+const _emp = {fluxo:'emp', receitas:'emp', despesas:'emp', resultado:'emp'};
+const EMP_LABEL = {emp:'Consolidado', marck:'Marck', grattano:'Grattano'};
+
+function setEmpresa(tab, emp, el){
+  _emp[tab] = emp;
+  // Update active pill
+  const group = document.getElementById('emp'+tab.charAt(0).toUpperCase()+tab.slice(1));
+  if(group) group.querySelectorAll('.emp-pill').forEach(p=>p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  // Update title
+  const titulo = document.getElementById('titulo'+tab.charAt(0).toUpperCase()+tab.slice(1));
+  const labels = {fluxo:'Fluxo de Caixa', receitas:'Receitas', despesas:'Despesas', resultado:'Resultado'};
+  if(titulo) titulo.textContent = (labels[tab]||tab) + ' — ' + EMP_LABEL[emp];
+  // Re-render that tab
+  if(tab==='fluxo') renderFluxo();
+  else if(tab==='receitas') renderReceitas();
+  else if(tab==='despesas') renderDespesas();
+  else if(tab==='resultado') renderResultado();
+}
+
+// Helper: get monthly data for a given empresa and key
+function getM(emp, key){
+  if(emp==='emp') return D.monthly[key]||{real:D.months.map(()=>0),prev:D.months.map(()=>0)};
+  return D['monthly_'+emp]?.[key]||D.monthly[key]||{real:D.months.map(()=>0),prev:D.months.map(()=>0)};
+}
+function getA(emp, key){
+  if(emp==='emp') return D.acum[key]||0;
+  return D['acum_'+emp]?.[key]||D.acum[key]||0;
+}
 
 // ═══════════════════════════════════════════════════════
 // FORMATTERS
@@ -656,8 +710,19 @@ function renderSaldos(){
 // 2. FLUXO
 // ════════════════════════════════════════
 function renderFluxo(){
-  const m = D.monthly;
-  const a = D.acum;
+  const emp = _emp.fluxo;
+  const m = {
+    saldo: getM(emp,'saldo'), receita_total: getM(emp,'receita_total'),
+    despesa_venda: getM(emp,'despesa_venda'), despesa_total: getM(emp,'despesa_total'),
+    impostos: getM(emp,'impostos'), outras_receitas: getM(emp,'outras_receitas'),
+    pessoal: getM(emp,'pessoal'), comercial: getM(emp,'comercial'), financeira: getM(emp,'financeira'),
+  };
+  const a = {
+    saldo: getA(emp,'saldo'), receita_total: getA(emp,'receita_total'),
+    despesa_venda: getA(emp,'despesa_venda'), despesa_total: getA(emp,'despesa_total'),
+    impostos: getA(emp,'impostos'), outras_receitas: getA(emp,'outras_receitas'),
+    pessoal: getA(emp,'pessoal'), comercial: getA(emp,'comercial'), financeira: getA(emp,'financeira'),
+  };
   const months = D.months;
 
   // KPIs
@@ -699,22 +764,19 @@ function renderFluxo(){
   });
 
   // Composição donut
-  const totalRec = recAcum;
-  const totalDesp = despAcum;
-  const totalSaldo = saldoAcum;
   killChart('chartComposicao');
   charts.chartComposicao = new Chart(document.getElementById('chartComposicao'),{
     type:'doughnut',
-    data:{labels:['Receita','Despesas','Saldo Líquido'],datasets:[{data:[totalRec,totalDesp,Math.max(0,totalSaldo)],backgroundColor:[C.green,C.red,C.gold],borderWidth:3,borderColor:'#fff'}]},
+    data:{labels:['Receita','Despesas','Saldo Líquido'],datasets:[{data:[recAcum,despAcum,Math.max(0,saldoAcum)],backgroundColor:[C.green,C.red,C.gold],borderWidth:3,borderColor:'#fff'}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.label+': '+fmtS(ctx.raw)}}}}
   });
   document.getElementById('legendComposicao').innerHTML=[
-    {l:'Receita',v:totalRec,c:C.green},{l:'Despesas',v:totalDesp,c:C.red},{l:'Saldo Líquido',v:totalSaldo,c:C.gold}
+    {l:'Receita',v:recAcum,c:C.green},{l:'Despesas',v:despAcum,c:C.red},{l:'Saldo Líquido',v:saldoAcum,c:C.gold}
   ].map(x=>`<div class="legend-item"><div class="legend-dot" style="background:${x.c}"></div><div class="legend-label">${x.l}</div><div class="legend-val">${fmtS(x.v)}</div></div>`).join('');
 
   // Tabela detalhada
   const rows = [
-    {label:'📥 Receita Total',key:'receita_total',bold:true,color:C.green},
+    {label:'📥 Receita Total',key:'receita_total',bold:true},
     {label:'  · Outras Receitas',key:'outras_receitas'},
     {label:'📤 Desp. Relativas a Venda',key:'despesa_venda',bold:true,neg:true},
     {label:'💼 Impostos',key:'impostos',neg:true},
@@ -722,12 +784,10 @@ function renderFluxo(){
     {label:'  · Pessoal',key:'pessoal',neg:true},
     {label:'  · Comercial',key:'comercial',neg:true},
     {label:'  · Financeira',key:'financeira',neg:true},
-    {label:'⚖️ Saldo',key:'saldo',bold:true,color:C.gold},
+    {label:'⚖️ Saldo',key:'saldo',bold:true},
   ];
-
   document.getElementById('tabelaFluxoBody').innerHTML = rows.map(row=>{
     const real = m[row.key].real;
-    const isPos = r => r===0?'':r>0?'pos':'neg';
     const style = row.bold?'font-weight:700':'';
     const bgStyle = row.key==='saldo'?'background:#fffbe6':row.bold?'background:var(--gray-50)':'';
     const cells = months.map((_,i)=>{
@@ -743,8 +803,18 @@ function renderFluxo(){
 // 3. RECEITAS
 // ════════════════════════════════════════
 function renderReceitas(){
-  const m = D.monthly;
-  const a = D.acum;
+  const emp = _emp.receitas;
+  const m = {
+    receita_total: getM(emp,'receita_total'),
+    fat_bruto: getM(emp,'fat_bruto'),
+    fat_liquido: getM(emp,'fat_liquido'),
+  };
+  const a = {
+    receita_total: getA(emp,'receita_total'),
+    fat_bruto: getA(emp,'fat_bruto'),
+    fat_liquido: getA(emp,'fat_liquido'),
+    outras_receitas: getA(emp,'outras_receitas'),
+  };
 
   const recAcum = a.receita_total;
   const fatBruto = a.fat_bruto;
@@ -799,8 +869,23 @@ function renderReceitas(){
 // 4. DESPESAS
 // ════════════════════════════════════════
 function renderDespesas(){
-  const m = D.monthly;
-  const a = D.acum;
+  const emp = _emp.despesas;
+  const m = {
+    despesa_venda: getM(emp,'despesa_venda'),
+    despesa_total: getM(emp,'despesa_total'),
+    impostos: getM(emp,'impostos'),
+    pessoal: getM(emp,'pessoal'),
+    financeira: getM(emp,'financeira'),
+    comercial: getM(emp,'comercial'),
+  };
+  const a = {
+    despesa_venda: getA(emp,'despesa_venda'),
+    despesa_total: getA(emp,'despesa_total'),
+    impostos: getA(emp,'impostos'),
+    pessoal: getA(emp,'pessoal'),
+    financeira: getA(emp,'financeira'),
+    comercial: getA(emp,'comercial'),
+  };
 
   const despVendaAcum = a.despesa_venda;
   const despTotalAcum = a.despesa_total;
@@ -863,8 +948,25 @@ function renderDespesas(){
 // 5. RESULTADO
 // ════════════════════════════════════════
 function renderResultado(){
-  const m = D.monthly;
-  const a = D.acum;
+  const emp = _emp.resultado;
+  const m = {
+    saldo: getM(emp,'saldo'),
+    receita_total: getM(emp,'receita_total'),
+    despesa_venda: getM(emp,'despesa_venda'),
+    despesa_total: getM(emp,'despesa_total'),
+    impostos: getM(emp,'impostos'),
+    pessoal: getM(emp,'pessoal'),
+    financeira: getM(emp,'financeira'),
+  };
+  const a = {
+    saldo: getA(emp,'saldo'),
+    receita_total: getA(emp,'receita_total'),
+    despesa_venda: getA(emp,'despesa_venda'),
+    despesa_total: getA(emp,'despesa_total'),
+    impostos: getA(emp,'impostos'),
+    pessoal: getA(emp,'pessoal'),
+    financeira: getA(emp,'financeira'),
+  };
 
   const saldoAcum = a.saldo;
   const recAcum = a.receita_total;
@@ -1112,7 +1214,38 @@ function parseCashFlow(buf){
     if(d instanceof Date) data_atualizacao=d.toLocaleDateString('pt-BR');
   }catch(e){}
 
-  return {months:MONTHS,monthly,acum,saldos_hoje,saldo_dia,projecao,hist_saldos,data_atualizacao};
+  // ── Read Marck + Grattano sheets ──
+  function readSheet(sheetName){
+    const ws2 = wb.Sheets[sheetName]; if(!ws2) return null;
+    const fc2 = XLSX.utils.sheet_to_json(ws2,{header:1,defval:null});
+    const monthly2={}, acum2={};
+    for(const[k,row] of Object.entries(KEY_ROWS)){
+      monthly2[k]={real:[],prev:[]};
+      acum2[k]=v2(fc2,row,2);
+      for(const m of MONTHS){
+        const[rc,pc]=COL_MAP[m];
+        monthly2[k].real.push(Math.round(v2(fc2,row,rc)*100)/100);
+        monthly2[k].prev.push(Math.round(v2(fc2,row,pc)*100)/100);
+      }
+    }
+    function v2(fc,row,col){if(!fc[row]||col>=fc[row].length)return 0;const x=fc[row][col];if(x===null||x===undefined)return 0;const n=parseFloat(x);return isNaN(n)||n===-1?0:n;}
+    return {monthly:monthly2, acum:acum2};
+  }
+
+  const marckData    = readSheet('Fluxo de Caixa Marck');
+  const grattanoData = readSheet('Fluxo de Caixa Grattano');
+
+  const monthly_marck    = marckData?.monthly    || monthly;
+  const acum_marck       = marckData?.acum        || acum;
+  const monthly_grattano = grattanoData?.monthly  || monthly;
+  const acum_grattano    = grattanoData?.acum      || acum;
+
+  // Fix Grattano saldo_dia (correct column)
+  const saldo_dia_fixed = {marck:sv(7,4), grattano:sv(8,8)};
+
+  return {months:MONTHS,monthly,acum,saldos_hoje,
+    saldo_dia:saldo_dia_fixed,projecao,hist_saldos,data_atualizacao,
+    monthly_marck,acum_marck,monthly_grattano,acum_grattano};
 }
 
 // ═══════════════════════════════════════════════════════
