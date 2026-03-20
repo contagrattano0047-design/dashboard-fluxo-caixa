@@ -184,7 +184,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 </head>
 <body>
 
-<div class="first-run" id="firstRun">
+<div class="first-run hidden" id="firstRun">
   <div class="first-run-box">
     <div class="first-run-icon">💰</div>
     <h2>Dashboard Financeiro</h2>
@@ -576,10 +576,10 @@ function renderFCTable(){
   rows.forEach(r=>{
     if(EXCLUDE_ROWS.includes(r.d)) return;
     if(!r.p&&!r.ar&&!Object.values(r.m).some(v=>v[0]||v[1])) return;
-    if(!r.p&&_expanded[r.c]===false) return; // collapsed
-    if(!r.p&&!_expanded[r.c]&&_expanded[r.c]!==true){
-      // default collapsed
-      html+=buildFCRow(r,true);
+    // Children are hidden unless their parent group is expanded
+    if(!r.p){
+      const isVisible=_expanded[r.c]===true;
+      html+=buildFCRow(r,!isVisible);
       return;
     }
     html+=buildFCRow(r,false);
@@ -812,8 +812,13 @@ async function initMsal(){
   return msalInstance;
 }
 async function msalLogin(){
-  try{const app=await initMsal();const resp=await app.handleRedirectPromise();if(resp?.accessToken){_msalToken=resp.accessToken;await onLoginSuccess();return;}await app.loginRedirect({scopes:GRAPH_SCOPES,prompt:'select_account'});}
-  catch(e){const el=document.getElementById('loginError');if(el){el.textContent='Erro: '+e.message;el.style.display='block';}}
+  try{
+    const app=await initMsal();
+    await app.loginRedirect({scopes:GRAPH_SCOPES,prompt:'select_account'});
+  }catch(e){
+    const el=document.getElementById('loginError');
+    if(el){el.textContent='Erro: '+e.message;el.style.display='block';}
+  }
 }
 async function msalLogout(){
   const app=await initMsal();_msalToken=null;
@@ -840,7 +845,12 @@ async function readFromSharePoint(){
     if(!metaResp.ok){const e=await metaResp.json().catch(()=>({}));throw new Error(e.error?.message||metaResp.status);}
     const meta=await metaResp.json();
     setLoading(true,'Baixando planilha…');
-    const dlResp=await fetch(meta['@microsoft.graph.downloadUrl']||('https://graph.microsoft.com/v1.0/shares/'+enc+'/driveItem/content'),meta['@microsoft.graph.downloadUrl']?{}:{headers});
+    let dlResp;
+    if(meta['@microsoft.graph.downloadUrl']){
+      dlResp=await fetch(meta['@microsoft.graph.downloadUrl']);
+    } else {
+      dlResp=await fetch('https://graph.microsoft.com/v1.0/shares/'+enc+'/driveItem/content',{headers});
+    }
     if(!dlResp.ok)throw new Error('Erro ao baixar: '+dlResp.status);
     const buf=await dlResp.arrayBuffer();
     setLoading(true,'Processando dados…');
@@ -969,15 +979,36 @@ async function printAll(){
 // ═══════════════════════════
 document.addEventListener('DOMContentLoaded',async()=>{
   Chart.defaults.font.family='DM Sans';
+  // Render preloaded data immediately so layout is visible
   D=window.__FC_DATA__||null;
   if(D)renderAll();
+
+  // Show loading while MSAL checks for existing session (avoid login flash)
+  setLoading(true,'Verificando sessão…');
   try{
     const app=await initMsal();
+    // 1. Returning from Microsoft login redirect
     const resp=await app.handleRedirectPromise();
-    if(resp?.accessToken){_msalToken=resp.accessToken;await onLoginSuccess();return;}
+    if(resp?.accessToken){
+      _msalToken=resp.accessToken;
+      setLoading(false);
+      document.getElementById('firstRun').classList.add('hidden');
+      await readFromSharePoint();
+      return;
+    }
+    // 2. Already logged in — silent token acquisition
     const accs=app.getAllAccounts();
-    if(accs.length>0){document.getElementById('firstRun').classList.add('hidden');await readFromSharePoint();return;}
-  }catch(e){console.warn('MSAL:',e);}
+    if(accs.length>0){
+      setLoading(false);
+      document.getElementById('firstRun').classList.add('hidden');
+      await readFromSharePoint();
+      return;
+    }
+  }catch(e){
+    console.warn('MSAL init:', e);
+  }
+  // 3. No session — show login screen
+  setLoading(false);
   document.getElementById('firstRun').classList.remove('hidden');
 });
 </script>
