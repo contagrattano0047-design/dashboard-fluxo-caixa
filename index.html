@@ -635,7 +635,7 @@ function setEmpresa(tab, emp, el){
 let _cenario = 'atual'; // atual | pessimista | realista | otimista
 let _colVis = {real:true, prev:true, evo:false, prop:false, cresc:false};
 
-const CENARIO_MULT = {atual:null, pessimista:1.0, realista:1.17, otimista:1.30};
+const CENARIO_MULT = {atual:1.0, pessimista:1.0, realista:1.17, otimista:1.30}; // Atual=Pessimista=base, Realista=×1.17, Otimista=×1.30
 const CENARIO_LABEL = {atual:'Atual', pessimista:'Pessimista', realista:'Realista', otimista:'Otimista'};
 
 function setCenario(val){
@@ -653,12 +653,9 @@ function toggleCol(col, el){
 function getPrev(emp, key){
   const base = getM(emp, key);
   const mult = CENARIO_MULT[_cenario];
-  if(mult === null) return base.prev; // Atual: use as-is from sheet
-  // For other scenarios: use marck/grattano base (pessimista=1x) scaled
-  // emp='emp' → use marck+grattano combined base
-  const empKey = emp === 'emp' ? 'marck' : emp; // emp uses marck as proxy for scaling
-  const mBase = getM(empKey, key);
-  return mBase.prev.map(v => v === 0 ? 0 : Math.round(v * mult * 100) / 100);
+  // Atual + Pessimista = stored value; Realista/Otimista = stored * multiplier
+  if(mult === null || mult === 1.0) return base.prev;
+  return base.prev.map(v => v === 0 ? 0 : Math.round(v * mult * 100) / 100);
 }
 function getPrevAcum(emp, key){
   return getPrev(emp, key).reduce((s,v)=>s+v, 0);
@@ -898,12 +895,11 @@ function _renderDemoRows(){
   }
 
   function getPrevForNode(node, mn, sheetPrev){
+    // Atual + Pessimista = stored value (same base)
+    // Realista = base * 1.17, Otimista = base * 1.30
     const mult = CENARIO_MULT[_cenario];
-    if(mult === null) return sheetPrev; // Atual
-    // For non-Atual scenarios: scale from Marck+Grattano (Pessimista base)
-    const mData = getM('marck', node.desc);
-    const basePrev = mData ? (mData.prev[D.months.indexOf(mn)]||0) : sheetPrev;
-    return Math.round(basePrev * mult * 100) / 100;
+    if(mult === null || mult === 1.0) return sheetPrev;
+    return Math.round(sheetPrev * mult * 100) / 100;
   }
 
   let html = '';
@@ -955,6 +951,7 @@ function renderFluxo(){
   const months = D.months;
 
   // KPIs
+  const mult = CENARIO_MULT[_cenario]||1.0;
   const saldoAcum = a.saldo;
   const recAcum = a.receita_total;
   const despAcum = a.despesa_venda + a.despesa_total;
