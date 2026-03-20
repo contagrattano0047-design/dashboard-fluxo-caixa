@@ -854,9 +854,14 @@ function _renderDemoHeader(){
 }
 
 function _renderDemoRows(){
-  const tree = D.demo_tree || [];
+  const tree = D.demo_tree;
+  if(!tree || !tree.length){ 
+    const tbody=document.getElementById('tabelaFluxoBody');
+    if(tbody) tbody.innerHTML='<tr><td colspan="14" style="text-align:center;padding:20px;color:var(--gray-400)">Carregando demonstrativo…</td></tr>';
+    return;
+  }
   const cv = _colVis;
-  const months = D.months;
+  const months = D.months || ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   const emp = _emp ? _emp.fluxo : 'emp';
 
   const NEG_PARENTS = new Set(['Despesa Relativas a Venda','Impostos','Despesa Total','Fixa','Pessoal','Variável','Consultoria','Despesa Comercial','Despesa Logística','Despesa de Sócios','Despesa Financeira','Outras Despesas','Imobilizado']);
@@ -1324,7 +1329,9 @@ async function readFromSharePoint(){
     if(!dlResp.ok) throw new Error('Erro ao baixar: '+dlResp.status);
     const buf = await dlResp.arrayBuffer();
     setLoading(true,'Processando dados…');
-    D = parseCashFlow(buf);
+    const parsed = parseCashFlow(buf);
+    // Preserve demo_tree from preloaded data (parsed from same sheet structure)
+    D = {...parsed, demo_tree: D.demo_tree || DEFAULT_DATA.demo_tree};
     renderAll();
     document.getElementById('fileDot').className='file-dot linked';
     document.getElementById('fileStatusText').innerHTML='Conectado: <b>'+meta.name+'</b> · SharePoint';
@@ -1465,9 +1472,29 @@ function parseCashFlow(buf){
     }
   }
 
+  // Build demo_tree (expandable table) from Empresas sheet
+  const SKIP_DT=new Set(['Movimentação Financeira Total','Entradas Financeiras','Saídas Financeiras','Entrada de Capital','Entrada Aporte','Resgate de Investimentos','Retirada Aporte','Retirada Investimento','Saída de Capital','Faturado','Cancelado','Devolvido','Faturamento Líquido','Faturamento Bruto']);
+  const demo_tree=[];
+  let cur_parent=null;
+  function pv2(row,col){const x=fc[row]?.[col];if(x===null||x===undefined)return null;const n=parseFloat(x);return(isNaN(n)||n===0||n===-1)?null:Math.round(n*10000)/100;}
+  for(let i=5;i<Math.min(199,fc.length);i++){
+    const cat=fc[i]?.[0],desc=fc[i]?.[1];
+    if(!desc||String(desc).trim()===''||String(desc)==='null')continue;
+    const ds=String(desc).trim();
+    if(SKIP_DT.has(ds))continue;
+    const ip=!cat||String(cat).trim()===''||String(cat)==='null';
+    if(ip)cur_parent=ds;
+    const mData={};
+    for(let mi=0;mi<MONTHS.length;mi++){
+      const mn=MONTHS[mi],[rc,pc]=COL_MAP[mn];
+      mData[mn]=[Math.round(v(i,rc)*100)/100,Math.round(v(i,pc)*100)/100,pv2(i,rc+1),pv2(i,rc+2),pv2(i,pc+2)];
+    }
+    demo_tree.push({id:i,parent_id:ip?null:cur_parent,desc:ds,is_parent:ip,ar:Math.round(v(i,2)*100)/100,ap:Math.round(v(i,4)*100)/100,m:mData});
+  }
+
   return {months:MONTHS,monthly,acum,saldos_hoje,
     saldo_dia:saldo_dia_fixed,projecao,hist_saldos,data_atualizacao,
-    monthly_marck,acum_marck,monthly_grattano,acum_grattano};
+    monthly_marck,acum_marck,monthly_grattano,acum_grattano,demo_tree};
 }
 
 // ═══════════════════════════════════════════════════════
