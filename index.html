@@ -11465,6 +11465,178 @@ function parseCashFlow(buf){
     if(d instanceof Date) data_atualizacao=d.toLocaleDateString('pt-BR');
   }catch(e){}
 
+
+  // ── Agenda operacional do mês (planilha) ──
+  function agSheetRows(sheetName){
+    const wsAg = wb.Sheets[sheetName];
+    return wsAg ? XLSX.utils.sheet_to_json(wsAg,{header:1,defval:null,raw:true}) : [];
+  }
+  function agHeaderMap(row){
+    const map = {};
+    (row || []).forEach((h,idx) => {
+      const key = String(h ?? '').trim();
+      if(key && !Object.prototype.hasOwnProperty.call(map, key)) map[key] = idx;
+    });
+    return map;
+  }
+  function agGetText(row, map, names){
+    for(const name of names){
+      if(Object.prototype.hasOwnProperty.call(map, name)){
+        const val = row[map[name]];
+        if(val !== null && val !== undefined && String(val).trim() !== '') return String(val).trim();
+      }
+    }
+    return '';
+  }
+  function agGetNum(row, map, names){
+    for(const name of names){
+      if(Object.prototype.hasOwnProperty.call(map, name)){
+        const val = toNumSmart(row[map[name]]);
+        if(val !== 0) return Math.abs(val);
+      }
+    }
+    return 0;
+  }
+  function agGetDate(row, map, names){
+    for(const name of names){
+      if(Object.prototype.hasOwnProperty.call(map, name)){
+        const dt = toDateSmart(row[map[name]]);
+        if(dt instanceof Date && !isNaN(dt.getTime())) return dt;
+      }
+    }
+    return null;
+  }
+  function agCompanyBucket(empresa){
+    const t = String(empresa || '').toUpperCase();
+    if(t.includes('MARCK')) return 'marck';
+    if(t.includes('GRATTANO')) return 'grattano';
+    return null;
+  }
+  function agWeekOfMonth(dt){
+    return Math.ceil(dt.getDate() / 7);
+  }
+  function agEmptyCompany(){
+    return {
+      summary:{total:0,count:0,days:0,largest_day:null,top_account:null},
+      weeks:[]
+    };
+  }
+  function agFinalizeCompany(daysMap){
+    const dayKeys = Object.keys(daysMap).sort();
+    if(!dayKeys.length) return agEmptyCompany();
+
+    const weekMap = {};
+    const accountMap = {};
+    let total = 0;
+    let count = 0;
+    let largestDay = null;
+
+    dayKeys.forEach(dayKey => {
+      const day = daysMap[dayKey];
+      day.items.sort((a,b) => (b.amount || 0) - (a.amount || 0) || String(a.name||'').localeCompare(String(b.name||''),'pt-BR'));
+      day.count = day.items.length;
+      day.total = Math.round(day.items.reduce((s,item)=>s + (item.amount || 0), 0) * 100) / 100;
+      total += day.total;
+      count += day.count;
+      if(!largestDay || day.total > largestDay.amount) largestDay = {date:day.date, amount:day.total};
+
+      day.items.forEach(item => {
+        const accName = item.account || 'Sem conta';
+        accountMap[accName] = (accountMap[accName] || 0) + (item.amount || 0);
+      });
+
+      const weekNo = day.week;
+      if(!weekMap[weekNo]) weekMap[weekNo] = {week:weekNo, count:0, total:0, days:[]};
+      weekMap[weekNo].days.push(day);
+      weekMap[weekNo].count += day.count;
+      weekMap[weekNo].total += day.total;
+    });
+
+    const weeks = Object.values(weekMap)
+      .sort((a,b)=>a.week-b.week)
+      .map(week => ({
+        week: week.week,
+        count: week.count,
+        total: Math.round(week.total * 100) / 100,
+        days: week.days.sort((a,b)=>a.date.localeCompare(b.date))
+      }));
+
+    let topAccount = null;
+    Object.entries(accountMap).forEach(([name,amount]) => {
+      if(!topAccount || amount > topAccount.amount) topAccount = {name, amount:Math.round(amount * 100) / 100};
+    });
+
+    return {
+      summary:{
+        total: Math.round(total * 100) / 100,
+        count,
+        days: dayKeys.length,
+        largest_day: largestDay,
+        top_account: topAccount
+      },
+      weeks
+    };
+  }
+  function buildAgendaFromWorkbook(sheetName, type){
+    const rows = agSheetRows(sheetName);
+    const empty = {marck: agEmptyCompany(), grattano: agEmptyCompany()};
+    if(!rows.length) return empty;
+
+    const headerRow = rows[0] || [];
+    const map = agHeaderMap(headerRow);
+    const categoriaIdx = Object.prototype.hasOwnProperty.call(map, 'Categoria') ? map['Categoria'] : null;
+
+    const buckets = {marck:{}, grattano:{}};
+
+    for(let i=1;i<rows.length;i++){
+      const row = rows[i] || [];
+      if(!row.some(v => v !== null && v !== undefined && String(v).trim() !== '')) continue;
+
+      const empresa = agGetText(row, map, ['Minha Empresa (Nome Fantasia)','Empresa','Empresa (Nome Fantasia)','Minha Empresa (Razão Social)']);
+      const bucket = agCompanyBucket(empresa);
+      if(!bucket) continue;
+
+      const dt = agGetDate(row, map, ['Previsão','Data de Crédito ou Débito (No Extrato)','Data Prevista','Data de Pagamento','Data de Recebimento','Data']);
+      if(!(dt instanceof Date)) continue;
+      if(dt.getMonth() !== refDateSaldo.getMonth() || dt.getFullYear() !== refDateSaldo.getFullYear()) continue;
+
+      const amount = agGetNum(row, map, type === 'receitas'
+        ? ['A Receber','Recebido','Valor Líquido','Valor da Conta','Total','Valor']
+        : ['A Pagar','Valor Líquido','Valor da Conta','Pago ou Recebido','Total','Valor']
+      );
+      if(!(amount > 0)) continue;
+
+      const category = categoriaIdx !== null ? String(row[categoriaIdx] ?? '').trim() : '';
+      const item = {
+        company: bucket,
+        date: dt.toISOString().slice(0,10),
+        week: agWeekOfMonth(dt),
+        name: agGetText(row, map, ['Cliente ou Fornecedor (Nome Fantasia)','Fornecedor','Cliente','Cliente / Fornecedor','Razão Social']) || 'Lançamento',
+        category: category || 'Sem categoria',
+        account: agGetText(row, map, ['Conta Corrente']) || 'Sem conta',
+        document: agGetText(row, map, ['Documento','Nota Fiscal','Número','Boleto','Número do Boleto']) || '—',
+        amount: Math.round(amount * 100) / 100,
+        obs: agGetText(row, map, ['Observação da Conta','Observação do Cliente ou Fornecedor','Observação do Pagto ou Recbto']),
+        emissao: (() => { const d = agGetDate(row, map, ['Emissão']); return d ? d.toISOString().slice(0,10) : null; })(),
+        venc: (() => { const d = agGetDate(row, map, ['Vencimento']); return d ? d.toISOString().slice(0,10) : null; })()
+      };
+
+      const key = item.date;
+      if(!buckets[bucket][key]) buckets[bucket][key] = {date:item.date, week:item.week, items:[]};
+      buckets[bucket][key].items.push(item);
+    }
+
+    return {
+      marck: agFinalizeCompany(buckets.marck),
+      grattano: agFinalizeCompany(buckets.grattano)
+    };
+  }
+
+  const ag_data = {
+    receitas: buildAgendaFromWorkbook('Base Recebimentos Previstos', 'receitas'),
+    despesas: buildAgendaFromWorkbook('Base Pagamentos Previstos', 'despesas')
+  };
+
   // ── Read Marck + Grattano sheets ──
   function readSheet(sheetName){
     const ws2 = wb.Sheets[sheetName]; if(!ws2) return null;
@@ -11604,7 +11776,7 @@ function parseCashFlow(buf){
 
   return {months:MONTHS,monthly,acum,saldos_hoje,
     saldo_dia:saldo_dia_fixed,projecao,hist_saldos,data_atualizacao,
-    monthly_marck,acum_marck,monthly_grattano,acum_grattano,demo_tree,kpis};
+    monthly_marck,acum_marck,monthly_grattano,acum_grattano,demo_tree,kpis,ag_data};
 }
 
 // ═══════════════════════════════════════════════════════
@@ -11802,13 +11974,30 @@ function agRenderPanel(type, companyKey, companyData){
 function agRenderAgenda(type, containerId){
   const root = document.getElementById(containerId);
   if(!root) return;
+  const source = (D && D.ag_data && D.ag_data[type]) ? D.ag_data : AG_DATA;
+  const marckData = source?.[type]?.['marck'];
+  const grattanoData = source?.[type]?.['grattano'];
+  if(!marckData || !grattanoData){
+    root.innerHTML = '<div class="ag-panel"><div class="ag-summary" style="padding:18px 20px;color:var(--gray-600)">Agenda operacional indisponível para este recorte.</div></div>';
+    return;
+  }
   root.innerHTML = `
     <div class="ag-grid">
-      ${agRenderPanel(type,'marck',AG_DATA[type]['marck'])}
-      ${agRenderPanel(type,'grattano',AG_DATA[type]['grattano'])}
+      ${agRenderPanel(type,'marck',marckData)}
+      ${agRenderPanel(type,'grattano',grattanoData)}
     </div>
   `;
 }
+const _renderReceitasOriginal = renderReceitas;
+renderReceitas = function(){
+  _renderReceitasOriginal();
+  try{ agRenderAgenda('receitas','agendaReceitasContainer'); }catch(e){ console.error('agendaReceitas:', e); }
+};
+const _renderDespesasOriginal = renderDespesas;
+renderDespesas = function(){
+  _renderDespesasOriginal();
+  try{ agRenderAgenda('despesas','agendaDespesasContainer'); }catch(e){ console.error('agendaDespesas:', e); }
+};
 document.addEventListener('DOMContentLoaded', function(){
   agRenderAgenda('receitas','agendaReceitasContainer');
   agRenderAgenda('despesas','agendaDespesasContainer');
