@@ -9720,8 +9720,6 @@ const DEFAULT_DATA = {
 // STATE
 // ═══════════════════════════════════════════════════════
 let D = JSON.parse(JSON.stringify(DEFAULT_DATA));
-D.ag_data = null;
-D.projecao_fonte = 'agenda_precarregada';
 let charts = {};
 let msalInstance = null;
 let _msalToken = null;
@@ -10576,7 +10574,6 @@ function renderAll(){
   try { renderReceitas(); } catch(e){ console.error('renderReceitas:', e); }
   try { renderDespesas(); } catch(e){ console.error('renderDespesas:', e); }
   try { renderResultado(); } catch(e){ console.error('renderResultado:', e); }
-  try { agRenderAgenda('receitas','agendaReceitasContainer'); agRenderAgenda('despesas','agendaDespesasContainer'); } catch(e){ console.error('renderAgenda:', e); }
 }
 
 // ════════════════════════════════════════
@@ -10618,12 +10615,8 @@ function renderSaldos(){
   const s = D.saldos_hoje;
   const sd = D.saldo_dia;
   const p = D.projecao || {marck:{}, grattano:{}};
-  const agendaPm = getAgendaProjection('marck', sd.marck);
-  const agendaPg = getAgendaProjection('grattano', sd.grattano);
-  const pm = agendaPm || p.marck || {despesas_mes:0, recebimentos_mes:0, projecao_caixa:sd.marck||0};
-  const pg = agendaPg || p.grattano || {despesas_mes:0, recebimentos_mes:0, projecao_caixa:sd.grattano||0};
-  const fontePm = getAgendaSourceLabel(agendaPm ? (D?.projecao_fonte || 'agenda_precarregada') : 'base_pagamentos');
-  const fontePg = getAgendaSourceLabel(agendaPg ? (D?.projecao_fonte || 'agenda_precarregada') : 'base_pagamentos');
+  const pm = getAgendaProjection('marck', sd.marck) || p.marck || {despesas_mes:0, recebimentos_mes:0, projecao_caixa:sd.marck||0};
+  const pg = getAgendaProjection('grattano', sd.grattano) || p.grattano || {despesas_mes:0, recebimentos_mes:0, projecao_caixa:sd.grattano||0};
   const totalGeral = sd.marck + sd.grattano;
 
   document.getElementById('tagDataSaldo').textContent = '📅 Posição: ' + (D.data_atualizacao||'—');
@@ -10669,7 +10662,7 @@ function renderSaldos(){
       <div class="stat-item"><div class="stat-label">Saídas Prev.</div><div class="stat-val red">${fmtS(pm.despesas_mes)}</div></div>
     </div>
     <div class="bank-card" style="background:${diffM>=0?'#e6f4ef':'var(--red-pale)'}">
-      <div><div class="bank-name">Projeção Fim de Mês</div><div style="font-size:11px;color:var(--gray-600)">Var: ${diffM>=0?'+':''}${fmtS(diffM)} vs saldo atual</div><div style="font-size:10px;color:var(--gray-400);margin-top:4px">Fonte: ${fontePm}</div></div>
+      <div><div class="bank-name">Projeção Fim de Mês</div><div style="font-size:11px;color:var(--gray-600)">Var: ${diffM>=0?'+':''}${fmtS(diffM)} vs saldo atual</div></div>
       <div class="bank-val ${diffM>=0?'pos':''}" style="${diffM<0?'color:var(--red)':''}">${fmt(pm.projecao_caixa)}</div>
     </div>
   `;
@@ -10683,7 +10676,7 @@ function renderSaldos(){
       <div class="stat-item"><div class="stat-label">Saídas Prev.</div><div class="stat-val red">${fmtS(pg.despesas_mes)}</div></div>
     </div>
     <div class="bank-card" style="background:${diffG>=0?'#e6f4ef':'var(--red-pale)'}">
-      <div><div class="bank-name">Projeção Fim de Mês</div><div style="font-size:11px;color:var(--gray-600)">Var: ${diffG>=0?'+':''}${fmtS(diffG)} vs saldo atual</div><div style="font-size:10px;color:var(--gray-400);margin-top:4px">Fonte: ${fontePg}</div></div>
+      <div><div class="bank-name">Projeção Fim de Mês</div><div style="font-size:11px;color:var(--gray-600)">Var: ${diffG>=0?'+':''}${fmtS(diffG)} vs saldo atual</div></div>
       <div class="bank-val ${diffG>=0?'pos':''}" style="${diffG<0?'color:var(--red)':''}">${fmt(pg.projecao_caixa)}</div>
     </div>
   `;
@@ -11267,10 +11260,7 @@ async function readFromSharePoint(){
 }
 
 function usePreloaded(){
-  D = JSON.parse(JSON.stringify(DEFAULT_DATA));
-  D.ag_data = (typeof AG_DATA !== 'undefined' ? AG_DATA : null);
-  D.projecao_fonte = 'agenda_precarregada';
-  renderAll();
+  D = JSON.parse(JSON.stringify(DEFAULT_DATA)); renderAll();
   document.getElementById('firstRun').classList.add('hidden');
   document.getElementById('fileDot').className='file-dot none';
   document.getElementById('fileStatusText').innerHTML='Dados pré-carregados';
@@ -11373,240 +11363,7 @@ function parseCashFlow(buf){
     return null;
   };
 
-  
-const detectBucket = empresa => {
-  const t = String(empresa || '').toUpperCase();
-  if(t.includes('MARCK')) return 'marck';
-  if(t.includes('GRATTANO')) return 'grattano';
-  return null;
-};
-
-const getAgendaSourceLabel = fonte => {
-  if(fonte === 'agenda_parseada_planilha') return 'Agenda operacional do mês · planilha';
-  if(fonte === 'base_pagamentos') return 'Resumo mensal · Base Pagamentos';
-  if(fonte === 'agenda_precarregada') return 'Agenda operacional do mês · base pré-carregada';
-  return 'Resumo mensal da planilha';
-};
-
-function readSheetRows(sheetName){
-  const ws = wb.Sheets[sheetName];
-  return ws ? XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true}) : [];
-}
-function detectHeaderRow(rows){
-  const limit = Math.min(rows.length, 12);
-  for(let i=0;i<limit;i++){
-    const row = rows[i] || [];
-    const joined = row.map(v=>String(v||'').toUpperCase()).join(' | ');
-    if(
-      joined.includes('MINHA EMPRESA') ||
-      joined.includes('PAGO OU RECEBIDO') ||
-      joined.includes('CLIENTE / FORNECEDOR') ||
-      joined.includes('DATA DE CRÉDITO OU DÉBITO') ||
-      joined.includes('VENCIMENTO')
-    ) return i;
-  }
-  return 0;
-}
-function makeRowAccessor(rows){
-  const headerRow = detectHeaderRow(rows);
-  const headers = (rows[headerRow] || []).map(v=>String(v||'').trim());
-  const headerMap = {};
-  headers.forEach((h,idx)=>{ if(h) headerMap[h] = idx; });
-  const byName = (row, names=[]) => {
-    for(const name of names){
-      if(Object.prototype.hasOwnProperty.call(headerMap, name)){
-        const val = row[headerMap[name]];
-        if(val !== null && val !== undefined && val !== '') return val;
-      }
-    }
-    return null;
-  };
-  return {headerRow, headers, headerMap, byName};
-}
-function normalizeAgendaItem(raw){
-  return {
-    company: raw.company,
-    date: raw.date,
-    week: raw.week,
-    name: raw.name || 'Lançamento',
-    category: raw.category || 'Sem categoria',
-    account: raw.account || 'Sem conta',
-    document: raw.document || '—',
-    amount: Math.round((raw.amount || 0) * 100) / 100,
-    obs: raw.obs || '',
-    emissao: raw.emissao || null,
-    venc: raw.venc || null
-  };
-}
-function buildAgendaFromSheet(rows, categoryColIndex, refDate){
-  if(!rows || !rows.length) return null;
-  const {headerRow, byName} = makeRowAccessor(rows);
-  const agenda = {receitas:{marck:[], grattano:[]}, despesas:{marck:[], grattano:[]}};
-  const acc = {receitas:{marck:{}, grattano:{}}, despesas:{marck:{}, grattano:{}}};
-
-  for(let i=headerRow+1;i<rows.length;i++){
-    const row = rows[i] || [];
-    if(!row.some(v => v !== null && v !== undefined && String(v).trim() !== '')) continue;
-
-    const empresa = byName(row,['Minha Empresa (Nome Fantasia)','Empresa','Empresa (Nome Fantasia)','Minha Empresa']) || row[0];
-    const bucket = detectBucket(empresa);
-    if(!bucket) continue;
-
-    const dtMov =
-      toDateSmart(byName(row,['Data Prevista','Data de Crédito ou Débito (No Extrato)','Data','Data de Pagamento','Data de Recebimento','Vencimento'])) ||
-      toDateSmart(row[1]) || toDateSmart(row[2]) || toDateSmart(row[3]);
-    if(!(dtMov instanceof Date)) continue;
-    if(dtMov.getMonth() !== refDate.getMonth() || dtMov.getFullYear() !== refDate.getFullYear()) continue;
-
-    const signed =
-      toNumSmart(byName(row,['Pago ou Recebido','Valor Líquido','Valor','Valor do Documento','Total'])) ||
-      toNumSmart(row[8]) || toNumSmart(row[9]) || toNumSmart(row[7]);
-    const amount = Math.abs(signed);
-    if(!(amount > 0)) continue;
-
-    const catFromCol = row[categoryColIndex];
-    const txt = [
-      byName(row,['Receita / Despesa','Tipo','Natureza','Operação','Cliente','Fornecedor','Cliente / Fornecedor','Documento']),
-      catFromCol,
-      row[0], row[1], row[2]
-    ].filter(Boolean).join(' ').toUpperCase();
-
-    let tipo = null;
-    if(/RECEB|RECEITA|CLIENTE|FATUR|NF/.test(txt) || signed > 0) tipo = 'receitas';
-    else if(/DESP|PAG|FORNEC|IMPOST|SAL[ÁA]R|CART[ÃA]O|TARIFA|EMPR[ÉE]ST|BOLETO|D[ÉE]BITO/.test(txt) || signed < 0) tipo = 'despesas';
-    if(!tipo) continue;
-
-    const category = (catFromCol !== null && catFromCol !== undefined && String(catFromCol).trim() !== '')
-      ? String(catFromCol).trim()
-      : String(byName(row,['Categoria','Natureza','Tipo']) || 'Sem categoria').trim();
-
-    const name =
-      byName(row,['Cliente / Fornecedor','Cliente','Fornecedor','Nome','Descrição','Descricao','Histórico','Historico','Documento']) ||
-      row[4] || row[5] || row[6] || 'Lançamento';
-
-    const account =
-      byName(row,['Conta Corrente','Conta','Banco','Conta Bancária','Conta Bancaria','Forma de Pagamento']) ||
-      row[12] || row[13] || 'Sem conta';
-
-    const document =
-      byName(row,['Documento','Tipo de Documento','Forma de Pagamento']) ||
-      '—';
-
-    const obs =
-      byName(row,['Observação','Observacao','Histórico','Historico','Referência','Referencia']) ||
-      '';
-
-    const emissao = toDateSmart(byName(row,['Emissão','Emissao','Data de Emissão','Data de Emissao','Competência','Competencia','Data'])) || null;
-    const venc = toDateSmart(byName(row,['Vencimento','Data Prevista','Data de Pagamento','Data de Recebimento'])) || dtMov;
-
-    agenda[tipo][bucket].push(normalizeAgendaItem({
-      company: bucket,
-      date: dtMov.toISOString().slice(0,10),
-      week: 0,
-      name: String(name || 'Lançamento').trim(),
-      category,
-      account: String(account || 'Sem conta').trim(),
-      document: String(document || '—').trim(),
-      amount,
-      obs: String(obs || '').trim(),
-      emissao: emissao ? emissao.toISOString().slice(0,10) : null,
-      venc: venc ? venc.toISOString().slice(0,10) : null
-    }));
-    const accName = String(account || 'Sem conta').trim() || 'Sem conta';
-    acc[tipo][bucket][accName] = (acc[tipo][bucket][accName] || 0) + amount;
-  }
-
-  const buildCompanyData = items => {
-    const byDate = {};
-    items.forEach(item => {
-      byDate[item.date] ||= [];
-      byDate[item.date].push(item);
-    });
-    const dates = Object.keys(byDate).sort();
-    const weeksMap = {};
-    const firstDay = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
-    dates.forEach(dateStr => {
-      const dt = new Date(dateStr + 'T00:00:00');
-      const week = Math.floor((dt.getDate() + firstDay.getDay() - 1) / 7) + 1;
-      const dayItems = byDate[dateStr].sort((a,b)=>(b.amount||0)-(a.amount||0)).map(it => ({...it, week}));
-      const total = dayItems.reduce((s,it)=>s+(it.amount||0),0);
-      weeksMap[week] ||= {week, total:0, count:0, days:[]};
-      weeksMap[week].total += total;
-      weeksMap[week].count += dayItems.length;
-      weeksMap[week].days.push({date:dateStr,total:Math.round(total*100)/100,count:dayItems.length,items:dayItems});
-    });
-    const weeks = Object.values(weeksMap).sort((a,b)=>a.week-b.week).map(w => ({
-      week:w.week,
-      total:Math.round(w.total*100)/100,
-      count:w.count,
-      days:w.days.sort((a,b)=>a.date.localeCompare(b.date))
-    }));
-    const total = Math.round(items.reduce((s,it)=>s+(it.amount||0),0)*100)/100;
-    let largest_day = null;
-    weeks.forEach(w=>w.days.forEach(d=>{
-      if(!largest_day || d.total > largest_day.amount) largest_day = {date:d.date, amount:Math.round(d.total*100)/100};
-    }));
-    return {summary:{total,count:items.length,days:dates.length,largest_day,top_account:null},weeks};
-  };
-
-  const out = {receitas:{}, despesas:{}};
-  ['receitas','despesas'].forEach(tipo => {
-    ['marck','grattano'].forEach(bucket => {
-      out[tipo][bucket] = buildCompanyData(agenda[tipo][bucket]);
-      const topEntries = Object.entries(acc[tipo][bucket] || {}).sort((a,b)=>b[1]-a[1]);
-      if(topEntries.length){
-        out[tipo][bucket].summary.top_account = {name:topEntries[0][0], amount:Math.round(topEntries[0][1]*100)/100};
-      }
-    });
-  });
-  return out;
-}
-function mergeAgendaData(base, extra){
-  if(!extra) return base;
-  if(!base) return extra;
-  const result = JSON.parse(JSON.stringify(base));
-  ['receitas','despesas'].forEach(tipo => {
-    ['marck','grattano'].forEach(bucket => {
-      const baseItems = [];
-      const extraItems = [];
-      (result[tipo]?.[bucket]?.weeks || []).forEach(w => (w.days || []).forEach(d => baseItems.push(...(d.items || []))));
-      (extra[tipo]?.[bucket]?.weeks || []).forEach(w => (w.days || []).forEach(d => extraItems.push(...(d.items || []))));
-      const merged = buildAgendaFromSheet([], 0, refDateSaldo); // dummy to keep shape
-      const items = baseItems.concat(extraItems);
-      const rebuilt = (function(items){
-        const byDate = {};
-        items.forEach(item => { byDate[item.date] ||= []; byDate[item.date].push(item); });
-        const dates = Object.keys(byDate).sort();
-        const weeksMap = {};
-        const firstDay = new Date(refDateSaldo.getFullYear(), refDateSaldo.getMonth(), 1);
-        dates.forEach(dateStr => {
-          const dt = new Date(dateStr + 'T00:00:00');
-          const week = Math.floor((dt.getDate() + firstDay.getDay() - 1) / 7) + 1;
-          const dayItems = byDate[dateStr].sort((a,b)=>(b.amount||0)-(a.amount||0));
-          const total = dayItems.reduce((s,it)=>s+(it.amount||0),0);
-          weeksMap[week] ||= {week, total:0, count:0, days:[]};
-          weeksMap[week].total += total;
-          weeksMap[week].count += dayItems.length;
-          weeksMap[week].days.push({date:dateStr,total:Math.round(total*100)/100,count:dayItems.length,items:dayItems});
-        });
-        const weeks = Object.values(weeksMap).sort((a,b)=>a.week-b.week).map(w => ({
-          week:w.week, total:Math.round(w.total*100)/100, count:w.count, days:w.days.sort((a,b)=>a.date.localeCompare(b.date))
-        }));
-        const total = Math.round(items.reduce((s,it)=>s+(it.amount||0),0)*100)/100;
-        let largest_day = null;
-        const accMap = {};
-        items.forEach(it => { accMap[it.account || 'Sem conta'] = (accMap[it.account || 'Sem conta'] || 0) + (it.amount || 0); });
-        weeks.forEach(w=>w.days.forEach(d=>{ if(!largest_day || d.total > largest_day.amount) largest_day = {date:d.date, amount:Math.round(d.total*100)/100}; }));
-        const top = Object.entries(accMap).sort((a,b)=>b[1]-a[1])[0];
-        return {summary:{total,count:items.length,days:dates.length,largest_day,top_account:top?{name:top[0],amount:Math.round(top[1]*100)/100}:null},weeks};
-      })(items);
-      result[tipo][bucket] = rebuilt;
-    });
-  });
-  return result;
-}
-
-try{
+  try{
     const wsBPProj = wb.Sheets['Base Pagamentos'];
     if(wsBPProj){
       const bpProj = XLSX.utils.sheet_to_json(wsBPProj,{defval:null, raw:true});
@@ -11615,6 +11372,12 @@ try{
       const projBP = {
         marck:{despesas_mes:0,recebimentos_mes:0,projecao_caixa:0},
         grattano:{despesas_mes:0,recebimentos_mes:0,projecao_caixa:0},
+      };
+      const detectBucket = empresa => {
+        const t = String(empresa || '').toUpperCase();
+        if(t.includes('MARCK')) return 'marck';
+        if(t.includes('GRATTANO')) return 'grattano';
+        return null;
       };
       bpProj.forEach(row => {
         const bucket = detectBucket(row['Minha Empresa (Nome Fantasia)'] || row['Empresa'] || row['Empresa (Nome Fantasia)']);
@@ -11674,16 +11437,6 @@ try{
       });
     }
   }catch(e){ console.warn('Projeção mensal via Base Pagamentos:', e); }
-
-
-let ag_data = (typeof AG_DATA !== 'undefined' ? JSON.parse(JSON.stringify(AG_DATA)) : null);
-try{
-  const bpPrevRows = readSheetRows('Base Pagamentos Previstos');
-  const bpRows = readSheetRows('Base Pagamentos');
-  const agendaPrev = buildAgendaFromSheet(bpPrevRows, 10, refDateSaldo); // coluna K
-  const agendaReal = buildAgendaFromSheet(bpRows, 11, refDateSaldo);     // coluna L
-  ag_data = mergeAgendaData(agendaPrev, agendaReal) || ag_data;
-}catch(e){ console.warn('Agenda operacional via planilha:', e); }
 
   // Historical saldos
   const hist_saldos={marck:[],grattano:[]};
@@ -11850,7 +11603,7 @@ try{
   }catch(e){}
 
   return {months:MONTHS,monthly,acum,saldos_hoje,
-    saldo_dia:saldo_dia_fixed,projecao,hist_saldos,data_atualizacao,ag_data,projecao_fonte:'agenda_parseada_planilha',
+    saldo_dia:saldo_dia_fixed,projecao,hist_saldos,data_atualizacao,
     monthly_marck,acum_marck,monthly_grattano,acum_grattano,demo_tree,kpis};
 }
 
@@ -12049,15 +11802,10 @@ function agRenderPanel(type, companyKey, companyData){
 function agRenderAgenda(type, containerId){
   const root = document.getElementById(containerId);
   if(!root) return;
-  const source = (D && D.ag_data) ? D.ag_data : (typeof AG_DATA !== 'undefined' ? AG_DATA : null);
-  if(!source || !source[type]){
-    root.innerHTML = '<div class="ag-panel"><div class="ag-summary" style="padding:18px 20px;color:var(--gray-600)">Agenda operacional indisponível para este recorte.</div></div>';
-    return;
-  }
   root.innerHTML = `
     <div class="ag-grid">
-      ${agRenderPanel(type,'marck',source[type]['marck'])}
-      ${agRenderPanel(type,'grattano',source[type]['grattano'])}
+      ${agRenderPanel(type,'marck',AG_DATA[type]['marck'])}
+      ${agRenderPanel(type,'grattano',AG_DATA[type]['grattano'])}
     </div>
   `;
 }
