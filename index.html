@@ -2440,7 +2440,17 @@ async function readFromSharePoint(){
     setLoading(true,'Processando dados…');
     const parsed = parseCashFlow(buf);
     D = {...parsed, demo_tree: parsed.demo_tree || D.demo_tree || DEFAULT_DATA.demo_tree};
+    // Atualizar AG_DATA com dados dinâmicos das bases (categoria exata)
+    if(parsed.agendaData){
+      AG_DATA.despesas = parsed.agendaData.despesas;
+      AG_DATA.receitas = parsed.agendaData.receitas;
+    }
     renderAll();
+    // Re-render agenda com dados atualizados
+    try{
+      agRenderAgenda('receitas','agendaReceitasContainer');
+      agRenderAgenda('despesas','agendaDespesasContainer');
+    }catch(e){console.error('agRenderAgenda after load:', e);}
     document.getElementById('fileDot').className='file-dot linked';
     document.getElementById('fileStatusText').innerHTML='Conectado: <b>'+meta.name+'</b> · SharePoint';
     document.getElementById('statusHint').textContent='Clique em Atualizar para reler';
@@ -2502,10 +2512,59 @@ function parseCashFlow(buf){
     grattano:{Santander:sv(3,8),Bradesco:sv(4,8),Itaú:sv(5,8),Caixa:sv(6,8),'Banco do Brasil':sv(7,8)},
   };
   const saldo_dia_fixed={marck:sv(7,4),grattano:sv(8,8)};
+
+  // ── Projeção: calcular dinamicamente das bases previstas ──
+  const _wsBPrev = wb.Sheets['Base Pagamentos Previstos'];
+  const _wsRPrev = wb.Sheets['Base Recebimentos Previstos'];
+  const _now = new Date();
+  const _curMonth = _now.getMonth();
+  const _curYear = _now.getFullYear();
+
+  function _xlDate(d){
+    if(d instanceof Date) return d;
+    if(typeof d==='number'){ const dt=new Date(Math.round((d-25569)*86400000)); return isNaN(dt.getTime())?null:dt; }
+    if(typeof d==='string'){ const dt=new Date(d); return isNaN(dt.getTime())?null:dt; }
+    return null;
+  }
+  function _toNum(x){
+    if(x===null||x===undefined||x==='')return 0;
+    if(typeof x==='number')return x;
+    const n=parseFloat(String(x).replace(/\./g,'').replace(',','.'));
+    return isNaN(n)?0:n;
+  }
+
   const projecao={
-    marck:{despesas_mes:sv(12,4),recebimentos_mes:sv(13,4),projecao_caixa:sv(14,4)},
-    grattano:{despesas_mes:sv(12,8),recebimentos_mes:sv(13,8),projecao_caixa:sv(14,8)},
+    marck:{despesas_mes:0,recebimentos_mes:0,projecao_caixa:0},
+    grattano:{despesas_mes:0,recebimentos_mes:0,projecao_caixa:0}
   };
+
+  if(_wsBPrev){
+    const bpRows=XLSX.utils.sheet_to_json(_wsBPrev,{defval:null,raw:true});
+    bpRows.forEach(row=>{
+      const emp=String(row['Minha Empresa (Nome Fantasia)']||'').toUpperCase();
+      const bk=emp.includes('GRATTANO')?'grattano':emp.includes('MARCK')?'marck':null;
+      if(!bk)return;
+      const dt=_xlDate(row['Previsão']||row['Vencimento']);
+      if(!dt||dt.getMonth()!==_curMonth||dt.getFullYear()!==_curYear)return;
+      projecao[bk].despesas_mes+=Math.abs(_toNum(row['A Pagar']));
+    });
+  }
+  if(_wsRPrev){
+    const rpRows=XLSX.utils.sheet_to_json(_wsRPrev,{defval:null,raw:true});
+    rpRows.forEach(row=>{
+      const emp=String(row['Minha Empresa (Nome Fantasia)']||'').toUpperCase();
+      const bk=emp.includes('GRATTANO')?'grattano':emp.includes('MARCK')?'marck':null;
+      if(!bk)return;
+      const dt=_xlDate(row['Previsão']||row['Vencimento']);
+      if(!dt||dt.getMonth()!==_curMonth||dt.getFullYear()!==_curYear)return;
+      projecao[bk].recebimentos_mes+=Math.abs(_toNum(row['A Receber']));
+    });
+  }
+  ['marck','grattano'].forEach(k=>{
+    projecao[k].despesas_mes=Math.round(projecao[k].despesas_mes*100)/100;
+    projecao[k].recebimentos_mes=Math.round(projecao[k].recebimentos_mes*100)/100;
+    projecao[k].projecao_caixa=Math.round((saldo_dia_fixed[k]+projecao[k].recebimentos_mes-projecao[k].despesas_mes)*100)/100;
+  });
 
   // Historical saldos
   const hist_saldos={marck:[],grattano:[]};
@@ -2671,9 +2730,172 @@ function parseCashFlow(buf){
     }
   }catch(e){}
 
+  // ── Build AG_DATA dynamicamente das bases (Categoria exata) ──
+  function _buildAgenda(){
+    const wsBPag = wb.Sheets['Base Pagamentos'];
+    const wsBPPrev = wb.Sheets['Base Pagamentos Previstos'];
+    const wsRec  = wb.Sheets['Base Recebimentos'];
+    const wsRPPrev = wb.Sheets['Base Recebimentos Previstos'];
+
+    // Helper: encontra a chave exata "Categoria" no objeto, ignorando "Categoria Ref.", "Categoria Ref. ", etc.
+    function _exactCategoria(row){
+      const keys = Object.keys(row);
+      for(let i=0;i<keys.length;i++){
+        if(keys[i] === 'Categoria') return row[keys[i]];
+      }
+      return null;
+    }
+
+    function _weekOfMonth(dt){
+      const d = dt.getDate();
+      return Math.ceil(d / 7);
+    }
+
+    function _fmtDate(dt){
+      const y=dt.getFullYear(), m=String(dt.getMonth()+1).padStart(2,'0'), d=String(dt.getDate()).padStart(2,'0');
+      return `${y}-${m}-${d}`;
+    }
+    function _fmtDateBR(dt){
+      if(!dt) return null;
+      const y=dt.getFullYear(), m=String(dt.getMonth()+1).padStart(2,'0'), d=String(dt.getDate()).padStart(2,'0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function _parseRows(ws, type){
+      if(!ws) return [];
+      const rows = XLSX.utils.sheet_to_json(ws, {defval:null, raw:true});
+      const items = [];
+      rows.forEach(row=>{
+        const emp = String(row['Minha Empresa (Nome Fantasia)']||'').toUpperCase();
+        const bk = emp.includes('GRATTANO')?'grattano':emp.includes('MARCK')?'marck':null;
+        if(!bk) return;
+
+        // Determinar data de referência
+        let dt;
+        if(type==='pagamentos_real') dt = _xlDate(row['Data de Crédito ou Débito (No Extrato)']);
+        else if(type==='pagamentos_prev') dt = _xlDate(row['Previsão']||row['Vencimento']);
+        else if(type==='recebimentos_real') dt = _xlDate(row['Data de Crédito ou Débito (No Extrato)']);
+        else dt = _xlDate(row['Previsão']||row['Vencimento']);
+        if(!dt||dt.getMonth()!==_curMonth||dt.getFullYear()!==_curYear) return;
+
+        // Valor
+        let valor = 0;
+        if(type==='pagamentos_real') valor = Math.abs(_toNum(row['Pago ou Recebido']));
+        else if(type==='pagamentos_prev') valor = Math.abs(_toNum(row['A Pagar']));
+        else if(type==='recebimentos_real') valor = Math.abs(_toNum(row['Recebido']||row['Pago ou Recebido']));
+        else valor = Math.abs(_toNum(row['A Receber']));
+        if(valor<=0) return;
+
+        // Categoria: usar APENAS a coluna com nome exato "Categoria"
+        const cat = _exactCategoria(row) || 'Sem categoria';
+
+        // Nome do fornecedor/cliente
+        const nome = row['Cliente ou Fornecedor (Nome Fantasia)'] || row['Fornecedor'] || row['Cliente'] || row['Razão Social'] || '—';
+
+        items.push({
+          company: bk,
+          date: _fmtDate(dt),
+          week: _weekOfMonth(dt),
+          name: String(nome),
+          category: String(cat),
+          account: String(row['Conta Corrente']||''),
+          document: String(row['Documento']||row['Origem']||''),
+          amount: Math.round(valor*100)/100,
+          obs: String(row['Observação da Conta']||row['Observação do Pagto ou Recbto']||''),
+          emissao: _fmtDateBR(_xlDate(row['Emissão'])),
+          venc: _fmtDateBR(_xlDate(row['Vencimento']))
+        });
+      });
+      return items;
+    }
+
+    // Coletar itens de todas as bases
+    const despItems = [
+      ..._parseRows(wsBPag, 'pagamentos_real'),
+      ..._parseRows(wsBPPrev, 'pagamentos_prev')
+    ];
+    const recItems = [
+      ..._parseRows(wsRec, 'recebimentos_real'),
+      ..._parseRows(wsRPPrev, 'recebimentos_prev')
+    ];
+
+    function _groupItems(items){
+      const result = {
+        marck:  {summary:{total:0,count:0,days:0,largest_day:{date:'',amount:0},top_account:{name:'',amount:0}}, weeks:[]},
+        grattano:{summary:{total:0,count:0,days:0,largest_day:{date:'',amount:0},top_account:{name:'',amount:0}}, weeks:[]}
+      };
+      ['marck','grattano'].forEach(bk=>{
+        const bkItems = items.filter(i=>i.company===bk).sort((a,b)=>a.date.localeCompare(b.date));
+        if(bkItems.length===0) return;
+
+        // Agrupar por semana e dia
+        const weekMap = {};
+        const dayTotals = {};
+        const accTotals = {};
+        let total = 0;
+
+        bkItems.forEach(item=>{
+          const w = item.week;
+          if(!weekMap[w]) weekMap[w] = {};
+          if(!weekMap[w][item.date]) weekMap[w][item.date] = [];
+          weekMap[w][item.date].push(item);
+          dayTotals[item.date] = (dayTotals[item.date]||0) + item.amount;
+          accTotals[item.account] = (accTotals[item.account]||0) + item.amount;
+          total += item.amount;
+        });
+
+        // Maior dia
+        let largestDay = {date:'',amount:0};
+        Object.entries(dayTotals).forEach(([d,v])=>{ if(v>largestDay.amount) largestDay={date:d,amount:Math.round(v*100)/100}; });
+
+        // Top conta
+        let topAcc = {name:'',amount:0};
+        Object.entries(accTotals).forEach(([n,v])=>{ if(v>topAcc.amount && n) topAcc={name:n,amount:Math.round(v*100)/100}; });
+
+        const weeks = Object.keys(weekMap).sort((a,b)=>a-b).map(w=>{
+          const days = Object.keys(weekMap[w]).sort().map(d=>{
+            const dItems = weekMap[w][d];
+            return {
+              date: d,
+              total: Math.round(dItems.reduce((a,i)=>a+i.amount,0)*100)/100,
+              count: dItems.length,
+              items: dItems
+            };
+          });
+          return {
+            week: parseInt(w),
+            total: Math.round(days.reduce((a,d)=>a+d.total,0)*100)/100,
+            count: days.reduce((a,d)=>a+d.count,0),
+            days: days
+          };
+        });
+
+        result[bk] = {
+          summary: {
+            total: Math.round(total*100)/100,
+            count: bkItems.length,
+            days: Object.keys(dayTotals).length,
+            largest_day: largestDay,
+            top_account: topAcc
+          },
+          weeks: weeks
+        };
+      });
+      return result;
+    }
+
+    return {
+      despesas: _groupItems(despItems),
+      receitas: _groupItems(recItems)
+    };
+  }
+
+  let agendaData = null;
+  try { agendaData = _buildAgenda(); } catch(e){ console.error('buildAgenda error:', e); }
+
   return {months:MONTHS,monthly,acum,saldos_hoje,
     saldo_dia:saldo_dia_fixed,projecao,hist_saldos,data_atualizacao,
-    monthly_marck,acum_marck,monthly_grattano,acum_grattano,demo_tree,kpis};
+    monthly_marck,acum_marck,monthly_grattano,acum_grattano,demo_tree,kpis,agendaData};
 }
 
 // ═══════════════════════════════════════════════════════
