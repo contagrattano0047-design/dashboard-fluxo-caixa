@@ -229,6 +229,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 .insight-text{font-size:12px;line-height:1.65;color:var(--gray-600)}
 @media(max-width:900px){.insight-grid{grid-template-columns:1fr}}
 
+
 /* RESPONSIVE */
 @media(max-width:1100px){
   .main{padding:18px}.header{padding:16px 18px}.status-bar{padding:9px 18px}.tabs-wrapper{padding:0 18px}
@@ -263,7 +264,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 .ag-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .ag-pill{font-size:11px;padding:5px 10px;border-radius:999px;background:#fff;border:1px solid var(--gray-200)}
 .ag-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ag-grid.single{grid-template-columns:1fr}
 .ag-panel{background:#fff;border:1px solid var(--gray-200);border-radius:14px;overflow:hidden}
+.ag-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ag-company-chip{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800;background:#e8ecf4;color:var(--navy);white-space:nowrap}
 .ag-panel-head{background:var(--navy-mid);padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
 .ag-panel-head h3{color:#fff;font-size:16px;font-family:'DM Serif Display',serif;font-weight:400}
 .ag-panel-head span{color:var(--gold-light);font-size:11px;font-weight:700}
@@ -277,16 +281,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 .ag-week{border:1px solid var(--gray-200);border-radius:12px;overflow:hidden;margin-bottom:12px;background:#fff}
 .ag-week-head{display:grid;grid-template-columns:1.4fr .9fr .7fr 1fr;gap:8px;padding:10px 12px;background:#f7f9fc;font-size:12px;font-weight:700;color:var(--navy);min-width:520px}
 .ag-week-body{padding:6px 10px 10px}
-.ag-day{border-top:1px solid var(--gray-100)}
+.ag-day{border-top:1px solid var(--gray-100);border-left:4px solid transparent;transition:background .2s,border-color .2s}
 .ag-day:first-child{border-top:none}
-.ag-day-toggle{display:grid;grid-template-columns:1.4fr .9fr .7fr 1fr;gap:8px;width:100%;border:none;background:transparent;padding:9px 4px;text-align:left;cursor:pointer;align-items:center;min-width:520px}
-.ag-day-toggle:hover{background:#fafbfe}
+.ag-day.ag-overdue{background:#fff5f6;border-left-color:var(--red)}
+.ag-day.ag-today{background:#fff8ef;border-left-color:var(--orange)}
+.ag-day.ag-overdue .ag-day-toggle:hover{background:#fff0f2}
+.ag-day.ag-today .ag-day-toggle:hover{background:#fff3e3}
+.ag-day-toggle{display:grid;grid-template-columns:1.4fr .9fr .7fr 1fr;gap:8px;width:100%;border:none;background:transparent;padding:9px 8px;text-align:left;cursor:pointer;align-items:center;min-width:520px}
+.ag-day-main{display:flex;align-items:center;gap:8px;min-width:0}
+.ag-chevron{font-size:11px;color:var(--navy);flex:0 0 auto}
+.ag-day-date-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
 .ag-day-date{font-weight:700;color:var(--navy)}
 .ag-day-week{font-size:11px;color:var(--gray-600)}
+.ag-day-flag{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.2px;white-space:nowrap}
+.ag-day-flag.danger{background:var(--red-pale);color:var(--red);border:1px solid #f3c7cc}
+.ag-day-flag.warn{background:#fff2dc;color:#c97816;border:1px solid #f4d3a6}
 .ag-num{text-align:right;font-variant-numeric:tabular-nums}
 .ag-day-total{white-space:nowrap;min-width:110px;text-align:right}
 .ag-day-total.ag-receita{color:var(--green-light);font-weight:700}
 .ag-day-total.ag-despesa{color:var(--red);font-weight:700}
+.ag-day.ag-overdue .ag-day-total.ag-despesa{color:var(--red)}
+.ag-day.ag-today .ag-day-total.ag-despesa{color:#c97816}
 .ag-badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:#e8ecf4;color:var(--navy)}
 .ag-items{display:none;padding:6px 0 10px 0}
 .ag-day.open .ag-items{display:block}
@@ -311,9 +326,33 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 .ag-alert.warn .ag-alert-val{color:#c97816}
 .ag-alert.info{background:#f4fbf7;border-color:#b7e1ce}
 .ag-alert.info .ag-alert-val{color:var(--green-light)}
-.ag-priority{background:#fffdf4;border-left:4px solid var(--gold)}
 .ag-obs{color:var(--gray-600);font-size:10px;line-height:1.4;max-width:260px}
-@media(max-width:1100px){.ag-grid{grid-template-columns:1fr}.ag-summary-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:1100px){.ag-grid{grid-template-columns:1fr}.ag-summary-grid{grid-template-columns:1fr 1fr}.section-header{align-items:stretch}.section-header .emp-selector{width:100%;justify-content:flex-start;overflow-x:auto;padding:6px}.section-header .emp-pill{flex:0 0 auto}}
+@media(max-width:900px){.ag-week-head,.ag-day-toggle{min-width:760px}.ag-summary-grid{grid-template-columns:1fr}.main{padding:16px}}
+@media(max-width:640px){.section-title{font-size:20px}.kpi-grid{grid-template-columns:1fr}.card-body,.chart-wrap,.ag-body,.ag-sections,.ag-summary{padding-left:14px;padding-right:14px}}
+
+
+/* AJUSTE FINAL DE CONTENÇÃO — ABA RESULTADO */
+html,body{max-width:100%;overflow-x:hidden}
+.main,.view,.section-header,.card,.card-body,.grid-2,.grid-3,.grid-2-1,.grid-1-2,.kpi-grid,.chart-wrap{min-width:0}
+.chart-wrap canvas{max-width:100%!important}
+#view-resultado{width:100%;max-width:100%;overflow-x:hidden}
+#view-resultado > *{max-width:100%}
+#view-resultado .section-header{width:100%}
+#view-resultado .emp-selector{max-width:100%;flex-wrap:wrap}
+#view-resultado .kpi-grid{grid-template-columns:repeat(auto-fit,minmax(175px,1fr))}
+#view-resultado #kpiFinanceiros{
+  grid-template-columns:repeat(auto-fit,minmax(175px,1fr));
+  align-items:stretch;
+}
+#view-resultado #kpiFinanceiros .kpi-card{
+  min-height:128px;
+}
+#view-resultado .card{max-width:100%}
+#view-resultado table{width:100%}
+@media(max-width:700px){
+  #view-resultado #kpiFinanceiros{grid-template-columns:repeat(auto-fit,minmax(175px,1fr))}
+}
 
 </style>
 </head>
@@ -1259,7 +1298,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
       <div class="ag-sections">
         <div class="ag-alerts">
       <div class="ag-alert danger">
-        <div><strong>A receber em atraso</strong><span>47 recebimentos vencidos e ainda pendentes</span></div>
+        <div><strong>A receber em atraso</strong><span>47 recebimentos pendentes com data operacional anterior</span></div>
         <div class="ag-alert-val">R$ 1.23M</div>
       </div>
     </div>
@@ -1284,6 +1323,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;98.457,88</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -1293,7 +1333,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -1357,6 +1397,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -1371,6 +1412,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;7.476,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -1380,7 +1422,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -1416,6 +1458,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -1442,6 +1485,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;5.110,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -1451,7 +1495,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -1487,6 +1531,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -1501,6 +1546,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;1.529,42</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -1510,7 +1556,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -1532,6 +1578,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -1546,6 +1593,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;6.457,50</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -1555,7 +1603,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -1605,6 +1653,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -1619,6 +1668,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;22.205,85</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -1628,7 +1678,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -1678,6 +1728,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -1692,6 +1743,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;151.800,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -1701,7 +1753,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -1765,6 +1817,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -1791,6 +1844,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;6.653,60</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -1800,7 +1854,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -1836,6 +1890,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -1850,6 +1905,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;61.050,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -1859,7 +1915,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -1881,6 +1937,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -1895,6 +1952,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;39.535,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -1904,7 +1962,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -1954,6 +2012,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -1968,6 +2027,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;96.464,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -1977,7 +2037,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2041,6 +2101,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2055,6 +2116,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;2.594,70</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2064,7 +2126,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2100,6 +2162,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2114,6 +2177,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;61.050,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2123,7 +2187,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2145,6 +2209,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2171,6 +2236,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;57.190,50</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2180,7 +2246,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2244,6 +2310,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2258,6 +2325,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;389.814,31</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2267,7 +2335,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2289,6 +2357,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2303,6 +2372,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;5.635,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2312,7 +2382,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2334,6 +2404,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2360,6 +2431,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;185.263,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2369,7 +2441,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2475,6 +2547,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2489,6 +2562,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;28.287,50</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2498,7 +2572,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2534,6 +2608,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2581,7 +2656,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
       <div class="ag-sections">
         <div class="ag-alerts">
       <div class="ag-alert danger">
-        <div><strong>A receber em atraso</strong><span>37 recebimentos vencidos e ainda pendentes</span></div>
+        <div><strong>A receber em atraso</strong><span>37 recebimentos pendentes com data operacional anterior</span></div>
         <div class="ag-alert-val">R$ 432.1k</div>
       </div>
     </div>
@@ -2606,6 +2681,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;1.119,20</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2615,7 +2691,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2637,6 +2713,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2651,6 +2728,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;8.849,99</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2660,7 +2738,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2682,6 +2760,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2696,6 +2775,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;744,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2705,7 +2785,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2727,6 +2807,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2753,6 +2834,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;44.840,57</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2762,7 +2844,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2826,6 +2908,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2840,6 +2923,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;21.250,18</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2849,7 +2933,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2871,6 +2955,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2885,6 +2970,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;26.660,09</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2894,7 +2980,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2930,6 +3016,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -2944,6 +3031,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;75.265,11</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -2953,7 +3041,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -2989,6 +3077,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -3003,6 +3092,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;12.270,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -3012,7 +3102,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -3034,6 +3124,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -3060,6 +3151,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;107.972,40</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -3069,7 +3161,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -3133,6 +3225,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -3147,6 +3240,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;14.925,30</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -3156,7 +3250,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -3192,6 +3286,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -3218,6 +3313,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;23.684,94</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -3227,7 +3323,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -3277,6 +3373,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -3291,6 +3388,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;72.149,78</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -3300,7 +3398,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -3378,6 +3476,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -3392,6 +3491,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;489,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -3401,7 +3501,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -3423,6 +3523,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -3449,6 +3550,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;9.703,31</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -3458,7 +3560,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -3522,6 +3624,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -3536,6 +3639,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-receita">R$&nbsp;12.145,68</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -3545,7 +3649,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -3623,6 +3727,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -3774,7 +3879,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
       <div class="ag-sections">
         <div class="ag-alerts">
       <div class="ag-alert danger">
-        <div><strong>Atrasados</strong><span>149 contas vencidas e ainda pendentes</span></div>
+        <div><strong>Atrasados</strong><span>149 contas pendentes com data operacional anterior</span></div>
         <div class="ag-alert-val">R$ 243.6k</div>
       </div>
     </div>
@@ -3799,6 +3904,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;16.669,60</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -3808,7 +3914,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -4936,6 +5042,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -4950,6 +5057,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;194,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -4959,7 +5067,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -4995,6 +5103,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -5009,6 +5118,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;5.553,80</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -5018,7 +5128,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -5096,6 +5206,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -5122,6 +5233,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;212.557,18</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -5131,7 +5243,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -5895,6 +6007,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -5909,6 +6022,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;3.765,92</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -5918,7 +6032,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -5954,6 +6068,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -5968,6 +6083,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;4.358,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -5977,7 +6093,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -6027,6 +6143,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -6041,6 +6158,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;135.440,41</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -6050,7 +6168,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -6324,6 +6442,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -6350,6 +6469,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;25.249,20</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -6359,7 +6479,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -6409,6 +6529,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -6423,6 +6544,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;30.956,19</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -6432,7 +6554,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -6706,6 +6828,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -6720,6 +6843,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;3.808,05</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -6729,7 +6853,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -6765,6 +6889,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -6779,6 +6904,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;157.483,32</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -6788,7 +6914,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -6950,6 +7076,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -6976,6 +7103,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;50.110,81</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -6985,7 +7113,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -7119,6 +7247,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -7133,6 +7262,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;13.602,53</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -7142,7 +7272,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -7206,6 +7336,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -7220,6 +7351,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;139.125,11</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -7229,7 +7361,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -7405,6 +7537,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -7431,6 +7564,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;19.661,94</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -7440,7 +7574,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -7504,6 +7638,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -7518,6 +7653,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;39.476,74</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -7527,7 +7663,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -8221,6 +8357,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -8268,7 +8405,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
       <div class="ag-sections">
         <div class="ag-alerts">
       <div class="ag-alert danger">
-        <div><strong>Atrasados</strong><span>36 contas vencidas e ainda pendentes</span></div>
+        <div><strong>Atrasados</strong><span>36 contas pendentes com data operacional anterior</span></div>
         <div class="ag-alert-val">R$ 128.5k</div>
       </div>
     </div>
@@ -8293,6 +8430,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;75.989,23</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -8302,7 +8440,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -8464,6 +8602,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -8478,6 +8617,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;9.826,71</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -8487,7 +8627,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -8593,6 +8733,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -8619,6 +8760,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;29.186,20</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -8628,7 +8770,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -8818,6 +8960,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -8832,6 +8975,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;4.305,40</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -8841,7 +8985,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -8877,6 +9021,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -8891,6 +9036,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;9.230,05</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -8900,7 +9046,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -8950,6 +9096,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -8964,6 +9111,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;25.427,86</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -8973,7 +9121,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9051,6 +9199,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9077,6 +9226,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;20.277,73</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9086,7 +9236,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9164,6 +9314,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9178,6 +9329,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;4.254,30</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9187,7 +9339,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9223,6 +9375,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9237,6 +9390,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;18.097,21</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9246,7 +9400,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9380,6 +9534,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9394,6 +9549,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;1.432,20</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9403,7 +9559,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9439,6 +9595,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9453,6 +9610,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;50,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9462,7 +9620,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9484,6 +9642,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9510,6 +9669,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;13.058,51</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9519,7 +9679,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9639,6 +9799,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9653,6 +9814,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;9.316,56</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9662,7 +9824,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9712,6 +9874,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9726,6 +9889,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;2.889,35</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9735,7 +9899,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9757,6 +9921,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9771,6 +9936,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;50,00</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9780,7 +9946,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9802,6 +9968,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9828,6 +9995,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;1.845,10</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9837,7 +10005,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9873,6 +10041,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9887,6 +10056,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;15.605,13</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9896,7 +10066,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9918,6 +10088,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9932,6 +10103,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;1.519,34</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9941,7 +10113,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -9963,6 +10135,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -9977,6 +10150,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
               <div class="ag-num ag-day-total ag-despesa">R$&nbsp;10.752,22</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -9986,7 +10160,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -10134,6 +10308,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
                   
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         
@@ -10146,7 +10321,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
     </div>
   </div></div></div>
 </div>
-</div>
+
 
 <!-- ══════════════════════════════════════════
      5. RESULTADO
@@ -10166,7 +10341,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 
   <div class="kpi-grid" id="kpiResultado"></div>
 
-  <div class="grid-2">
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header">
+      <div>
+        <div class="card-title">📌 KPIs Financeiros</div>
+        <div class="card-subtitle">Indicadores de eficiência operacional e equilíbrio econômico</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="kpi-grid" id="kpiFinanceiros"></div>
+    </div>
+  </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header">
+        <div>
+          <div class="card-title">📊 Leitura dos KPIs</div>
+          <div class="card-subtitle">Leitura automática e orientativa dos indicadores financeiros</div>
+        </div>
+      </div>
+      <div class="card-body" id="resumoKpisFinanceiros" style="font-size:13px;line-height:1.65"></div>
+    </div>
+
+    <div class="grid-2">
     <div class="card">
       <div class="card-header"><div class="card-title">Saldo Acumulado</div><div class="card-subtitle">Evolução do resultado acumulado mês a mês</div></div>
       <div class="chart-wrap" style="height:260px"><canvas id="chartResultadoAcum"></canvas></div>
@@ -10177,16 +10374,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-header"><div class="card-title">Resumo Executivo — Todas as Categorias</div><div class="card-subtitle">Acumulado 2026</div></div>
-    <div style="overflow-x:auto">
-      <table class="data-table">
-        <thead><tr><th>Categoria</th><th class="num">Realizado</th><th class="num">Previsto</th><th class="num">Diferença</th><th class="num">% Realiz.</th></tr></thead>
-        <tbody id="tabelaResultado"></tbody>
-      </table>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Resumo Executivo — Todas as Categorias</div><div class="card-subtitle">Acumulado 2026</div></div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>Categoria</th><th class="num">Realizado</th><th class="num">Previsto</th><th class="num">Diferença</th><th class="num">% Realiz.</th></tr></thead>
+          <tbody id="tabelaResultado"></tbody>
+        </table>
+      </div>
     </div>
-  </div>
-
 
 </div>
 <!-- /main -->
@@ -10405,124 +10601,115 @@ function nomeCenarioAtual(){
 
 function renderResumoSaldos(){
   const sd = D.saldo_dia || {marck:0, grattano:0};
-  const p = D.projecao || {marck:{projecao_caixa:0, recebimentos_mes:0, despesas_mes:0}, grattano:{projecao_caixa:0, recebimentos_mes:0, despesas_mes:0}};
-  const s = D.saldos_hoje || {marck:{}, grattano:{}};
-
+  const proj = D.projecao || {marck:{despesas_mes:0,recebimentos_mes:0,projecao_caixa:0}, grattano:{despesas_mes:0,recebimentos_mes:0,projecao_caixa:0}};
   const total = (sd.marck||0) + (sd.grattano||0);
-  const projTotal = ((p.marck && p.marck.projecao_caixa) || 0) + ((p.grattano && p.grattano.projecao_caixa) || 0);
-  const recebTotal = ((p.marck && p.marck.recebimentos_mes) || 0) + ((p.grattano && p.grattano.recebimentos_mes) || 0);
-  const despTotal = ((p.marck && p.marck.despesas_mes) || 0) + ((p.grattano && p.grattano.despesas_mes) || 0);
-
-  const bancos = []
-    .concat(Object.entries(s.marck || {}).map(([b,v]) => ({empresa:'Marck', banco:b, valor:Number(v)||0})))
-    .concat(Object.entries(s.grattano || {}).map(([b,v]) => ({empresa:'Grattano', banco:b, valor:Number(v)||0})))
-    .filter(x => x.valor > 0)
-    .sort((a,b) => b.valor - a.valor);
-
-  const maiorBanco = bancos.length ? bancos[0] : null;
-  const conc = maiorBanco && total > 0 ? (maiorBanco.valor / total * 100) : 0;
+  const entradasMes = (proj.marck?.recebimentos_mes||0) + (proj.grattano?.recebimentos_mes||0);
+  const despesasMes = (proj.marck?.despesas_mes||0) + (proj.grattano?.despesas_mes||0);
+  const projTotal = (proj.marck?.projecao_caixa||0) + (proj.grattano?.projecao_caixa||0);
+  const variacao = projTotal - total;
+  const cobertura = total > 0 ? (despesasMes / total * 100) : 0;
+  const conc = topBankConcentration();
+  const acao = variacao < 0
+    ? 'Priorizar a agenda de pagamentos não críticos, acompanhar recebimentos de maior valor e preservar liquidez nas contas mais relevantes.'
+    : cobertura > 80
+      ? 'Apesar do fechamento projetado positivo, vale manter disciplina na agenda diária para evitar consumo acelerado de caixa.'
+      : 'Com a liquidez atual sob controle, o foco deve permanecer em diversificação bancária e execução disciplinada do fluxo diário.';
 
   const texto = `
-    <b>Posição de caixa:</b> O caixa consolidado do grupo está em <b>${fmtS(total)}</b>, distribuído entre Marck e Grattano, refletindo a liquidez imediata disponível para suporte às obrigações de curto prazo.<br><br>
-    <b>Movimentação do período:</b> Para o mês corrente, estão previstos <b>${fmtS(recebTotal)}</b> em entradas e <b>${fmtS(despTotal)}</b> em saídas, levando a uma projeção de fechamento de <b>${fmtS(projTotal)}</b>.<br><br>
-    <b>Leitura gerencial:</b> A posição de caixa permanece administrável no curto prazo, mas a concentração em <b>${maiorBanco ? `${maiorBanco.banco} (${maiorBanco.empresa})` : '—'}</b>, equivalente a <b>${pct(conc)}</b> do saldo consolidado, recomenda monitoramento contínuo sob a ótica de diversificação bancária e preservação de liquidez.
+    <b>Situação:</b> O caixa consolidado está em <b>${fmtS(total)}</b> e a projeção de fechamento do mês aponta <b>${fmtS(projTotal)}</b>, gerando variação de <b>${variacao>=0?'+':''}${fmtS(variacao)}</b> sobre a posição atual.<br><br>
+    <b>Causa:</b> No mês, estão previstos <b>${fmtS(entradasMes)}</b> em entradas e <b>${fmtS(despesasMes)}</b> em saídas. A maior concentração bancária segue em <b>${conc.top?.nome || '—'}</b>, com <b>${pct(conc.pct)}</b> do caixa consolidado.<br><br>
+    <b>Ação:</b> ${acao}
   `;
-
   const el = document.getElementById('resumoSaldos');
   if(el) el.innerHTML = texto;
 }
 
+
 function renderResumoFluxo(){
   const emp = _emp.fluxo;
-  const aSaldo = getA(emp,'saldo');
-  const aRec = getA(emp,'receita_total');
-  const aDesp = getA(emp,'despesa_venda') + getA(emp,'despesa_total') + getA(emp,'impostos');
-  const prevSaldo = getPrev(emp,'saldo');
-  const cenSaldo = getPrevAcum(emp,'saldo');
+  const aSaldo = getA(emp,'saldo') || 0;
+  const aRec = getA(emp,'receita_total') || 0;
+  const aDesp = (getA(emp,'despesa_venda')||0) + (getA(emp,'despesa_total')||0) + (getA(emp,'impostos')||0);
+  const prevSaldo = getPrev(emp,'saldo') || [];
+  const cenSaldo = getPrevAcum(emp,'saldo') || 0;
   const gapAcum = aSaldo - cenSaldo;
-  const menorPrev = prevSaldo && prevSaldo.length ? Math.min(...prevSaldo) : 0;
-  const mesRiscoIdx = prevSaldo ? prevSaldo.findIndex(v => Number(v) < 0) : -1;
+  const menorPrev = prevSaldo.length ? Math.min(...prevSaldo) : 0;
+  const mesRiscoIdx = prevSaldo.findIndex(v => Number(v) < 0);
   const mesRisco = mesRiscoIdx >= 0 ? D.months[mesRiscoIdx] : null;
-  const sustentadoCaixa = aRec < aDesp && aSaldo > 0;
+  const burn = aRec > 0 ? ((aDesp - aRec) / aRec * 100) : 0;
+  const acao = mesRisco
+    ? `Antecipar cobertura de caixa antes de <b>${mesRisco}</b>, revisar desembolsos futuros e buscar aceleração das entradas mais próximas.`
+    : aDesp > aRec
+      ? 'Acompanhar de perto o ritmo das saídas, porque o caixa atual ainda está compensando um resultado operacional mais fraco.'
+      : 'Manter a disciplina de execução do fluxo para preservar o desempenho acima da referência do cenário.';
 
   const texto = `
-    <b>Desempenho acumulado:</b> O fluxo de caixa apresenta saldo acumulado de <b>${fmtS(aSaldo)}</b>, com receitas de <b>${fmtS(aRec)}</b> frente a desembolsos de <b>${fmtS(aDesp)}</b> no período analisado.<br><br>
-    <b>Leitura do cenário:</b> Em <b>${nomeCenarioAtual()}</b>, a comparação com a projeção indica diferença acumulada de <b>${fmtS(gapAcum)}</b>, permitindo avaliar o comportamento do caixa frente à referência selecionada.<br><br>
-    <b>Leitura gerencial:</b> ${sustentadoCaixa ? `Embora o acumulado permaneça positivo, a operação corrente segue consumindo caixa, uma vez que as despesas ainda superam as receitas. Isso indica que o resultado está sendo sustentado, até o momento, pelo caixa remanescente do exercício anterior.` : `A dinâmica entre entradas e saídas está mais equilibrada, reduzindo a dependência do caixa carregado do exercício anterior.`} ${mesRisco ? `No cenário atual, o ponto de maior atenção ocorre em <b>${mesRisco}</b>, quando o menor saldo projetado atinge <b>${fmtS(menorPrev)}</b>.` : `No cenário selecionado, não há indicação de saldo mensal negativo, e o menor saldo projetado permanece em <b>${fmtS(menorPrev)}</b>.`}
+    <b>Situação:</b> O fluxo acumulado está em <b>${fmtS(aSaldo)}</b>, com receitas de <b>${fmtS(aRec)}</b> frente a desembolsos de <b>${fmtS(aDesp)}</b> no período.<br><br>
+    <b>Causa:</b> A execução está <b>${gapAcum>=0?'acima':'abaixo'}</b> do <b>${nomeCenarioAtual()}</b> em <b>${fmtS(Math.abs(gapAcum))}</b>. ${aDesp > aRec ? `As saídas superam as entradas em <b>${pct(Math.abs(burn))}</b> da receita, mostrando consumo operacional de caixa.` : `As entradas permanecem acima das saídas, preservando geração operacional no período.`} ${mesRisco ? `No cenário atual, o menor saldo projetado ocorre em <b>${mesRisco}</b>, com <b>${fmtS(menorPrev)}</b>.` : `Não há indicação de saldo mensal negativo no cenário atual.`}<br><br>
+    <b>Ação:</b> ${acao}
   `;
-
   const el = document.getElementById('resumoFluxo');
   if(el) el.innerHTML = texto;
 }
 
+
 function renderResumoReceitas(){
   const emp = _emp.receitas;
   const rec = getM(emp,'receita_total');
-  const aRec = getA(emp,'receita_total');
-  const aBruto = getA(emp,'fat_bruto');
-  const aLiq = getA(emp,'fat_liquido');
+  const aRec = getA(emp,'receita_total') || 0;
+  const aBruto = getA(emp,'fat_bruto') || 0;
+  const aLiq = getA(emp,'fat_liquido') || 0;
   const cancelDev = Math.max(0, aBruto - aLiq);
   const assertiv = aBruto > 0 ? (aLiq / aBruto * 100) : 0;
 
   const mesesRealizados = (rec.real || []).map(v => (Number(v) || 0) !== 0);
   const basePessPeriodo = (rec.prev || []).reduce((acc,v,i)=>acc + (mesesRealizados[i] ? (Number(v)||0) : 0), 0);
-  const baseOtimPeriodo = basePessPeriodo * 1.30;
   const superPess = basePessPeriodo > 0 ? ((aRec - basePessPeriodo) / basePessPeriodo * 100) : 0;
-
-  let desempenho = '';
-  let leitura = '';
-
-  if(basePessPeriodo > 0 && aRec >= baseOtimPeriodo){
-    desempenho = `Na comparação com a base do cenário pessimista para o período, os recebimentos já superam essa referência em <b>${pct(superPess)}</b>, posicionando o desempenho acima do cenário otimista projetado.`;
-    leitura = `O comportamento observado reforça a consistência da geração de receita no período e sinaliza evolução acima da referência histórica utilizada para projeção.`;
-  }else if(basePessPeriodo > 0 && superPess > 0){
-    desempenho = `Na comparação com a base do cenário pessimista para o período, os recebimentos já superam essa referência em <b>${pct(superPess)}</b>, indicando desempenho acima do realizado no ano anterior para a mesma janela.`;
-    leitura = `A receita evolui em patamar superior à base histórica do período, sustentando uma leitura gerencial positiva quanto ao ritmo comercial e financeiro observado até o momento.`;
-  }else if(basePessPeriodo > 0){
-    desempenho = `Na comparação com a base do cenário pessimista para o período, os recebimentos ainda estão <b>${pct(Math.abs(superPess))}</b> abaixo dessa referência, exigindo acompanhamento próximo nas próximas competências.`;
-    leitura = `Apesar da boa qualidade do faturamento, a evolução da receita ainda demanda monitoramento para verificar recuperação frente à base histórica do período.`;
-  }else{
-    desempenho = `Ainda não há base comparável suficiente no período para leitura gerencial frente ao cenário pessimista.`;
-    leitura = `A leitura gerencial da receita permanece concentrada, neste momento, na qualidade do faturamento e na manutenção do ritmo comercial.`;
-  }
+  const evolucao = lastFinite(getM(emp,'receita_total').evo);
+  const acao = superPess < 0
+    ? 'Reforçar cobrança e conversão das competências seguintes para reaproximar a receita da base histórica do período.'
+    : assertiv < 98
+      ? 'Priorizar análise de devoluções, cancelamentos e qualidade da carteira faturada.'
+      : 'Manter o ritmo comercial e a disciplina de faturamento para preservar a conversão em caixa.';
 
   const texto = `
-    <b>Qualidade do faturamento:</b> O faturamento bruto acumulado é de <b>${fmtS(aBruto)}</b>, com faturamento líquido de <b>${fmtS(aLiq)}</b>. As devoluções e cancelamentos somam <b>${fmtS(cancelDev)}</b>, o que mantém a assertividade de faturamento em <b>${pct(assertiv)}</b>, com baixo nível de retrabalho e menor exposição a embaraços fiscais.<br><br>
-    <b>Desempenho frente à base:</b> ${desempenho}<br><br>
-    <b>Leitura gerencial:</b> ${leitura}
+    <b>Situação:</b> A receita recebida acumula <b>${fmtS(aRec)}</b>, com faturamento bruto de <b>${fmtS(aBruto)}</b> e faturamento líquido de <b>${fmtS(aLiq)}</b>.<br><br>
+    <b>Causa:</b> A receita está <b>${superPess>=0?'acima':'abaixo'}</b> da base pessimista do período em <b>${pct(Math.abs(superPess))}</b>. As devoluções e cancelamentos somam <b>${fmtS(cancelDev)}</b>, mantendo assertividade de <b>${pct(assertiv)}</b>${evolucao!==null ? ` e variação mensal mais recente de <b>${pct(evolucao)}</b>.` : '.'}<br><br>
+    <b>Ação:</b> ${acao}
   `;
-
   const el = document.getElementById('resumoReceitas');
   if(el) el.innerHTML = texto;
 }
 
+
 function renderResumoDespesas(){
   const emp = _emp.despesas;
-  const categoriasGerenciaveis = [
-    {nome:'Pessoal', valor:getA(emp,'pessoal')},
-    {nome:'Financeira', valor:getA(emp,'financeira')},
-    {nome:'Comercial', valor:getA(emp,'comercial')},
-    {nome:'Impostos', valor:getA(emp,'impostos')}
-  ].filter(c => Number(c.valor) > 0).sort((a,b)=>b.valor-a.valor);
+  const categorias = [
+    {nome:'Pessoal', valor:getA(emp,'pessoal')||0, evo:lastFinite(getM(emp,'pessoal').evo), cresc:lastFinite(getM(emp,'pessoal').cresc)},
+    {nome:'Financeira', valor:getA(emp,'financeira')||0, evo:lastFinite(getM(emp,'financeira').evo), cresc:lastFinite(getM(emp,'financeira').cresc)},
+    {nome:'Comercial', valor:getA(emp,'comercial')||0, evo:lastFinite(getM(emp,'comercial').evo), cresc:lastFinite(getM(emp,'comercial').cresc)},
+    {nome:'Impostos', valor:getA(emp,'impostos')||0, evo:lastFinite(getM(emp,'impostos').evo), cresc:lastFinite(getM(emp,'impostos').cresc)}
+  ].filter(c => c.valor > 0).sort((a,b)=>b.valor-a.valor);
 
-  const top3 = categoriasGerenciaveis.slice(0,3);
-  const totalGer = categoriasGerenciaveis.reduce((a,c)=>a + (Number(c.valor)||0), 0);
-  const totalTop3 = top3.reduce((a,c)=>a + (Number(c.valor)||0), 0);
-  const percTop3 = totalGer > 0 ? (totalTop3 / totalGer * 100) : 0;
-
-  const nomes = top3.map(c => c.nome).join(', ');
-  const partes = top3.map(c => `${c.nome} (${fmtS(c.valor)})`).join(', ');
-  const principal = top3[0] ? top3[0].nome : '—';
+  const top3 = categorias.slice(0,3);
+  const total = categorias.reduce((a,c)=>a+c.valor,0);
+  const pesoTop3 = total > 0 ? (top3.reduce((a,c)=>a+c.valor,0)/total*100) : 0;
+  const fora = categorias.filter(c => (c.evo!==null && c.evo>20) || (c.cresc!==null && c.cresc>30));
+  const acao = fora.length
+    ? `Abrir revisão imediata em <b>${fora.map(c=>c.nome).join(' e ')}</b>, validando recorrência, classificação e oportunidade de contenção.`
+    : top3[0]
+      ? `Concentrar a agenda de eficiência em <b>${top3[0].nome}</b> e nas demais linhas líderes, pois elas concentram a maior alavanca de economia.`
+      : 'Manter acompanhamento das linhas gerenciáveis para preservar disciplina de gastos.';
 
   const texto = `
-    <b>Estrutura de custos:</b> Desconsiderando a compra de mercadoria, as despesas gerenciáveis permanecem concentradas principalmente em <b>${nomes || '—'}</b>, que representam <b>${pct(percTop3)}</b> das principais linhas sob gestão direta.<br><br>
-    <b>Principais pressões:</b> As três categorias que mais consomem recursos no período são <b>${partes || '—'}</b>, sendo <b>${principal}</b> a principal pressão atual sobre a estrutura de gastos.<br><br>
-    <b>Leitura gerencial:</b> O foco da gestão deve permanecer nessas linhas para identificar oportunidades de renegociação, redimensionamento ou ganho de eficiência. A leitura conjunta de <b>%Evo M/M</b> e <b>%Cresc. vs AA</b> continua sendo o principal instrumento para localizar categorias fora do padrão ou com possível alocação inadequada.
+    <b>Situação:</b> Desconsiderando compra de mercadoria, as despesas gerenciáveis estão concentradas em <b>${top3.map(c=>c.nome).join(', ') || '—'}</b>, que representam <b>${pct(pesoTop3)}</b> do total monitorado.<br><br>
+    <b>Causa:</b> A principal pressão atual vem de <b>${top3[0]?.nome || '—'}</b>, com acumulado de <b>${fmtS(top3[0]?.valor || 0)}</b>. ${fora.length ? `Além disso, há comportamento acima do padrão em <b>${fora.map(c=>c.nome).join(' e ')}</b>.` : 'No momento, não há desvio relevante nas leituras de evolução mensal e comparação anual.'}<br><br>
+    <b>Ação:</b> ${acao}
   `;
-
   const el = document.getElementById('resumoDespesas');
   if(el) el.innerHTML = texto;
 }
+
 
 
 function renderKpisFinanceiros(){
@@ -10559,7 +10746,7 @@ function renderKpisFinanceiros(){
 
   const pmpInfo = D.kpis?.pmp?.[emp] || D.kpis?.pmp?.emp || null;
   const pmp = pmpInfo?.avg_pagamento ?? null;
-  const pmpSub = 'Prazo médio ponderado entre emissão e pagamento';
+  const pmpSub = 'Somente compras de mercadorias para revenda';
 
   el.innerHTML =
     kpiCard('navy','⚙️','Desp. Op. / Receita Bruta',pct(despOpSobreBruta),'Despesa operacional sobre faturamento bruto') +
@@ -10589,13 +10776,65 @@ function renderResumoKpisFinanceiros(){
   const margemLiquida = rec > 0 ? (saldo / rec * 100) : 0;
   const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
   const pontoEquilibrio = margemContrib > 0 ? (despOp / margemContrib) : null;
+  const comprometimento = rec > 0 ? ((despMerc + despOp + impostos) / rec * 100) : 0;
+  const gapOperacional = rec - (despMerc + despOp + impostos);
   const pmpInfo = D.kpis?.pmp?.[emp] || D.kpis?.pmp?.emp || null;
   const pmp = pmpInfo?.avg_pagamento ?? null;
 
+  let leituraResultado = '';
+  if(rec <= 0){
+    leituraResultado = 'A receita ainda não é suficiente para uma leitura executiva consistente do resultado.';
+  }else if(gapOperacional < 0){
+    leituraResultado = `As despesas superam a receita em <b>${fmtS(Math.abs(gapOperacional))}</b>, indicando consumo de caixa no período e dependência maior da posição acumulada para sustentar a operação.`;
+  }else if(gapOperacional === 0){
+    leituraResultado = 'A operação está em equilíbrio, com receita cobrindo exatamente o nível atual de despesas.';
+  }else{
+    leituraResultado = `A operação gera excedente de <b>${fmtS(gapOperacional)}</b> sobre a estrutura de custos, reforçando a capacidade de transformar receita em resultado e preservar caixa.`;
+  }
+
+  let leituraComprometimento = '';
+  if(rec <= 0){
+    leituraComprometimento = 'Sem base de receita suficiente para leitura do comprometimento.';
+  }else if(comprometimento > 110){
+    leituraComprometimento = `O comprometimento está em <b>${pct(comprometimento)}</b>, acima de um patamar sustentável, o que exige revisão de custos, mix comercial ou recomposição de receita.`;
+  }else if(comprometimento > 100){
+    leituraComprometimento = `O comprometimento está em <b>${pct(comprometimento)}</b>, sinalizando que a operação trabalha acima do ponto de equilíbrio econômico e com pressão direta sobre a liquidez.`;
+  }else if(comprometimento > 85){
+    leituraComprometimento = `O comprometimento está em <b>${pct(comprometimento)}</b>, ainda controlado, mas com menor margem de segurança para absorver oscilações de receita.`;
+  }else{
+    leituraComprometimento = `O comprometimento está em <b>${pct(comprometimento)}</b>, indicando boa folga operacional entre receita e despesas.`;
+  }
+
+  const peTexto = pontoEquilibrio
+    ? (rec >= pontoEquilibrio
+        ? `A receita atual permanece <b>acima</b> do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, o que reduz a pressão estrutural sobre o resultado.`
+        : `A receita atual permanece <b>abaixo</b> do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, sinalizando necessidade de ganho de escala comercial ou revisão da base de custos.`)
+    : 'O ponto de equilíbrio não pôde ser estimado com segurança no cenário atual.';
+
+  const vencTexto = pmpInfo?.avg_venc !== null && pmpInfo?.avg_venc !== undefined
+    ? (pmpInfo.avg_venc === 0
+        ? 'Os pagamentos ocorrem, em média, no vencimento.'
+        : pmpInfo.avg_venc < 0
+          ? `Os pagamentos ocorrem, em média, <b>${Math.abs(pmpInfo.avg_venc).toFixed(1)} dia(s) antes</b> do vencimento.`
+          : `Os pagamentos ocorrem, em média, <b>${pmpInfo.avg_venc.toFixed(1)} dia(s) após</b> o vencimento.`)
+    : 'Ainda não há base suficiente para comparar pagamento e vencimento.';
+
+  let pmpLeitura = '';
+  if(pmp === null){
+    pmpLeitura = 'A leitura do PMP ainda depende de base suficiente de compras de mercadorias para revenda.';
+  }else if(pmp >= 40){
+    pmpLeitura = `O PMP está em <b>${pmp.toFixed(1)} dias</b>, mostrando forte alavancagem de fornecedores e maior fôlego para financiar parte da operação.`;
+  }else if(pmp >= 30){
+    pmpLeitura = `O PMP está em <b>${pmp.toFixed(1)} dias</b>, em um patamar saudável para sustentar capital de giro sem pressionar excessivamente o caixa.`;
+  }else{
+    pmpLeitura = `O PMP está em <b>${pmp.toFixed(1)} dias</b>, em patamar mais curto, o que exige disciplina maior na programação financeira de curto prazo.`;
+  }
+
   const texto = `
-    <b>Eficiência operacional:</b> A despesa operacional representa <b>${pct(despOpSobreBruta)}</b> da receita bruta, enquanto o EBITDA ajustado totaliza <b>${fmtS(ebitdaAjustado)}</b>, com margem EBITDA de <b>${pct(margemEbitda)}</b>. Esses indicadores mostram o quanto a estrutura operacional está conseguindo transformar receita em resultado.<br><br>
-    <b>Rentabilidade e equilíbrio:</b> A margem de lucro líquido está em <b>${pct(margemLiquida)}</b> e o ponto de equilíbrio estimado é de <b>${pontoEquilibrio ? fmtS(pontoEquilibrio) : '—'}</b>. ${pontoEquilibrio ? (rec >= pontoEquilibrio ? 'No patamar atual, a receita permanece acima do ponto de equilíbrio.' : 'No patamar atual, a receita ainda está abaixo do ponto de equilíbrio estimado.') : 'No cenário atual, o ponto de equilíbrio não pôde ser estimado com segurança.'}<br><br>
-    <b>Contas a pagar:</b> O PMP está em <b>${pmp !== null ? pmp.toFixed(1) + ' dias' : '—'}</b>, refletindo o prazo médio ponderado entre emissão e pagamento dos compromissos financeiros. ${pmpInfo?.avg_venc !== null && pmpInfo?.avg_venc !== undefined ? (pmpInfo.avg_venc === 0 ? 'Os pagamentos ocorrem, em média, no vencimento.' : pmpInfo.avg_venc < 0 ? `Os pagamentos ocorrem, em média, ${Math.abs(pmpInfo.avg_venc).toFixed(1)} dia(s) antes do vencimento.` : `Os pagamentos ocorrem, em média, ${pmpInfo.avg_venc.toFixed(1)} dia(s) após o vencimento.`) : ''} ${pmp !== null ? (pmp >= 30 ? 'Esse prazo contribui para o financiamento parcial da operação e preserva maior fôlego de caixa.' : 'O prazo médio de pagamento é mais curto e exige maior disciplina de caixa no curto prazo.') : 'A leitura do prazo médio de pagamento ainda depende de base suficiente para cálculo.'}
+    <b>Resultado operacional:</b> A despesa operacional representa <b>${pct(despOpSobreBruta)}</b> da receita bruta, enquanto o EBITDA ajustado totaliza <b>${fmtS(ebitdaAjustado)}</b>, com margem EBITDA de <b>${pct(margemEbitda)}</b>. ${leituraResultado}<br><br>
+    <b>Pressão sobre a receita:</b> A margem de lucro líquido está em <b>${pct(margemLiquida)}</b>. ${leituraComprometimento}<br><br>
+    <b>Equilíbrio econômico:</b> ${peTexto}<br><br>
+    <b>Contas a pagar e capital de giro:</b> ${pmpLeitura} ${vencTexto} Essa leitura considera somente lançamentos da categoria <b>Compras de Mercadorias para Revenda</b>.
   `;
 
   const el = document.getElementById('resumoKpisFinanceiros');
@@ -10632,123 +10871,57 @@ function renderAlertasExecutivos(){
   const riscoIdx = fluxoPrev.findIndex(v => Number(v) < 0);
   const menorSaldo = fluxoPrev.length ? Math.min(...fluxoPrev) : 0;
 
-  // Base comparável do cenário pessimista: meses realizados + futuro projetado em pessimista
-  const cenarioAtual = _cenario;
-  _cenario = 'pessimista';
-  const basePess = getPrevAcum(emp,'receita_total');
-  _cenario = cenarioAtual;
-  const superacaoPess = basePess > 0 ? ((rec - basePess) / basePess * 100) : null;
-
-  const categoriasGer = [
-    {nome:'Pessoal', acum:getA(emp,'pessoal')||0, evo:lastFinite(getM(emp,'pessoal').evo), cresc:lastFinite(getM(emp,'pessoal').cresc)},
-    {nome:'Comercial', acum:getA(emp,'comercial')||0, evo:lastFinite(getM(emp,'comercial').evo), cresc:lastFinite(getM(emp,'comercial').cresc)},
-    {nome:'Financeira', acum:getA(emp,'financeira')||0, evo:lastFinite(getM(emp,'financeira').evo), cresc:lastFinite(getM(emp,'financeira').cresc)}
-  ].sort((a,b)=>b.acum-a.acum);
-
-  const foraPadrao = categoriasGer.find(c => (c.evo !== null && c.evo > 20) || (c.cresc !== null && c.cresc > 30));
-
   const alerts = [];
 
-  if(riscoIdx >= 0){
+  alerts.push({
+    cls: compromet > 110 ? 'danger' : compromet > 100 ? 'danger' : compromet > 85 ? 'warn' : 'success',
+    title:'Comprometimento da receita',
+    text: compromet > 100
+      ? `As despesas representam <b>${pct(compromet)}</b> da receita, configurando operação acima do limite sustentável e consumo direto de caixa.`
+      : compromet > 85
+        ? `As despesas representam <b>${pct(compromet)}</b> da receita, mantendo a operação com folga curta e sensível a oscilações.`
+        : `As despesas representam <b>${pct(compromet)}</b> da receita, preservando folga operacional mais confortável.`
+  });
+
+  alerts.push({
+    cls: margemEbitda < 0 ? 'danger' : margemEbitda < 8 ? 'warn' : 'success',
+    title:'Qualidade da margem EBITDA',
+    text: margemEbitda < 0
+      ? `O EBITDA ajustado está negativo em <b>${fmtS(Math.abs(ebitdaAjustado))}</b>, mostrando que a operação ainda não gera resultado suficiente antes da pressão financeira.`
+      : `O EBITDA ajustado soma <b>${fmtS(ebitdaAjustado)}</b>, com margem de <b>${pct(margemEbitda)}</b>.`
+  });
+
+  if(pontoEquilibrio){
     alerts.push({
-      cls:'danger',
-      title:'Pressão de caixa projetada',
-      text:`O fluxo projetado indica saldo negativo a partir de <b>${D.months[riscoIdx]}</b>, com piso estimado em <b>${fmtS(menorSaldo)}</b>. Recomenda-se antecipar plano de cobertura de caixa e revisar desembolsos futuros.`
-    });
-  } else {
-    alerts.push({
-      cls:'success',
-      title:'Fluxo sob controle no cenário atual',
-      text:`Não há indicação de saldo mensal negativo no cenário selecionado. O menor saldo projetado permanece em <b>${fmtS(menorSaldo)}</b>, preservando margem de liquidez no curto prazo.`
+      cls: rec >= pontoEquilibrio ? 'success' : 'danger',
+      title:'Ponto de equilíbrio',
+      text: rec >= pontoEquilibrio
+        ? `A receita acumulada está acima do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, preservando sustentação econômica da operação.`
+        : `A receita acumulada ainda está abaixo do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, o que reforça a necessidade de recompor margem ou volume.`
     });
   }
 
-  if(compromet > 100){
-    alerts.push({
-      cls:'danger',
-      title:'Receita integralmente comprometida',
-      text:`O comprometimento da receita está em <b>${pct(compromet)}</b>, sinalizando que a estrutura de despesas supera a capacidade operacional de geração no período e exige ação imediata sobre custos.`
-    });
-  } else if(compromet > 85){
-    alerts.push({
-      cls:'warn',
-      title:'Estrutura de custos pressionada',
-      text:`O comprometimento da receita alcança <b>${pct(compromet)}</b>, com baixa folga operacional. A diretoria deve acompanhar especialmente despesas recorrentes e preservar margem nas próximas competências.`
-    });
-  } else {
-    alerts.push({
-      cls:'success',
-      title:'Comprometimento em patamar administrável',
-      text:`O comprometimento da receita está em <b>${pct(compromet)}</b>, indicando estrutura de custos relativamente equilibrada frente ao nível atual de faturamento.`
-    });
-  }
-
-  if(pontoEquilibrio && rec < pontoEquilibrio){
-    alerts.push({
-      cls:'warn',
-      title:'Receita abaixo do ponto de equilíbrio',
-      text:`A receita acumulada está abaixo do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>. Mantido esse quadro, a companhia dependerá de disciplina adicional de custos e sustentação de caixa para preservar resultado.`
-    });
-  } else if(pontoEquilibrio){
-    alerts.push({
-      cls:'success',
-      title:'Operação acima do ponto de equilíbrio',
-      text:`A receita acumulada supera o ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, reforçando capacidade de cobertura da estrutura fixa e sustentação do resultado operacional.`
-    });
-  }
+  alerts.push({
+    cls: riscoIdx >= 0 ? 'danger' : 'success',
+    title:'Reflexo no caixa projetado',
+    text: riscoIdx >= 0
+      ? `No cenário atual, o fluxo projeta saldo negativo a partir de <b>${D.months[riscoIdx]}</b>, com piso estimado em <b>${fmtS(menorSaldo)}</b>.`
+      : `O cenário atual não projeta saldo mensal negativo; o menor saldo esperado permanece em <b>${fmtS(menorSaldo)}</b>.`
+  });
 
   if(pmp !== null){
     alerts.push({
-      cls: pmp < 20 ? 'warn' : 'success',
+      cls: pmp < 20 ? 'warn' : pmp > 45 ? 'success' : 'success',
       title:'Prazo médio de pagamento',
       text: pmp < 20
-        ? `O PMP está em <b>${pmp.toFixed(1)} dias</b>, indicando prazo curto concedido pelos fornecedores e menor contribuição do passivo comercial para o financiamento da operação.`
-        : `O PMP está em <b>${pmp.toFixed(1)} dias</b>, prazo que contribui para financiar parcialmente a operação e reduz pressão imediata sobre o caixa.`
+        ? `O PMP está em <b>${pmp.toFixed(1)} dias</b>, sugerindo menor financiamento operacional por fornecedores.`
+        : `O PMP está em <b>${pmp.toFixed(1)} dias</b>, considerando apenas compras de mercadorias para revenda, ajudando a sustentar capital de giro.`
     });
   }
 
-  if(superacaoPess !== null){
-    if(superacaoPess > 30){
-      alerts.push({
-        cls:'success',
-        title:'Receita acima do cenário otimista',
-        text:`A receita acumulada supera a base pessimista em <b>${pct(superacaoPess)}</b>, posicionando o desempenho atual acima do patamar do cenário otimista projetado para o período.`
-      });
-    } else if(superacaoPess > 0){
-      alerts.push({
-        cls:'success',
-        title:'Receita acima da base pessimista',
-        text:`A receita acumulada já supera a base pessimista em <b>${pct(superacaoPess)}</b>, confirmando evolução superior ao histórico do mesmo período.`
-      });
-    } else {
-      alerts.push({
-        cls:'warn',
-        title:'Receita abaixo da base de referência',
-        text:`A receita acumulada ainda não supera a base pessimista comparável do período, exigindo acompanhamento da conversão de faturamento e manutenção do ritmo comercial.`
-      });
-    }
-  }
-
-  if(foraPadrao){
-    const partes = [];
-    if(foraPadrao.evo !== null && foraPadrao.evo > 20) partes.push(`evolução mensal de <b>${pct(foraPadrao.evo)}</b>`);
-    if(foraPadrao.cresc !== null && foraPadrao.cresc > 30) partes.push(`crescimento de <b>${pct(foraPadrao.cresc)}</b> versus ano anterior`);
-    alerts.push({
-      cls:'warn',
-      title:`Categoria fora do padrão: ${foraPadrao.nome}`,
-      text:`A categoria <b>${foraPadrao.nome}</b> requer revisão gerencial, com ${partes.join(' e ')}. Vale validar alocação contábil, recorrência do gasto e oportunidades de contenção.`
-    });
-  }
-
-  const el = document.getElementById('alertasExecutivos');
-  if(!el) return;
-  el.innerHTML = alerts.map(a=>`
-    <div class="alert-item ${a.cls}">
-      <div class="alert-title">${a.title}</div>
-      <div class="alert-text">${a.text}</div>
-    </div>
-  `).join('');
+  renderAlertGrid('alertasExecutivos', alerts.slice(0,4));
 }
+
 
 
 
@@ -10768,50 +10941,40 @@ function renderAlertasSaldos(){
   const proj = D.projecao || {marck:{despesas_mes:0,recebimentos_mes:0,projecao_caixa:0}, grattano:{despesas_mes:0,recebimentos_mes:0,projecao_caixa:0}};
   const total = (sd.marck||0) + (sd.grattano||0);
   const projTotal = (proj.marck?.projecao_caixa||0) + (proj.grattano?.projecao_caixa||0);
+  const entradasMes = (proj.marck?.recebimentos_mes||0) + (proj.grattano?.recebimentos_mes||0);
+  const despesasMes = (proj.marck?.despesas_mes||0) + (proj.grattano?.despesas_mes||0);
   const variacao = projTotal - total;
-  const cobertura = total > 0 ? ((proj.marck?.despesas_mes||0)+(proj.grattano?.despesas_mes||0)) / total * 100 : 0;
+  const cobertura = total > 0 ? (despesasMes / total * 100) : 0;
+  const conc = topBankConcentration();
 
   const alerts = [];
   alerts.push({
-    cls: total <= 0 ? 'danger' : 'success',
-    title: 'Posição de caixa do dia',
-    text: total <= 0
-      ? `A posição consolidada de caixa está crítica, sem folga financeira imediata.`
-      : `A posição consolidada do dia soma <b>${fmtS(total)}</b>, formando a base de liquidez para suportar o ciclo operacional de curto prazo.`
+    cls: variacao < 0 ? 'warn' : 'success',
+    title:'Trajetória do caixa no mês',
+    text: variacao < 0
+      ? `A projeção de fechamento cai <b>${fmtS(Math.abs(variacao))}</b> frente à posição atual, sinalizando consumo de caixa ao longo do mês.`
+      : `A projeção de fechamento adiciona <b>${fmtS(variacao)}</b> à posição atual, reforçando ganho de liquidez no período.`
   });
   alerts.push({
-    cls: projTotal < 0 ? 'danger' : variacao < 0 ? 'warn' : 'success',
-    title: 'Projeção de fechamento do mês',
-    text: projTotal < 0
-      ? `A projeção consolidada de fechamento indica saldo negativo de <b>${fmtS(projTotal)}</b>, exigindo revisão imediata dos desembolsos e avaliação de cobertura de caixa.`
-      : variacao < 0
-        ? `A projeção consolidada de fechamento está em <b>${fmtS(projTotal)}</b>, abaixo da posição atual em <b>${fmtS(Math.abs(variacao))}</b>, indicando consumo de caixa ao longo do mês.`
-        : `A projeção consolidada de fechamento está em <b>${fmtS(projTotal)}</b>, acima da posição atual em <b>${fmtS(variacao)}</b>, reforçando ganho de liquidez no período.`
+    cls: cobertura > 100 ? 'danger' : cobertura > 75 ? 'warn' : 'success',
+    title:'Cobertura dos desembolsos previstos',
+    text: `As saídas previstas consomem <b>${pct(cobertura)}</b> do caixa disponível. ${cobertura > 100 ? 'Sem reforço de entradas, a posição atual não cobre integralmente o mês.' : cobertura > 75 ? 'A folga existe, mas ficou mais estreita e pede disciplina na agenda.' : 'A folga de curto prazo permanece administrável.'}`
   });
   alerts.push({
-    cls: cobertura > 100 ? 'warn' : 'success',
-    title: 'Cobertura de desembolsos',
-    text: cobertura > 100
-      ? `As despesas previstas do mês representam <b>${pct(cobertura)}</b> da posição atual de caixa, o que recomenda acompanhamento mais próximo da liquidez.`
-      : `As despesas previstas do mês representam <b>${pct(cobertura)}</b> da posição atual de caixa, mantendo a cobertura financeira em patamar administrável.`
+    cls: conc.pct > 40 ? 'warn' : 'success',
+    title:'Concentração bancária',
+    text: `A maior exposição continua em <b>${conc.top?.nome || '—'}</b>, concentrando <b>${pct(conc.pct)}</b> do caixa consolidado. ${conc.pct > 40 ? 'Vale revisar diversificação para reduzir risco operacional e bancário.' : 'A distribuição entre contas permanece em patamar mais equilibrado.'}`
   });
-
-  const bancos = [
-    ...Object.entries(D.saldos_hoje?.marck||{}).map(([b,v])=>({banco:b, valor:v||0, empresa:'Marck'})),
-    ...Object.entries(D.saldos_hoje?.grattano||{}).map(([b,v])=>({banco:b, valor:v||0, empresa:'Grattano'}))
-  ].filter(x=>x.valor>0).sort((a,b)=>b.valor-a.valor);
-  const maior = bancos[0];
-  const conc = maior && total > 0 ? maior.valor/total*100 : 0;
   alerts.push({
-    cls: conc > 60 ? 'warn' : 'success',
-    title: 'Concentração bancária',
-    text: maior
-      ? `A maior exposição bancária está em <b>${maior.banco} (${maior.empresa})</b>, concentrando <b>${pct(conc)}</b> do caixa consolidado.`
-      : `A distribuição bancária do caixa não indica concentração relevante no período.`
+    cls: entradasMes < despesasMes ? 'warn' : 'success',
+    title:'Leitura operacional das entradas',
+    text: entradasMes < despesasMes
+      ? `As entradas previstas do mês ainda não superam as saídas, o que aumenta a dependência da posição de caixa já formada.`
+      : `As entradas previstas superam as saídas do mês, sustentando a leitura de liquidez mais confortável no curto prazo.`
   });
-
   renderAlertGrid('alertasSaldos', alerts);
 }
+
 
 function renderAlertasFluxo(){
   const emp = _emp.fluxo;
@@ -10821,38 +10984,40 @@ function renderAlertasFluxo(){
   const prevSaldo = getPrev(emp,'saldo') || [];
   const riscoIdx = prevSaldo.findIndex(v => Number(v) < 0);
   const menor = prevSaldo.length ? Math.min(...prevSaldo) : 0;
-  const gap = saldo - getPrevAcum(emp,'saldo');
+  const gap = saldo - (getPrevAcum(emp,'saldo') || 0);
   const alerts = [];
 
   alerts.push({
     cls: saldo >= 0 ? 'success' : 'danger',
-    title:'Desempenho acumulado do fluxo',
+    title:'Resultado acumulado do fluxo',
     text: saldo >= 0
-      ? `O fluxo acumulado está positivo em <b>${fmtS(saldo)}</b>, porém essa leitura deve ser acompanhada em conjunto com a estrutura de receitas e despesas do período.`
-      : `O fluxo acumulado está negativo em <b>${fmtS(saldo)}</b>, indicando consumo de caixa e necessidade de ação gerencial imediata.`
+      ? `O fluxo acumulado segue positivo em <b>${fmtS(saldo)}</b>, mas essa leitura precisa ser validada junto da relação entre entradas e saídas do período.`
+      : `O fluxo acumulado está negativo em <b>${fmtS(Math.abs(saldo))}</b>, configurando consumo líquido de caixa no período.`
   });
   alerts.push({
-    cls: desp > rec ? 'warn' : 'success',
-    title:'Relação entre entradas e saídas',
+    cls: desp > rec ? 'danger' : 'success',
+    title:'Geração operacional',
     text: desp > rec
-      ? `As despesas acumuladas já superam as receitas do período, sinalizando que o saldo positivo depende de caixa remanescente de períodos anteriores.`
-      : `As receitas acumuladas permanecem acima das despesas do período, sustentando o fluxo com geração operacional positiva.`
+      ? `As saídas acumuladas superam as entradas em <b>${fmtS(desp-rec)}</b>, indicando que o caixa atual está sendo sustentado por saldo trazido de períodos anteriores.`
+      : `As entradas acumuladas superam as saídas em <b>${fmtS(rec-desp)}</b>, sustentando geração operacional positiva de caixa.`
   });
   alerts.push({
     cls: riscoIdx >= 0 ? 'danger' : 'success',
-    title:'Projeção de liquidez',
+    title:'Pressão futura de liquidez',
     text: riscoIdx >= 0
-      ? `O cenário projetado indica saldo negativo a partir de <b>${D.months[riscoIdx]}</b>, com piso estimado em <b>${fmtS(menor)}</b>.`
-      : `O cenário projetado não indica saldo mensal negativo; o menor nível previsto de caixa permanece em <b>${fmtS(menor)}</b>.`
+      ? `A projeção aponta saldo negativo a partir de <b>${D.months[riscoIdx]}</b>, com piso estimado em <b>${fmtS(menor)}</b>.`
+      : `O cenário atual não projeta meses com saldo negativo; o menor saldo esperado permanece em <b>${fmtS(menor)}</b>.`
   });
   alerts.push({
-    cls: gap < 0 ? 'warn' : 'success',
-    title:'Leitura frente ao cenário',
-    text: `No <b>${nomeCenarioAtual()}</b>, a diferença acumulada frente à projeção corrente é de <b>${fmtS(gap)}</b>, referência central para acompanhamento gerencial do fluxo.`
+    cls: gap >= 0 ? 'success' : 'warn',
+    title:`Aderência ao ${nomeCenarioAtual()}`,
+    text: gap >= 0
+      ? `O realizado está <b>${fmtS(gap)}</b> acima da referência do cenário, reforçando execução melhor que o esperado.`
+      : `O realizado está <b>${fmtS(Math.abs(gap))}</b> abaixo da referência do cenário, recomendando acompanhamento mais próximo das próximas competências.`
   });
-
   renderAlertGrid('alertasFluxo', alerts);
 }
+
 
 function renderAlertasReceitas(){
   const emp = _emp.receitas;
@@ -10867,31 +11032,41 @@ function renderAlertasReceitas(){
   const basePess = getPrevAcum(emp,'receita_total');
   _cenario = cenarioAtual;
   const superacao = basePess > 0 ? ((rec - basePess) / basePess * 100) : null;
+  const evo = lastFinite(getM(emp,'receita_total').evo);
+  const cresc = lastFinite(getM(emp,'receita_total').cresc);
 
   const alerts = [];
   alerts.push({
     cls: assertiv >= 99 ? 'success' : assertiv >= 97 ? 'warn' : 'danger',
     title:'Qualidade do faturamento',
-    text:`O faturamento bruto acumulado é de <b>${fmtS(bruto)}</b>, com faturamento líquido de <b>${fmtS(liq)}</b>. As devoluções e cancelamentos somam <b>${fmtS(devol)}</b>, mantendo assertividade de <b>${pct(assertiv)}</b>.`
+    text:`As devoluções e cancelamentos somam <b>${fmtS(devol)}</b>, mantendo conversão líquida de <b>${pct(assertiv)}</b> sobre o faturamento bruto.`
   });
   if(superacao !== null){
     alerts.push({
-      cls: superacao > 30 ? 'success' : superacao > 0 ? 'success' : 'warn',
-      title:'Desempenho frente à base pessimista',
-      text: superacao > 30
-        ? `A receita acumulada supera a base pessimista em <b>${pct(superacao)}</b>, posicionando o desempenho atual acima do cenário otimista projetado.`
-        : superacao > 0
-          ? `A receita acumulada já supera a base pessimista em <b>${pct(superacao)}</b>, refletindo evolução superior ao histórico do período.`
-          : `A receita acumulada ainda está <b>${pct(superacao)}</b> abaixo da base pessimista comparável, exigindo acompanhamento próximo da performance comercial.`
+      cls: superacao < 0 ? 'warn' : superacao > 30 ? 'success' : 'success',
+      title:'Receita frente à base histórica',
+      text: superacao >= 0
+        ? `A receita recebida supera a base pessimista do período em <b>${pct(superacao)}</b>, o que sustenta leitura favorável da execução comercial.`
+        : `A receita recebida está <b>${pct(Math.abs(superacao))}</b> abaixo da base pessimista do período, pedindo aceleração das próximas competências.`
     });
   }
-  alerts.push({
-    cls:'success',
-    title:'Leitura gerencial de receita',
-    text:`O comportamento de faturamento segue saudável sob a ótica de qualidade operacional, com baixa exposição a retrabalho e embaraços fiscais.`
-  });
-  renderAlertGrid('alertasReceitas', alerts);
+  if(evo !== null){
+    alerts.push({
+      cls: evo < -10 ? 'warn' : evo > 10 ? 'success' : 'success',
+      title:'Ritmo mensal mais recente',
+      text:`A última variação mensal disponível foi de <b>${pct(evo)}</b>. ${evo < -10 ? 'O ritmo recente perdeu força e merece acompanhamento de curto prazo.' : 'O comportamento recente permanece compatível com continuidade operacional.'}`
+    });
+  }
+  if(cresc !== null){
+    alerts.push({
+      cls: cresc < 0 ? 'warn' : 'success',
+      title:'Comparação anual',
+      text:`Na comparação com o mesmo período do ano anterior, a receita registra <b>${pct(cresc)}</b>. ${cresc < 0 ? 'A base comparativa ficou mais desafiadora.' : 'Há ganho de tração frente ao ano anterior.'}`
+    });
+  }
+  renderAlertGrid('alertasReceitas', alerts.slice(0,4));
 }
+
 
 function renderAlertasDespesas(){
   const emp = _emp.despesas;
@@ -10907,50 +11082,66 @@ function renderAlertasDespesas(){
   const foraPadrao = cats.filter(c => (c.evo!==null && c.evo>20) || (c.cresc!==null && c.cresc>30)).slice(0,2);
   const alerts = [];
   alerts.push({
-    cls: percTop > 70 ? 'warn' : 'success',
-    title:'Concentração das despesas gerenciáveis',
-    text:`As três principais categorias gerenciáveis — <b>${top3.map(c=>c.nome).join(', ') || '—'}</b> — representam <b>${pct(percTop)}</b> do total monitorado, concentrando a principal pressão sob a margem.`
+    cls: percTop > 75 ? 'warn' : 'success',
+    title:'Concentração da estrutura gerenciável',
+    text:`As três principais linhas — <b>${top3.map(c=>c.nome).join(', ') || '—'}</b> — representam <b>${pct(percTop)}</b> do total monitorado. ${percTop > 75 ? 'A pressão está muito concentrada e facilita priorização.' : 'A estrutura está mais distribuída entre categorias.'}`
   });
-  alerts.push({
-    cls:'warn',
-    title:'Linhas prioritárias para gestão',
-    text:`O foco gerencial deve recair sobre <b>${top3.map(c=>`${c.nome} (${fmtS(c.acum)})`).join(', ') || 'as principais linhas de despesa'}</b>, com avaliação de renegociação, eficiência e aderência ao orçamento operacional.`
-  });
+  if(top3[0]){
+    alerts.push({
+      cls: 'warn',
+      title:'Primeira frente de atuação',
+      text:`A maior pressão individual está em <b>${top3[0].nome}</b>, com acumulado de <b>${fmtS(top3[0].acum)}</b>. É a principal alavanca para renegociação ou ganho de eficiência.`
+    });
+  }
   if(foraPadrao.length){
     alerts.push({
-      cls:'warn',
+      cls:'danger',
       title:'Categorias fora do padrão',
-      text:`Há indício de comportamento atípico em <b>${foraPadrao.map(c=>c.nome).join(' e ')}</b>, considerando leitura de %Evo M/M e %Cresc. vs AA. Recomenda-se validar recorrência, classificação e eventual oportunidade de contenção.`
+      text:`Há desvio relevante em <b>${foraPadrao.map(c=>c.nome).join(' e ')}</b>, considerando %Evo M/M e %Cresc. vs AA. Isso merece validação imediata da causa.`
     });
   } else {
     alerts.push({
       cls:'success',
-      title:'Comportamento de despesas sob controle',
-      text:`As categorias monitoradas não apresentam desvios relevantes nas leituras de evolução mensal e crescimento versus ano anterior.`
+      title:'Comportamento recente sob controle',
+      text:`As categorias monitoradas não apresentam desvio relevante nas leituras de evolução mensal e comparação anual.`
     });
   }
-  renderAlertGrid('alertasDespesas', alerts);
+  const fin = cats.find(c=>c.nome==='Financeira');
+  if(fin){
+    alerts.push({
+      cls: fin.acum/Math.max(total,1)*100 > 20 ? 'warn' : 'success',
+      title:'Peso da despesa financeira',
+      text:`A despesa financeira acumula <b>${fmtS(fin.acum)}</b>. ${fin.acum/Math.max(total,1)*100 > 20 ? 'O peso relativo ficou relevante e pode estar drenando resultado sem gerar operação.' : 'O peso relativo permanece administrável dentro da estrutura monitorada.'}`
+    });
+  }
+  renderAlertGrid('alertasDespesas', alerts.slice(0,4));
 }
+
 
 function renderResumoResultado(){
   const emp = _emp.resultado;
-  const aSaldo = getA(emp,'saldo');
-  const aRec = getA(emp,'receita_total');
-  const despTotal = getA(emp,'despesa_venda') + getA(emp,'despesa_total') + getA(emp,'impostos');
+  const aSaldo = getA(emp,'saldo') || 0;
+  const aRec = getA(emp,'receita_total') || 0;
+  const despTotal = (getA(emp,'despesa_venda')||0) + (getA(emp,'despesa_total')||0) + (getA(emp,'impostos')||0);
   const margemOper = aRec > 0 ? ((aRec - despTotal) / aRec * 100) : 0;
   const compromet = aRec > 0 ? (despTotal / aRec * 100) : 0;
-  const cenSaldo = getPrevAcum(emp,'saldo');
+  const cenSaldo = getPrevAcum(emp,'saldo') || 0;
   const gap = aSaldo - cenSaldo;
+  const acao = compromet > 100
+    ? 'Atuar imediatamente sobre custos, mix de receita e estrutura operacional para interromper consumo de caixa.'
+    : compromet > 85
+      ? 'Preservar disciplina de despesas e monitorar o fluxo de perto, porque a folga operacional está mais estreita.'
+      : 'Manter o controle de custos e buscar expansão de margem sem perder ritmo operacional.';
 
   const texto = `
-    <b>Resultado acumulado:</b> A companhia apresenta resultado acumulado de <b>${fmtS(aSaldo)}</b>, comparado a <b>${fmtS(cenSaldo)}</b> no <b>${nomeCenarioAtual()}</b>, produzindo variação de <b>${fmtS(gap)}</b>.<br><br>
-    <b>Eficiência operacional:</b> A margem operacional está em <b>${pct(margemOper)}</b>, enquanto o comprometimento da receita alcança <b>${pct(compromet)}</b>, evidenciando o nível de pressão das despesas sobre a geração de resultado.<br><br>
-    <b>Leitura gerencial:</b> ${compromet > 100 ? 'A estrutura atual indica consumo superior à receita, exigindo atenção imediata sobre custos e recomposição operacional.' : compromet > 80 ? 'A estrutura segue pressionada, com baixa folga operacional, o que exige disciplina de custos e monitoramento próximo do fluxo.' : 'A estrutura operacional está relativamente equilibrada, com espaço para sustentação do resultado sob controle de custos.'}
+    <b>Situação:</b> O resultado acumulado está em <b>${fmtS(aSaldo)}</b>, contra <b>${fmtS(cenSaldo)}</b> no <b>${nomeCenarioAtual()}</b>, com variação de <b>${gap>=0?'+':''}${fmtS(gap)}</b>.<br><br>
+    <b>Causa:</b> A margem operacional está em <b>${pct(margemOper)}</b> e o comprometimento da receita em <b>${pct(compromet)}</b>, refletindo o peso da estrutura de despesas sobre a geração de resultado.<br><br>
+    <b>Ação:</b> ${acao}
   `;
-
   const el = document.getElementById('resumoResultado');
   if(el) el.innerHTML = texto;
 }
+
 
 
 // ═══════════════════════════════════════════════════════
@@ -10974,56 +11165,50 @@ function renderInsightsSaldos(){
   const total = (sd.marck||0)+(sd.grattano||0);
   const projTotal = (proj.marck?.projecao_caixa||0)+(proj.grattano?.projecao_caixa||0);
   const variacao = projTotal-total;
+  const entradasMes = (proj.marck?.recebimentos_mes||0)+(proj.grattano?.recebimentos_mes||0);
   const despesasMes = (proj.marck?.despesas_mes||0)+(proj.grattano?.despesas_mes||0);
-  const cobertura = total>0 ? (despesasMes/total*100) : 0;
   const conc = topBankConcentration();
   const cards = [];
-  cards.push(insightCard('Tendência de fechamento',
-    variacao>=0
-      ? `A projeção de fechamento indica acréscimo de <b>${fmtS(variacao)}</b> sobre a posição atual, sinalizando menor pressão imediata sobre a liquidez.`
-      : `A projeção de fechamento indica redução de <b>${fmtS(Math.abs(variacao))}</b> sobre a posição atual, o que pede acompanhamento mais próximo do caixa ao longo do mês.`));
-  if(cobertura >= 80){
-    cards.push(insightCard('Pressão das saídas previstas',
-      `As saídas já mapeadas para o mês representam <b>${pct(cobertura)}</b> do caixa disponível hoje, o que reduz a folga operacional e recomenda disciplina na gestão das liberações.`));
-  } else {
-    cards.push(insightCard('Folga operacional de curto prazo',
-      `As saídas previstas consomem <b>${pct(cobertura)}</b> do caixa disponível, mantendo uma margem de manobra mais confortável para a operação corrente.`));
-  }
-  if(conc.top && conc.pct >= 50){
-    cards.push(insightCard('Concentração bancária relevante',
-      `Há concentração material em <b>${conc.top.nome}</b>, que concentra <b>${pct(conc.pct)}</b> do caixa consolidado. Vale acompanhar essa exposição para reduzir dependência operacional em uma única conta.`));
-  } else if(conc.top) {
-    cards.push(insightCard('Distribuição bancária',
-      `A concentração do caixa permanece relativamente distribuída entre as contas, com maior participação em <b>${conc.top.nome}</b> em <b>${pct(conc.pct)}</b> do total.`));
-  }
+  cards.push(insightCard('Leitura de liquidez',
+    variacao >= 0
+      ? `A posição atual não apenas sustenta a operação, como projeta acréscimo de <b>${fmtS(variacao)}</b> até o fechamento do mês.`
+      : `A projeção aponta redução de <b>${fmtS(Math.abs(variacao))}</b> até o fechamento, o que transforma a gestão diária de pagamentos em ponto central.`));
+  cards.push(insightCard('Dependência das entradas futuras',
+    entradasMes >= despesasMes
+      ? `As entradas previstas já cobrem as saídas do mês, reduzindo dependência do caixa parado em conta.`
+      : `As saídas previstas seguem acima das entradas do mês, então a folga atual depende da posição de caixa já acumulada.`));
+  cards.push(insightCard('Risco de concentração',
+    `A principal exposição está em <b>${conc.top?.nome || '—'}</b>, com <b>${pct(conc.pct)}</b> do caixa consolidado. Esse ponto merece monitoramento sob a ótica de diversificação e contingência.`));
   const el = document.getElementById('insightsSaldos');
   if(el) el.innerHTML = cards.join('');
 }
+
 function renderInsightsFluxo(){
   const emp = _emp.fluxo;
   const rec = getA(emp,'receita_total')||0;
   const desp = (getA(emp,'despesa_venda')||0)+(getA(emp,'despesa_total')||0)+(getA(emp,'impostos')||0);
   const saldo = getA(emp,'saldo')||0;
   const saldoPrev = getPrev(emp,'saldo')||[];
-  const gap = saldo-getPrevAcum(emp,'saldo');
+  const gap = saldo-(getPrevAcum(emp,'saldo')||0);
   const riscoIdx = saldoPrev.findIndex(v => Number(v)<0);
   const menor = saldoPrev.length ? Math.min(...saldoPrev) : 0;
   const cards = [];
-  cards.push(insightCard('Dependência do caixa acumulado',
+  cards.push(insightCard('Motor do resultado',
     desp>rec
-      ? `As despesas acumuladas seguem acima das receitas do período. Na prática, o saldo positivo atual continua apoiado pelo caixa remanescente de períodos anteriores.`
-      : `As receitas acumuladas seguem acima das despesas, preservando geração operacional de caixa no período.`));
-  cards.push(insightCard('Desvio frente ao cenário',
+      ? `A operação está consumindo caixa: as saídas já superam as entradas em <b>${fmtS(desp-rec)}</b>.`
+      : `A operação está gerando caixa: as entradas superam as saídas em <b>${fmtS(rec-desp)}</b>.`));
+  cards.push(insightCard('Comparação com a referência',
     gap>=0
-      ? `O fluxo executado está <b>${fmtS(gap)}</b> acima do cenário selecionado, indicando desempenho melhor que a referência adotada para o período.`
-      : `O fluxo executado está <b>${fmtS(Math.abs(gap))}</b> abaixo do cenário selecionado, o que sugere acompanhamento mais próximo das próximas competências.`));
-  cards.push(insightCard('Ponto de atenção futuro',
+      ? `O realizado está <b>${fmtS(gap)}</b> acima do ${nomeCenarioAtual()}, sugerindo execução melhor do que a referência adotada.`
+      : `O realizado está <b>${fmtS(Math.abs(gap))}</b> abaixo do ${nomeCenarioAtual()}, pedindo atenção maior sobre os próximos meses.`));
+  cards.push(insightCard('Próximo gatilho de decisão',
     riscoIdx>=0
-      ? `A projeção aponta pressão de caixa a partir de <b>${D.months[riscoIdx]}</b>, com menor saldo estimado de <b>${fmtS(menor)}</b>.`
-      : `Não há sinal de saldo mensal negativo no cenário atual; o menor saldo projetado permanece em <b>${fmtS(menor)}</b>.`));
+      ? `O mês crítico projetado é <b>${D.months[riscoIdx]}</b>, quando o saldo estimado chega a <b>${fmtS(menor)}</b>. Esse é o ponto para antecipar decisões de cobertura.`
+      : `Sem meses negativos no cenário atual, o foco pode migrar de sobrevivência para eficiência e preservação do saldo mínimo.`));
   const el = document.getElementById('insightsFluxo');
   if(el) el.innerHTML = cards.join('');
 }
+
 function renderInsightsReceitas(){
   const emp = _emp.receitas;
   const rec = getA(emp,'receita_total')||0;
@@ -11034,26 +11219,30 @@ function renderInsightsReceitas(){
   const superacao = basePess>0 ? ((rec-basePess)/basePess*100) : null;
   const evo = lastFinite(getM(emp,'receita_total').evo);
   const cresc = lastFinite(getM(emp,'receita_total').cresc);
+  const bruto = getA(emp,'fat_bruto') || 0;
+  const liq = getA(emp,'fat_liquido') || 0;
+  const assertiv = bruto > 0 ? (liq / bruto * 100) : 0;
   const cards = [];
   if(superacao !== null){
-    cards.push(insightCard('Leitura frente ao cenário',
-      superacao>30
-        ? `A receita já avança <b>${pct(superacao)}</b> sobre a base pessimista do período, mantendo desempenho compatível com superação do cenário otimista projetado.`
-        : superacao>0
-          ? `A receita já supera a base pessimista em <b>${pct(superacao)}</b>, sustentando leitura favorável para a sequência do período.`
-          : `A receita ainda está <b>${pct(Math.abs(superacao))}</b> abaixo da base pessimista, o que recomenda atenção ao ritmo das próximas competências.`));
+    cards.push(insightCard('Força da execução comercial',
+      superacao>=0
+        ? `A receita entregue já está <b>${pct(superacao)}</b> acima da base pessimista do período, sugerindo execução melhor que a referência histórica.`
+        : `A receita ainda está <b>${pct(Math.abs(superacao))}</b> abaixo da base pessimista, o que torna as próximas competências decisivas.`));
   }
   if(evo !== null){
-    cards.push(insightCard('Ritmo mais recente',
-      `Na última leitura disponível, a receita apresentou variação mensal de <b>${pct(evo)}</b>. Esse movimento ajuda a identificar aceleração ou perda de ritmo comercial no curtíssimo prazo.`));
+    cards.push(insightCard('Tração de curtíssimo prazo',
+      `A última variação mensal de receita foi de <b>${pct(evo)}</b>, indicador útil para captar aceleração ou perda de fôlego comercial antes do fechamento.`));
   }
+  cards.push(insightCard('Conversão do faturamento',
+    `A assertividade entre faturamento bruto e líquido está em <b>${pct(assertiv)}</b>. Quanto maior esse índice, menor a erosão de receita por devoluções e cancelamentos.`));
   if(cresc !== null){
-    cards.push(insightCard('Comparação com o ano anterior',
-      `Frente ao mesmo período do ano anterior, a receita registra variação de <b>${pct(cresc)}</b>, reforçando a leitura sobre consistência — ou não — do crescimento realizado.`));
+    cards.push(insightCard('Leitura contra a base anual',
+      `Frente ao mesmo período do ano anterior, a receita varia <b>${pct(cresc)}</b>, o que ajuda a separar crescimento estrutural de oscilações pontuais.`));
   }
   const el = document.getElementById('insightsReceitas');
-  if(el) el.innerHTML = cards.join('');
+  if(el) el.innerHTML = cards.slice(0,4).join('');
 }
+
 function renderInsightsDespesas(){
   const emp = _emp.despesas;
   const cats = [
@@ -11068,23 +11257,24 @@ function renderInsightsDespesas(){
   const fora = cats.filter(c => (c.evo!==null && c.evo>20) || (c.cresc!==null && c.cresc>30));
   const cards = [];
   if(top3.length){
-    cards.push(insightCard('Foco de atuação imediata',
-      `As principais linhas gerenciáveis hoje são <b>${top3.map(c=>c.nome).join(', ')}</b>, que concentram <b>${pct(percTop)}</b> do total monitorado. São elas que oferecem maior potencial de captura de eficiência.`));
+    cards.push(insightCard('Onde está a pressão estrutural',
+      `As linhas <b>${top3.map(c=>c.nome).join(', ')}</b> concentram <b>${pct(percTop)}</b> do total monitorado. É nelas que a gestão captura maior impacto com menor dispersão.`));
   }
   if(fora.length){
-    cards.push(insightCard('Categorias fora do padrão',
-      `Há comportamento acima do padrão em <b>${fora.map(c=>c.nome).join(' e ')}</b>, considerando %Evo M/M e %Cresc. vs AA. Vale revisar alocação, dinâmica operacional e eventual necessidade de contenção.`));
+    cards.push(insightCard('Sinal de desvio',
+      `As categorias <b>${fora.map(c=>c.nome).join(' e ')}</b> exibem leitura fora do padrão em evolução mensal ou comparação anual, o que sugere causa específica e não apenas efeito de mix.`));
   } else {
-    cards.push(insightCard('Comportamento das categorias',
-      `As categorias monitoradas não mostram desvio relevante frente aos indicadores de evolução mensal e comparação anual, o que sugere maior estabilidade da estrutura gerenciável.`));
+    cards.push(insightCard('Estrutura mais estável',
+      `Sem desvios relevantes nas leituras recentes, a discussão pode migrar de contenção emergencial para eficiência contínua.`));
   }
   if(top3[0]){
     cards.push(insightCard('Prioridade de negociação',
-      `A linha mais pesada no período é <b>${top3[0].nome}</b>, com acumulado de <b>${fmtS(top3[0].acum)}</b>. Esse é o primeiro ponto para revisão de contratos, renegociação ou ajuste de processo.`));
+      `A maior linha individual é <b>${top3[0].nome}</b>, com <b>${fmtS(top3[0].acum)}</b>. Esse é o melhor ponto de partida para renegociação ou revisão de processo.`));
   }
   const el = document.getElementById('insightsDespesas');
-  if(el) el.innerHTML = cards.join('');
+  if(el) el.innerHTML = cards.slice(0,3).join('');
 }
+
 function renderInsightsResultado(){
   const emp = _emp.resultado;
   const rec = getA(emp,'receita_total') || 0;
@@ -11105,21 +11295,24 @@ function renderInsightsResultado(){
   const pmpInfo = D.kpis?.pmp?.[emp] || D.kpis?.pmp?.emp || null;
   const pmp = pmpInfo?.avg_pagamento ?? null;
   const cards = [];
-  cards.push(insightCard('Eficiência econômica',
-    `A despesa operacional equivale a <b>${pct(despOpSobreBruta)}</b> da receita bruta e o EBITDA ajustado soma <b>${fmtS(ebitdaAjustado)}</b>, com margem EBITDA de <b>${pct(margemEbitda)}</b>.`));
+  cards.push(insightCard('Qualidade do resultado',
+    `O EBITDA ajustado soma <b>${fmtS(ebitdaAjustado)}</b>, com margem EBITDA de <b>${pct(margemEbitda)}</b>. Isso mostra a capacidade da operação de gerar resultado antes da pressão financeira.`));
   if(pontoEquilibrio){
-    cards.push(insightCard('Leitura de equilíbrio',
+    cards.push(insightCard('Distância do equilíbrio',
       rec >= pontoEquilibrio
-        ? `A receita acumulada permanece acima do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, o que preserva sustentação econômica da operação.`
-        : `A receita acumulada ainda não supera o ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, o que exige atenção sobre volume e custos.`));
+        ? `A receita já supera o ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, o que melhora a sustentação econômica do negócio.`
+        : `A receita ainda não alcança o ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, mantendo a estrutura pressionada.`));
   }
+  cards.push(insightCard('Estrutura operacional',
+    `A despesa operacional representa <b>${pct(despOpSobreBruta)}</b> da receita bruta. Esse indicador mostra quanto da capacidade comercial está sendo absorvido pela estrutura fixa.`));
   if(pmp !== null){
-    cards.push(insightCard('Suporte do prazo de fornecedores',
-      `O PMP está em <b>${pmp.toFixed(1)} dias</b>, mostrando o prazo médio ponderado entre emissão e pagamento. Esse prazo ajuda a dimensionar o suporte que os fornecedores oferecem ao caixa operacional.`));
+    cards.push(insightCard('Capital de giro via fornecedores',
+      `O PMP está em <b>${pmp.toFixed(1)} dias</b>, considerando apenas compras de mercadorias para revenda. Esse prazo mede quanto da operação está sendo financiada por fornecedores.`));
   }
   const el = document.getElementById('insightsResultado');
-  if(el) el.innerHTML = cards.join('');
+  if(el) el.innerHTML = cards.slice(0,4).join('');
 }
+
 function renderAll(){
   try { document.getElementById('lastUpdateTime').textContent = D.data_atualizacao || new Date().toLocaleString('pt-BR'); } catch(e){}
   try { renderSaldos(); } catch(e){ console.error('renderSaldos:', e); }
@@ -11499,6 +11692,7 @@ function renderReceitas(){
   renderResumoReceitas();
   renderAlertasReceitas();
   renderInsightsReceitas();
+  try{ agRenderAgenda('receitas','agendaReceitasContainer'); }catch(e){ console.error('agendaReceitas:', e); }
 }
 
 // ════════════════════════════════════════
@@ -11581,6 +11775,7 @@ function renderDespesas(){
   renderResumoDespesas();
   renderAlertasDespesas();
   renderInsightsDespesas();
+  try{ agRenderAgenda('despesas','agendaDespesasContainer'); }catch(e){ console.error('agendaDespesas:', e); }
 }
 
 // ════════════════════════════════════════
@@ -12069,11 +12264,12 @@ function parseCashFlow(buf){
           .trim()
           .toUpperCase();
 
-        // PMP considera somente compras de mercadoria para revenda
+        // PMP considera somente compras de mercadorias para revenda
+        const categoriaNorm = String(categoria||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
         if(![
           'COMPRAS DE MERCADORIA PARA REVENDA',
           'COMPRAS DE MERCADORIAS PARA REVENDA'
-        ].includes(categoria)) return;
+        ].includes(categoriaNorm)) return;
 
         const dtPag = row['Data de Crédito ou Débito (No Extrato)'];
         const dtEm  = row['Emissão'];
@@ -12132,6 +12328,11 @@ function parseCashFlow(buf){
     function _toInt(v){
       const n = parseInt(String(v ?? '').replace(/\D/g,''),10);
       return Number.isFinite(n) ? n : null;
+    }
+
+    function _isCardAccount(account, document){
+      const base = `${account || ''} ${document || ''}`.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+      return /(cartao|credito|master|mastercard|visa|elo|amex|american express)/.test(base);
     }
 
     function _startOfBusinessWeek(dt){
@@ -12257,6 +12458,13 @@ function parseCashFlow(buf){
           : type==='recebimentos_real' ? 'Recebido'
           : 'Pendente';
 
+        const account = String(row['Conta Corrente']||'');
+        const document = String(row['Documento']||row['Origem']||'');
+        const previsaoIso = _fmtDateBR(_xlDate(row['Previsão']));
+        const vencimentoIso = _fmtDateBR(_xlDate(row['Vencimento']));
+        const isCard = _isCardAccount(account, document);
+        const dataOperacionalIso = previsaoIso || vencimentoIso || _fmtDate(dt);
+
         items.push({
           company: bk,
           date: _fmtDate(dt),
@@ -12266,15 +12474,19 @@ function parseCashFlow(buf){
           week_end: weekMeta.end,
           name: String(nome),
           category: String(cat),
-          account: String(row['Conta Corrente']||''),
-          document: String(row['Documento']||row['Origem']||''),
+          account: account,
+          document: document,
           amount: Math.round(valor*100)/100,
           status: status,
           is_realizado: type==='pagamentos_real' || type==='recebimentos_real',
           source_type: type,
           obs: String(row['Observação da Conta']||row['Observação do Pagto ou Recbto']||''),
           emissao: _fmtDateBR(_xlDate(row['Emissão'])),
-          venc: _fmtDateBR(_xlDate(row['Vencimento']))
+          previsao: previsaoIso,
+          venc_original: vencimentoIso,
+          venc: dataOperacionalIso,
+          ref_date: dataOperacionalIso,
+          is_card_account: isCard
         });
       });
       return items;
@@ -12383,7 +12595,24 @@ function parseCashFlow(buf){
 // ═══════════════════════════════════════════════════════
 function setLoading(on,msg=''){const el=document.getElementById('loadingOverlay');if(on){document.getElementById('loadingMsg').textContent=msg;el.classList.add('show');}else{el.classList.remove('show');}}
 function setError(msg){document.getElementById('fileDot').className='file-dot error';document.getElementById('fileStatusText').innerHTML='Erro: '+msg;document.getElementById('statusHint').textContent='Tente Atualizar ou faça login novamente';}
-function switchTab(view,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));el.classList.add('active');document.getElementById('view-'+view).classList.add('active');}
+function switchTab(view,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  el.classList.add('active');
+  const target=document.getElementById('view-'+view);
+  if(target) target.classList.add('active');
+  setTimeout(()=>{
+    try{
+      window.scrollTo({left:0,top:window.scrollY,behavior:'instant'});
+      document.documentElement.scrollLeft=0;
+      document.body.scrollLeft=0;
+      window.dispatchEvent(new Event('resize'));
+      if(typeof Chart!=='undefined' && Chart.instances){
+        Object.values(Chart.instances).forEach(ch=>{ try{ ch.resize(); }catch(e){} });
+      }
+    }catch(e){}
+  },60);
+}
 
 // Print
 let _printingAll=false;
@@ -12491,7 +12720,7 @@ function agWeekRef(iso){
 function agNormalizeCompanyData(companyData){
   const allItems = [];
   const todayIso = new Date().toISOString().slice(0,10);
-  const refDate = (item) => agToISODate(item.venc || item.date);
+  const refDate = (item) => agToISODate(item.ref_date || item.previsao || item.venc || item.date);
   const statusOrder = (item) => {
     const ref = refDate(item) || item.date || '';
     if(item.status === 'Pendente' && ref < todayIso) return 0;
@@ -12504,7 +12733,10 @@ function agNormalizeCompanyData(companyData){
       (day?.items || []).forEach(item=>{
         const clone = Object.assign({}, item);
         clone.date = agToISODate(clone.date || day?.date);
-        clone.venc = agToISODate(clone.venc || clone.date);
+        clone.previsao = agToISODate(clone.previsao || clone.ref_date || clone.date);
+        clone.venc_original = agToISODate(clone.venc_original || clone.venc || clone.date);
+        clone.ref_date = agToISODate(clone.ref_date || clone.previsao || clone.venc || clone.date);
+        clone.venc = agToISODate(clone.ref_date || clone.previsao || clone.venc || clone.date);
         clone.amount = Number(clone.amount || 0);
         clone.status = clone.status || 'Pendente';
         allItems.push(clone);
@@ -12633,6 +12865,29 @@ function agStatusClass(status){
   return 'pendente';
 }
 
+function agOperationalDate(item){
+  return item?.ref_date || item?.previsao || item?.venc || item?.date || null;
+}
+function agIsPendingItem(item){
+  const s = String(item?.status || '').toLowerCase();
+  return s !== 'pago' && s !== 'recebido';
+}
+function agDaySignal(day){
+  const todayIso = new Date().toISOString().slice(0,10);
+  let overdue = 0;
+  let today = 0;
+  (day?.items || []).forEach(item => {
+    if(!agIsPendingItem(item)) return;
+    const ref = agOperationalDate(item);
+    if(!ref) return;
+    if(ref < todayIso) overdue++;
+    else if(ref === todayIso) today++;
+  });
+  if(overdue > 0) return { className:'ag-overdue', badge:'Atrasado', badgeClass:'danger' };
+  if(today > 0) return { className:'ag-today', badge:'Hoje', badgeClass:'warn' };
+  return { className:'', badge:'', badgeClass:'' };
+}
+
 function agDaySummary(items, type){
   const counts = { pendente:0, pago:0, recebido:0 };
   (items || []).forEach(item => {
@@ -12656,7 +12911,119 @@ function agToggleDay(id){
   const el = document.getElementById(id);
   if(el) el.classList.toggle('open');
 }
-function agRenderPanel(type, companyKey, companyData){
+
+function agCompanyLabel(key){
+  return key === 'marck' ? 'Marck' : key === 'grattano' ? 'Grattano' : 'Consolidado';
+}
+function agClone(obj){
+  return JSON.parse(JSON.stringify(obj));
+}
+function agMergeCompanyData(type){
+  const source = AG_DATA[type] || {};
+  const marck = agClone(source.marck || {summary:{},weeks:[]});
+  const grattano = agClone(source.grattano || {summary:{},weeks:[]});
+
+  const merged = {
+    summary:{
+      total:(marck.summary.total||0)+(grattano.summary.total||0),
+      count:(marck.summary.count||0)+(grattano.summary.count||0),
+      days:0,
+      paid_count:(marck.summary.paid_count||0)+(grattano.summary.paid_count||0),
+      received_count:(marck.summary.received_count||0)+(grattano.summary.received_count||0),
+      pending_count:(marck.summary.pending_count||0)+(grattano.summary.pending_count||0),
+      overdue_count:(marck.summary.overdue_count||0)+(grattano.summary.overdue_count||0),
+      overdue_amount:(marck.summary.overdue_amount||0)+(grattano.summary.overdue_amount||0),
+      today_count:(marck.summary.today_count||0)+(grattano.summary.today_count||0),
+      today_amount:(marck.summary.today_amount||0)+(grattano.summary.today_amount||0),
+      largest_day:null,
+      top_account:null
+    },
+    weeks:[]
+  };
+
+  const topDayCandidates = [marck.summary.largest_day, grattano.summary.largest_day].filter(Boolean);
+  if(topDayCandidates.length){
+    merged.summary.largest_day = topDayCandidates.sort((a,b)=>(b.amount||0)-(a.amount||0))[0];
+  }
+
+  const accountTotals = {};
+  const weekMap = new Map();
+
+  [['marck', marck], ['grattano', grattano]].forEach(([companyKey, companyData]) => {
+    (companyData.weeks || []).forEach(week => {
+      const key = `${week.start}|${week.end}|${week.week}`;
+      if(!weekMap.has(key)){
+        weekMap.set(key, {
+          week: week.week,
+          start: week.start,
+          end: week.end,
+          total: 0,
+          count: 0,
+          daysMap: new Map()
+        });
+      }
+      const wk = weekMap.get(key);
+      wk.total += week.total || 0;
+      wk.count += week.count || 0;
+
+      (week.days || []).forEach(day => {
+        if(!wk.daysMap.has(day.date)){
+          wk.daysMap.set(day.date, {date: day.date, total: 0, count: 0, items: []});
+        }
+        const dayRef = wk.daysMap.get(day.date);
+        dayRef.total += day.total || 0;
+        dayRef.count += day.count || 0;
+
+        (day.items || []).forEach(item => {
+          const row = Object.assign({}, item, {company: companyKey});
+          dayRef.items.push(row);
+          const accName = row.account || 'Sem conta';
+          accountTotals[accName] = (accountTotals[accName] || 0) + (row.amount || 0);
+        });
+      });
+    });
+  });
+
+  merged.weeks = Array.from(weekMap.values()).map(wk => {
+    const days = Array.from(wk.daysMap.values())
+      .map(day => {
+        day.items.sort((a,b)=>(b.amount||0)-(a.amount||0));
+        return day;
+      })
+      .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+    return {
+      week: wk.week,
+      start: wk.start,
+      end: wk.end,
+      total: wk.total,
+      count: wk.count,
+      days
+    };
+  }).sort((a,b)=>String(a.start).localeCompare(String(b.start)));
+
+  const dayMap = new Map();
+  merged.weeks.forEach(week => {
+    week.days.forEach(day => {
+      dayMap.set(day.date, (dayMap.get(day.date) || 0) + (day.total || 0));
+    });
+  });
+  merged.summary.days = dayMap.size;
+
+  let topDay = null;
+  for(const [date, amount] of dayMap.entries()){
+    if(!topDay || amount > topDay.amount) topDay = {date, amount};
+  }
+  if(topDay) merged.summary.largest_day = topDay;
+
+  const topAccountEntry = Object.entries(accountTotals).sort((a,b)=>b[1]-a[1])[0];
+  if(topAccountEntry){
+    merged.summary.top_account = {name: topAccountEntry[0], amount: topAccountEntry[1]};
+  }
+
+  return merged;
+}
+function agRenderPanel(type, companyKey, companyData, opts={}){
+
   const cls = type === 'receitas' ? 'ag-receita' : 'ag-despesa';
   const label = type === 'receitas' ? 'A RECEBER NO MÊS' : 'A PAGAR NO MÊS';
   const topDay = companyData.summary.largest_day;
@@ -12668,11 +13035,11 @@ function agRenderPanel(type, companyKey, companyData){
   const overdueLabel = type === 'despesas' ? 'Atrasados' : 'A receber em atraso';
   const todayLabel = type === 'despesas' ? 'Prioridade do dia' : 'Prioridade de recebimento do dia';
   const overdueText = type === 'despesas'
-    ? 'contas vencidas e ainda pendentes'
-    : 'recebimentos vencidos e ainda pendentes';
+    ? 'contas pendentes com data operacional anterior'
+    : 'recebimentos pendentes com data operacional anterior';
   const todayText = type === 'despesas'
-    ? 'compromissos pendentes com vencimento hoje'
-    : 'recebimentos pendentes previstos para hoje';
+    ? 'compromissos pendentes com data operacional hoje'
+    : 'recebimentos pendentes com data operacional hoje';
   const alerts = [];
   if((companyData.summary.overdue_count || 0) > 0){
     alerts.push(`
@@ -12693,7 +13060,7 @@ function agRenderPanel(type, companyKey, companyData){
   if(alerts.length === 0){
     alerts.push(`
       <div class="ag-alert info">
-        <div><strong>Sem alertas críticos</strong><span>Não há lançamentos pendentes vencidos ou com prioridade para hoje.</span></div>
+        <div><strong>Sem alertas críticos</strong><span>Não há lançamentos pendentes com data operacional vencida ou com prioridade para hoje.</span></div>
         <div class="ag-alert-val">OK</div>
       </div>
     `);
@@ -12707,28 +13074,35 @@ function agRenderPanel(type, companyKey, companyData){
         <div class="ag-num">${agFmtShort(week.total)}</div>
       </div>
       <div class="ag-week-body">
-        ${week.days.map((day,didx) => `
-          <div class="ag-day ${day.items.some(item => item.status === 'Pendente' && ((item.venc || item.date) <= new Date().toISOString().slice(0,10))) ? 'ag-priority' : ''}" id="ag-${type}-${companyKey}-${widx}-${didx}">
+        ${week.days.map((day,didx) => {
+          const signal = agDaySignal(day);
+          return `
+          <div class="ag-day ${signal.className}" id="ag-${type}-${companyKey}-${widx}-${didx}">
             <button class="ag-day-toggle" onclick="agToggleDay('ag-${type}-${companyKey}-${widx}-${didx}')">
               <div class="ag-day-main">
                 <span class="ag-chevron">▶</span>
-                <div><div class="ag-day-date">${agFmtDate(day.date)} <span class="ag-day-week">• ${agDayName(day.date)}</span></div></div>
+                <div class="ag-day-date-wrap">
+                  <div class="ag-day-date">${agFmtDate(day.date)} <span class="ag-day-week">• ${agDayName(day.date)}</span></div>
+                  ${signal.badge ? `<span class="ag-day-flag ${signal.badgeClass}">${signal.badge}</span>` : ''}
+                </div>
               </div>
               <div class="ag-day-summary">${agDaySummary(day.items, type)}</div>
               <div class="ag-num"><span class="ag-badge">${day.count} lanç.</span></div>
               <div class="ag-num ag-day-total ${cls}">${agFmtMoney(day.total)}</div>
             </button>
             <div class="ag-items">
+              <div class="ag-table-wrap">
               <table class="ag-table">
                 <thead>
                   <tr>
                     <th>Cliente / Fornecedor</th>
+                    ${opts.showCompanyCol ? '<th>Empresa</th>' : ''}
                     <th>Categoria</th>
                     <th>Status</th>
                     <th>Conta Corrente</th>
                     <th>Documento</th>
                     <th>Emissão</th>
-                    <th>Venc.</th>
+                    <th>Previsão</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
@@ -12739,27 +13113,30 @@ function agRenderPanel(type, companyKey, companyData){
                         <div><strong>${agEsc(item.name)}</strong></div>
                         <div class="ag-obs">${agEsc(item.obs && item.obs !== 'N/D' ? item.obs.slice(0,140) : '')}</div>
                       </td>
+                      ${opts.showCompanyCol ? `<td><span class="ag-company-chip">${agCompanyLabel(item.company)}</span></td>` : ''}
                       <td><span class="ag-cat">${agEsc(item.category || 'Sem categoria')}</span></td>
                       <td><span class="ag-status ${agStatusClass(item.status)}">${agEsc(item.status || '—')}</span></td>
                       <td><span class="ag-acc">${agEsc(item.account || 'Sem conta')}</span></td>
                       <td>${agEsc(item.document || '—')}</td>
                       <td>${item.emissao ? agFmtDate(item.emissao) : '—'}</td>
-                      <td>${item.venc ? agFmtDate(item.venc) : '—'}</td>
+                      <td>${(item.ref_date || item.previsao || item.venc) ? agFmtDate(item.ref_date || item.previsao || item.venc) : '—'}</td>
                       <td class="ag-num"><strong>${agFmtMoney(item.amount)}</strong></td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
     </div>
   `).join('');
   return `
     <div class="ag-panel">
       <div class="ag-panel-head">
-        <h3>${agCompanyName(companyKey)}</h3>
+        <h3>${opts.titleOverride || agCompanyName(companyKey)}</h3>
         <span>${label}</span>
       </div>
       <div class="ag-summary">
@@ -12801,10 +13178,21 @@ function agRenderPanel(type, companyKey, companyData){
 function agRenderAgenda(type, containerId){
   const root = document.getElementById(containerId);
   if(!root) return;
+  const emp = (_emp && _emp[type]) || 'emp';
+
+  if(emp === 'marck' || emp === 'grattano'){
+    root.innerHTML = `
+      <div class="ag-grid single">
+        ${agRenderPanel(type, emp, AG_DATA[type][emp])}
+      </div>
+    `;
+    return;
+  }
+
+  const merged = agMergeCompanyData(type);
   root.innerHTML = `
-    <div class="ag-grid">
-      ${agRenderPanel(type,'marck',AG_DATA[type]['marck'])}
-      ${agRenderPanel(type,'grattano',AG_DATA[type]['grattano'])}
+    <div class="ag-grid single">
+      ${agRenderPanel(type, 'emp', merged, {showCompanyCol:true, titleOverride:'Consolidado'})}
     </div>
   `;
 }
