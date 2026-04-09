@@ -106,6 +106,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 .emp-pill{padding:5px 14px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray-600);transition:all .2s;border:none;background:none;font-family:'DM Sans',sans-serif}
 .emp-pill:hover{color:var(--navy)}.emp-pill.active{background:var(--gold);color:var(--navy)}
 
+
+.scenario-inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.scenario-inline-label{font-size:11px;color:var(--gray-600);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.scenario-inline .cenario-select{min-width:190px}
+.scenario-inline.compact{margin-left:0}.card-header .scenario-inline{margin-left:auto}.scenario-inline.compact .scenario-inline-label{font-size:10px}
+
+
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:13px;margin-bottom:20px}
 .kpi-card{background:var(--white);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-sm);border-top:3px solid transparent;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
@@ -354,6 +361,25 @@ html,body{max-width:100%;overflow-x:hidden}
   #view-resultado #kpiFinanceiros{grid-template-columns:repeat(auto-fit,minmax(175px,1fr))}
 }
 
+
+/* RESULTADO — TENDÊNCIA E PREDITIVO */
+.kpi-trend{
+  display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:4px 9px;
+  border-radius:999px;font-size:10px;font-weight:700;line-height:1.1;border:1px solid transparent;
+}
+.kpi-trend.up{background:#e6f4ef;color:var(--green-light);border-color:#b7e1ce}
+.kpi-trend.down{background:var(--red-pale);color:var(--red);border-color:#f3c7cc}
+.kpi-trend.flat{background:#fff8ef;color:#c97816;border-color:#f4d3a6}
+.kpi-trend .arrow{font-size:11px;font-weight:800}
+.pred-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.pred-item{background:var(--white);border:1px solid var(--gray-200);border-left:4px solid var(--orange);border-radius:10px;padding:12px 14px}
+.pred-item.danger{border-left-color:var(--red);background:#fff5f6}
+.pred-item.warn{border-left-color:var(--orange);background:#fff8ef}
+.pred-item.success{border-left-color:var(--green-light);background:#f4fbf7}
+.pred-title{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.pred-text{font-size:12px;line-height:1.6;color:var(--gray-600)}
+@media(max-width:1100px){.pred-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -582,7 +608,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <div class="section-header">
 <div>
 <div class="section-title" id="tituloFluxo">Fluxo de Caixa — Consolidado</div>
-<div class="section-subtitle" id="subtituloFluxo">Realizado vs. Previsto · 2026</div>
+<div class="section-subtitle" id="subtituloFluxo">Realizado vs. Cenário de Referência · 2026</div>
 </div>
 <div class="emp-selector" id="empFluxo">
 <button class="emp-pill active" onclick="setEmpresa(&#39;fluxo&#39;,&#39;emp&#39;,this)">Consolidado</button>
@@ -592,18 +618,11 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 <!-- Cenário + colunas extras -->
 <div class="cenario-bar">
-<div class="cenario-label">📊 Cenário Previsto:</div>
-<select class="cenario-select" id="cenarioSelect" onchange="setCenario(this.value)">
-<option value="atual">Atual (Base Previstos)</option>
-<option value="pessimista">Pessimista (histórico ×1,0)</option>
-<option value="realista">Realista (histórico ×1,17)</option>
-<option value="otimista">Otimista (histórico ×1,30)</option>
-</select>
 <div style="flex:1"></div>
 <div class="cenario-label">Colunas extras:</div>
 <div class="col-tog-group" id="colToggles">
 <button class="col-tog active" data-col="real" onclick="toggleCol(&#39;real&#39;,this)">Realizado</button>
-<button class="col-tog active" data-col="prev" onclick="toggleCol(&#39;prev&#39;,this)">Previsto</button>
+<button class="col-tog active" data-col="prev" onclick="toggleCol(&#39;prev&#39;,this)">Cenário</button>
 <button class="col-tog" data-col="evo" onclick="toggleCol(&#39;evo&#39;,this)">%Evo M/M</button>
 <button class="col-tog" data-col="prop" onclick="toggleCol(&#39;prop&#39;,this)">%Prop</button>
 <button class="col-tog" data-col="cresc" onclick="toggleCol(&#39;cresc&#39;,this)">%Cresc. vs AA</button>
@@ -625,8 +644,8 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 <div class="card" style="margin-bottom:16px">
 <div class="card-header">
-<div><div class="card-title">Saldo Mensal — Realizado vs. Previsto</div><div class="card-subtitle">Resultado líquido (Receita − Despesas) por mês</div></div>
-<div class="recorte-tag">📅 2026</div>
+<div><div class="card-title" id="tituloChartSaldo">Saldo Mensal — Realizado vs. Cenário</div><div class="card-subtitle" id="subtituloChartSaldo">Resultado líquido (Receita − Despesas) por mês vs cenário de referência</div></div>
+<div class="recorte-tag">📅 2026</div><div class="scenario-inline compact"><span class="scenario-inline-label">Cenário</span><select class="cenario-select scenario-sync" onchange="setCenario(this.value)"><option value="atual">Atual (base do sistema)</option><option value="pessimista">Pessimista (AA ×1,00)</option><option value="realista">Realista (AA ×1,17)</option><option value="otimista" selected>Otimista (AA ×1,30)</option></select></div>
 </div>
 <div class="chart-wrap" style="height:280px"><canvas height="0" id="chartSaldo" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0"></canvas></div>
 </div>
@@ -643,7 +662,7 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 <!-- Tabela detalhada -->
 <div class="card">
-<div class="card-header"><div class="card-title">Demonstrativo Mensal Detalhado</div><div class="card-subtitle">Realizado vs. Previsto · 2026</div></div>
+<div class="card-header"><div class="card-title">Demonstrativo Mensal Detalhado</div><div class="card-subtitle" id="subtituloTabelaFluxo">Realizado vs. Cenário de Referência · 2026</div></div>
 <div style="overflow-x:auto">
 <table class="data-table" id="tabelaFluxo" style="font-size:11px">
 <thead><tr><th style="min-width:230px;position:sticky;left:0;z-index:3;background:var(--gray-50)">Categoria</th><th class="num" style="min-width:90px">Jan<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:90px">Fev<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:90px">Mar<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:90px">Abr<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:90px">Mai<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:90px">Jun<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:90px">Jul<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:90px">Ago<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:90px">Set<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:90px">Out<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:90px">Nov<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:90px">Dez<br><span style="color:var(--gold);font-size:8px">Prev</span></th><th class="num" style="min-width:105px">Acumulado</th></tr></thead>
@@ -1213,6 +1232,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <button class="emp-pill active" onclick="setEmpresa(&#39;receitas&#39;,&#39;emp&#39;,this)">Consolidado</button>
 <button class="emp-pill" onclick="setEmpresa(&#39;receitas&#39;,&#39;marck&#39;,this)">Marck</button>
 <button class="emp-pill" onclick="setEmpresa(&#39;receitas&#39;,&#39;grattano&#39;,this)">Grattano</button>
+
 </div>
 </div>
 <div class="kpi-grid" id="kpiReceitas"><div class="kpi-card gold"><div class="kpi-icon">💰</div><div class="kpi-label">Fat. Bruto Acumulado</div><div class="kpi-value">R$ 6.68M</div><div class="kpi-sub">2026 YTD</div></div><div class="kpi-card green"><div class="kpi-icon">✅</div><div class="kpi-label">Fat. Líquido Acumulado</div><div class="kpi-value">R$ 6.66M</div><div class="kpi-sub">Após devoluções</div></div><div class="kpi-card teal"><div class="kpi-icon">📥</div><div class="kpi-label">Receita Total Recebida</div><div class="kpi-value">R$ 5.21M</div><div class="kpi-sub">Entradas realizadas</div></div><div class="kpi-card navy"><div class="kpi-icon">📊</div><div class="kpi-label">Média Mensal</div><div class="kpi-value">R$ 1.30M</div><div class="kpi-sub">Sobre 4 meses com dados</div></div></div>
@@ -1225,13 +1245,13 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 <div class="card-body" id="resumoReceitas" style="font-size:13px; line-height:1.65;">
 <b>Qualidade do faturamento:</b> O faturamento bruto acumulado é de <b>R$ 6.68M</b>, com faturamento líquido de <b>R$ 6.66M</b>. As devoluções e cancelamentos somam <b>R$ 17k</b>, o que mantém a assertividade de faturamento em <b>99.7%</b>, com baixo nível de retrabalho e menor exposição a embaraços fiscais.<br><br>
-<b>Desempenho frente à base:</b> Na comparação com a base do cenário pessimista para o período, os recebimentos já superam essa referência em <b>98.8%</b>, posicionando o desempenho acima do cenário otimista projetado.<br><br>
+<b>Desempenho frente à base:</b> Na comparação com a base do cenário pessimista para o período, os recebimentos já superam essa referência em <b>98.8%</b>, posicionando o desempenho acima do cenário de referência projetado.<br><br>
 <b>Leitura gerencial:</b> O comportamento observado reforça a consistência da geração de receita no período e sinaliza evolução acima da referência histórica utilizada para projeção.
   </div>
 </div>
 <div class="grid-2-1">
 <div class="card">
-<div class="card-header"><div class="card-title">Receita Total Mensal — Realizado vs. Previsto</div><div class="card-subtitle">R$ em milhares</div></div>
+<div class="card-header"><div class="card-title" id="tituloChartReceitaMensal">Receita Total Mensal — Realizado vs. Cenário</div><div class="card-subtitle" id="subtituloChartReceitaMensal">R$ em milhares · cenário de referência</div></div><div class="scenario-inline compact"><span class="scenario-inline-label">Cenário</span><select class="cenario-select scenario-sync" onchange="setCenario(this.value)"><option value="atual">Atual (base do sistema)</option><option value="pessimista">Pessimista (AA ×1,00)</option><option value="realista">Realista (AA ×1,17)</option><option value="otimista" selected>Otimista (AA ×1,30)</option></select></div>
 <div class="chart-wrap" style="height:270px"><canvas height="0" id="chartReceitaMensal" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0"></canvas></div>
 </div>
 <div class="card">
@@ -3795,9 +3815,10 @@ html,body{max-width:100%;overflow-x:hidden}
 <button class="emp-pill active" onclick="setEmpresa(&#39;despesas&#39;,&#39;emp&#39;,this)">Consolidado</button>
 <button class="emp-pill" onclick="setEmpresa(&#39;despesas&#39;,&#39;marck&#39;,this)">Marck</button>
 <button class="emp-pill" onclick="setEmpresa(&#39;despesas&#39;,&#39;grattano&#39;,this)">Grattano</button>
+
 </div>
 </div>
-<div class="kpi-grid" id="kpiDespesas"><div class="kpi-card red"><div class="kpi-icon">📤</div><div class="kpi-badge badge-danger">Acumulado 2026</div><div class="kpi-label">Total Despesas</div><div class="kpi-value R$ 5.80M">R$ 5.80M</div></div><div class="kpi-card orange"><div class="kpi-icon">🛒</div><div class="kpi-label">Desp. c/ Mercadoria</div><div class="kpi-value">R$ 4.40M</div><div class="kpi-sub">75.8% do total</div></div><div class="kpi-card navy"><div class="kpi-icon">🏢</div><div class="kpi-label">Despesa Operacional</div><div class="kpi-value">R$ 1.35M</div><div class="kpi-sub">23.3% do total</div></div><div class="kpi-card purple"><div class="kpi-icon">👥</div><div class="kpi-label">Pessoal</div><div class="kpi-value">R$ 85k</div><div class="kpi-sub">1.5% do total</div></div></div>
+<div class="kpi-grid" id="kpiDespesas"><div class="kpi-card red"><div class="kpi-icon">📤</div><div class="kpi-badge badge-danger">Realizado vs. cenário de referência do mesmo período</div><div class="kpi-label">Total Despesas</div><div class="kpi-value R$ 5.80M">R$ 5.80M</div></div><div class="kpi-card orange"><div class="kpi-icon">🛒</div><div class="kpi-label">Desp. c/ Mercadoria</div><div class="kpi-value">R$ 4.40M</div><div class="kpi-sub">75.8% do total</div></div><div class="kpi-card navy"><div class="kpi-icon">🏢</div><div class="kpi-label">Despesa Operacional</div><div class="kpi-value">R$ 1.35M</div><div class="kpi-sub">23.3% do total</div></div><div class="kpi-card purple"><div class="kpi-icon">👥</div><div class="kpi-label">Pessoal</div><div class="kpi-value">R$ 85k</div><div class="kpi-sub">1.5% do total</div></div></div>
 <div class="card" style="margin-bottom:16px">
 <div class="card-header">
 <div>
@@ -3817,7 +3838,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <div class="chart-wrap" style="height:270px"><canvas height="238" id="chartDespCategorias" style="box-sizing: border-box; display: block; height: 238px; width: 716px;" width="716"></canvas></div>
 </div>
 <div class="card">
-<div class="card-header"><div class="card-title">Despesa Total Mensal</div><div class="card-subtitle">Realizado vs. Previsto · 2026</div></div>
+<div class="card-header"><div class="card-title" id="tituloChartDespMensal">Despesa Total Mensal — Realizado vs. Cenário</div><div class="card-subtitle" id="subtituloChartDespMensal">Comparação com o cenário de referência · 2026</div></div><div class="scenario-inline compact"><span class="scenario-inline-label">Cenário</span><select class="cenario-select scenario-sync" onchange="setCenario(this.value)"><option value="atual">Atual (base do sistema)</option><option value="pessimista">Pessimista (AA ×1,00)</option><option value="realista">Realista (AA ×1,17)</option><option value="otimista" selected>Otimista (AA ×1,30)</option></select></div>
 <div class="chart-wrap" style="height:270px"><canvas height="238" id="chartDespMensal" style="box-sizing: border-box; display: block; height: 238px; width: 716px;" width="716"></canvas></div>
 </div>
 </div>
@@ -10336,10 +10357,23 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="emp-pill active" onclick="setEmpresa(&#39;resultado&#39;,&#39;emp&#39;,this)">Consolidado</button>
       <button class="emp-pill" onclick="setEmpresa(&#39;resultado&#39;,&#39;marck&#39;,this)">Marck</button>
       <button class="emp-pill" onclick="setEmpresa(&#39;resultado&#39;,&#39;grattano&#39;,this)">Grattano</button>
+    
     </div>
   </div>
 
   <div class="kpi-grid" id="kpiResultado"></div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header">
+      <div>
+        <div class="card-title">🔮 Riscos e Projeções</div>
+        <div class="card-subtitle">Sinais antecipados para gestão financeira e capital de giro</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="pred-grid" id="predicoesResultado"></div>
+    </div>
+  </div>
 
   <div class="card" style="margin-bottom:16px">
     <div class="card-header">
@@ -10369,16 +10403,16 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="chart-wrap" style="height:260px"><canvas id="chartResultadoAcum"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-title">Resultado vs. Previsto</div><div class="card-subtitle">Gap entre realizado e projetado</div></div>
+      <div class="card-header"><div class="card-title" id="tituloChartGapResultado">Resultado Mensal vs. Cenário</div><div class="card-subtitle" id="subtituloChartGapResultado">Linhas: realizado e cenário selecionado · Barras: gap mensal</div></div><div class="scenario-inline compact"><span class="scenario-inline-label">Cenário</span><select class="cenario-select scenario-sync" onchange="setCenario(this.value)"><option value="atual">Atual (base do sistema)</option><option value="pessimista">Pessimista (AA ×1,00)</option><option value="realista">Realista (AA ×1,17)</option><option value="otimista" selected>Otimista (AA ×1,30)</option></select></div>
       <div class="chart-wrap" style="height:260px"><canvas id="chartGapPrevisto"></canvas></div>
     </div>
   </div>
 
     <div class="card">
-      <div class="card-header"><div class="card-title">Resumo Executivo — Todas as Categorias</div><div class="card-subtitle">Acumulado 2026</div></div>
+      <div class="card-header"><div class="card-title">Resumo Executivo — Todas as Categorias</div><div class="card-subtitle" id="subtituloTabelaResultado">Acumulado 2026 vs. cenário de referência</div></div>
       <div style="overflow-x:auto">
         <table class="data-table">
-          <thead><tr><th>Categoria</th><th class="num">Realizado</th><th class="num">Previsto</th><th class="num">Diferença</th><th class="num">% Realiz.</th></tr></thead>
+          <thead><tr><th>Categoria</th><th class="num">Realizado</th><th class="num" id="thCenarioResultado">Cenário de Referência</th><th class="num">Diferença</th><th class="num">% Desvio</th></tr></thead>
           <tbody id="tabelaResultado"></tbody>
         </table>
       </div>
@@ -10499,7 +10533,7 @@ function setEmpresa(tab, emp, el){
 }
 
 // Cenário + column toggle state
-let _cenario = 'atual'; // atual | pessimista | realista | otimista
+let _cenario = 'otimista'; // atual | pessimista | realista | otimista
 let _colVis = {real:true, prev:true, evo:false, prop:false, cresc:false};
 
 const CENARIO_MULT = {pessimista:1.0, realista:1.17, otimista:1.30}; // Atual usa Base Previstos
@@ -10510,6 +10544,8 @@ const CENARIO_ATUAL_DATA = {"Adiantamento":[0.0,0.0,0.0,14430.93,14430.93,14430.
 
 function setCenario(val){
   _cenario = val;
+  updateScenarioSelectors();
+  updateScenarioTexts();
   renderFluxo();
   renderReceitas();
   renderDespesas();
@@ -10551,6 +10587,54 @@ function getPrevAcum(emp, key){
   return getPrev(emp, key).reduce((s,v)=>s+(Number(v)||0), 0);
 }
 
+function getScenarioRawByName(emp, key, scenarioName='otimista'){
+  const base = getM(emp, key);
+  if(scenarioName === 'atual'){
+    const ma = D.monthly_atual?.[key];
+    if(ma && Array.isArray(ma.prev)) return D.months.map((_,i)=>Number(ma.prev[i] ?? 0));
+    return D.months.map((_,i)=>Number(base.prev?.[i] ?? 0));
+  }
+  const mult = CENARIO_MULT[scenarioName] ?? 1.0;
+  return D.months.map((_,i)=>{
+    const v = Number(base.prev?.[i] ?? 0);
+    return v === 0 ? 0 : Math.round(v * mult * 100) / 100;
+  });
+}
+function getLastRealizedMonthIndex(emp){
+  const keys = ['receita_total','despesa_venda','despesa_total','impostos','saldo'];
+  let idx = -1;
+  D.months.forEach((_,i)=>{
+    const hasReal = keys.some(key => Math.abs(Number(getM(emp, key).real?.[i] ?? 0)) > 0.0001);
+    if(hasReal) idx = i;
+  });
+  return Math.max(0, idx);
+}
+function getScenarioSamePeriod(emp, key, scenarioName='otimista'){
+  const raw = getScenarioRawByName(emp, key, scenarioName);
+  const lastIdx = getLastRealizedMonthIndex(emp);
+  return D.months.map((_,i)=> i <= lastIdx ? Number(raw[i] ?? 0) : null);
+}
+function getScenarioAccumSamePeriod(emp, key, scenarioName='otimista'){
+  return getScenarioSamePeriod(emp, key, scenarioName).reduce((s,v)=>s+(Number(v)||0), 0);
+}
+function classResultadoComparativo(kind, diff){
+  if(kind === 'receita' || kind === 'resultado'){
+    return diff >= 0 ? 'pos' : 'neg';
+  }
+  if(kind === 'controlavel'){
+    return diff <= 0 ? 'pos' : 'neg';
+  }
+  if(kind === 'variavel'){
+    return diff <= 0 ? 'pos' : '';
+  }
+  return '';
+}
+function badgeResultadoComparativo(kind){
+  if(kind === 'variavel') return ' <span class="badge badge-navy">Variável</span>';
+  if(kind === 'controlavel') return ' <span class="badge badge-orange">Controlável</span>';
+  return '';
+}
+
 // Percent badge helper
 function pctBadge(v){
   if(v===null||v===undefined) return '<span class="pct-neu">—</span>';
@@ -10585,10 +10669,44 @@ const C = {navy:'#0a1628',gold:'#c9a84c',teal:'#2a9d8f',red:'#e63946',green:'#40
 
 function killChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
 
-function kpiCard(accent,icon,label,value,sub,cls='',valClass=''){
+
+function trendChip(trend){
+  if(!trend) return '';
+  const arrows = {up:'▲', down:'▼', flat:'◆'};
+  return `<div class="kpi-trend ${trend.cls}"><span class="arrow">${arrows[trend.cls] || '◆'}</span><span>${trend.text}</span></div>`;
+}
+function kpiCard(accent,icon,label,value,sub,cls='',valClass='',trend=null){
   const badge=cls?`<div class="kpi-badge ${cls}">${sub}</div>`:'';
   const subLine = cls?'':`<div class="kpi-sub">${sub}</div>`;
-  return `<div class="kpi-card ${accent}"><div class="kpi-icon">${icon}</div>${badge}<div class="kpi-label">${label}</div><div class="kpi-value ${valClass}">${value}</div>${subLine}</div>`;
+  return `<div class="kpi-card ${accent}"><div class="kpi-icon">${icon}</div>${badge}<div class="kpi-label">${label}</div><div class="kpi-value ${valClass}">${value}</div>${subLine}${trendChip(trend)}</div>`;
+}
+
+function lastTwoNonZeroPoints(arr){
+  const pts = [];
+  (arr || []).forEach((v,i)=>{
+    const n = Number(v);
+    if(!Number.isNaN(n) && n !== 0) pts.push({idx:i, val:n});
+  });
+  const current = pts.length ? pts[pts.length-1] : null;
+  const previous = pts.length > 1 ? pts[pts.length-2] : null;
+  return {current, previous};
+}
+function fmtTrendDelta(delta, kind='currency'){
+  if(kind==='percent') return `${delta>=0?'+':''}${delta.toFixed(1)} p.p.`;
+  if(kind==='days') return `${delta>=0?'+':''}${delta.toFixed(1)} dia(s)`;
+  return `${delta>=0?'+':''}${fmtS(Math.abs(delta))}`.replace(/^-\s*/, '-');
+}
+function makeTrend(current, previous, better='higher', kind='currency'){
+  if(current === null || previous === null || current === undefined || previous === undefined) return null;
+  const delta = Number(current) - Number(previous);
+  const absDelta = Math.abs(delta);
+  const tol = kind==='currency' ? 1 : 0.05;
+  if(absDelta <= tol) return {cls:'flat', text:'estável vs mês anterior'};
+  const direction = delta > 0 ? 'up' : 'down';
+  const favorable = better === 'lower' ? delta < 0 : delta > 0;
+  const cls = favorable ? 'up' : 'down';
+  const prefix = favorable ? 'melhora' : 'piora';
+  return {cls, text:`${prefix} ${fmtTrendDelta(delta, kind)} vs mês anterior`};
 }
 
 
@@ -10597,6 +10715,34 @@ function nomeCenarioAtual(){
   return _cenario === 'atual'
     ? 'Cenário Atual'
     : 'Cenário ' + _cenario.charAt(0).toUpperCase() + _cenario.slice(1);
+}
+
+function updateScenarioSelectors(){
+  document.querySelectorAll('.scenario-sync').forEach(sel=>{ sel.value = _cenario; });
+}
+function tituloCenarioAtual(){
+  return _cenario === 'atual' ? 'Cenário Atual' : 'Cenário ' + (_cenario.charAt(0).toUpperCase() + _cenario.slice(1));
+}
+function updateScenarioTexts(){
+  const nome = tituloCenarioAtual();
+  const map = {
+    subtituloFluxo: `Realizado vs. ${nome} · 2026`,
+    tituloChartSaldo: 'Saldo Mensal — Realizado vs. Cenário',
+    subtituloChartSaldo: `Resultado líquido (Receita − Despesas) por mês vs ${nome.toLowerCase()}`,
+    subtituloTabelaFluxo: `Realizado vs. ${nome} · 2026`,
+    tituloChartReceitaMensal: 'Receita Total Mensal — Realizado vs. Cenário',
+    subtituloChartReceitaMensal: `R$ em milhares · comparação com ${nome.toLowerCase()}`,
+    tituloChartDespMensal: 'Despesa Total Mensal — Realizado vs. Cenário',
+    subtituloChartDespMensal: `Comparação com ${nome.toLowerCase()} · 2026`,
+    tituloChartGapResultado: 'Resultado Mensal vs. Cenário',
+    subtituloChartGapResultado: `Linhas: realizado e ${nome.toLowerCase()} · Barras: gap mensal (realizado − cenário)`,
+    subtituloTabelaResultado: `Acumulado 2026 vs. ${nome.toLowerCase()}`,
+    thCenarioResultado: nome
+  };
+  Object.entries(map).forEach(([id,val])=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent = val;
+  });
 }
 
 function renderResumoSaldos(){
@@ -10716,45 +10862,37 @@ function renderKpisFinanceiros(){
   const el = document.getElementById('kpiFinanceiros');
   if(!el) return;
   const emp = _emp.resultado;
+  const d = resultadoMetricas(emp);
 
-  const rec = getA(emp,'receita_total') || 0;
-  const fatBruto = getA(emp,'fat_bruto') || 0;
-  const despMerc = getA(emp,'despesa_venda') || 0;
-  const despOp = getA(emp,'despesa_total') || 0;
-  const impostos = getA(emp,'impostos') || 0;
-  const outrasReceitas = getA(emp,'outras_receitas') || 0;
-  const financeira = getA(emp,'financeira') || 0;
-  const saldo = getA(emp,'saldo') || 0;
+  const comprometMensal = D.months.map((_,i)=>{
+    const rec = Number(d.m.receita_total?.real?.[i]) || 0;
+    const desp = (Number(d.m.despesa_venda?.real?.[i])||0) + (Number(d.m.despesa_total?.real?.[i])||0) + (Number(d.m.impostos?.real?.[i])||0);
+    return rec > 0 ? (desp / rec * 100) : 0;
+  });
+  const comprometPts = lastTwoNonZeroPoints(comprometMensal);
+  const pontoEqMensal = D.months.map((_,i)=>{
+    const rec = Number(d.m.receita_total?.real?.[i]) || 0;
+    const despMerc = Number(d.m.despesa_venda?.real?.[i]) || 0;
+    const impostos = Number(d.m.impostos?.real?.[i]) || 0;
+    const despOp = Number(d.m.despesa_total?.real?.[i]) || 0;
+    const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
+    return margemContrib > 0 ? (despOp / margemContrib) : 0;
+  });
+  const pontoEqPts = lastTwoNonZeroPoints(pontoEqMensal);
 
-  const despOpSobreBruta = fatBruto > 0 ? (despOp / fatBruto * 100) : 0;
-
-  // EBITDA ajustado: antes do financeiro e dos impostos, sem depreciação/amortização
-  const despOpSemFin = Math.max(0, despOp - financeira);
-  const ebitdaAjustado = rec + outrasReceitas - despMerc - despOpSemFin;
-  const margemEbitda = rec > 0 ? (ebitdaAjustado / rec * 100) : 0;
-
-  const margemLiquida = rec > 0 ? (saldo / rec * 100) : 0;
-
-  // Ponto de equilíbrio simplificado para revenda:
-  // custos variáveis aproximados = mercadoria + impostos
-  const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
-  const pontoEquilibrio = margemContrib > 0 ? (despOp / margemContrib) : null;
-
-  const peSub = pontoEquilibrio
-    ? (rec >= pontoEquilibrio ? 'Receita atual acima do equilíbrio' : 'Receita atual abaixo do equilíbrio')
+  const peSub = d.pontoEquilibrio
+    ? (d.recAcum >= d.pontoEquilibrio ? 'Receita atual acima do equilíbrio' : 'Receita atual abaixo do equilíbrio')
     : 'Margem de contribuição insuficiente';
 
-  const pmpInfo = D.kpis?.pmp?.[emp] || D.kpis?.pmp?.emp || null;
-  const pmp = pmpInfo?.avg_pagamento ?? null;
   const pmpSub = 'Somente compras de mercadorias para revenda';
 
   el.innerHTML =
-    kpiCard('navy','⚙️','Desp. Op. / Receita Bruta',pct(despOpSobreBruta),'Despesa operacional sobre faturamento bruto') +
-    kpiCard('purple','📈','EBITDA Ajustado',fmtS(ebitdaAjustado),'Antes de impostos e financeiro') +
-    kpiCard('teal','💹','Margem EBITDA',pct(margemEbitda),'EBITDA / Receita Total') +
-    kpiCard('green','🧮','Margem Lucro Líquido',pct(margemLiquida),'Saldo líquido / Receita Total') +
-    kpiCard('orange','🎯','Ponto de Equilíbrio',pontoEquilibrio ? fmtS(pontoEquilibrio) : '—',peSub) +
-    kpiCard('gold','📤','PMP',pmp !== null ? (pmp.toFixed(1)+' dias') : '—',pmpSub);
+    kpiCard('navy','⚙️','Desp. Op. / Receita Bruta',pct(d.despOpSobreBruta),'Despesa operacional sobre faturamento bruto','', '', makeTrend(d.despOpBrutaPts.current?.val ?? null, d.despOpBrutaPts.previous?.val ?? null, 'lower', 'percent')) +
+    kpiCard('purple','📈','EBITDA Ajustado',fmtS(d.ebitdaAjustado),'Antes de impostos e financeiro','', '', makeTrend(d.ebitdaPts.current?.val ?? null, d.ebitdaPts.previous?.val ?? null, 'higher', 'currency')) +
+    kpiCard('teal','💹','Margem EBITDA',pct(d.margemEbitda),'EBITDA / Receita Total','', '', makeTrend(d.margemEbitdaPts.current?.val ?? null, d.margemEbitdaPts.previous?.val ?? null, 'higher', 'percent')) +
+    kpiCard('green','🧮','Margem Lucro Líquido',pct(d.margemLiquida),'Saldo líquido / Receita Total','', '', makeTrend(d.margemLiquidaPts.current?.val ?? null, d.margemLiquidaPts.previous?.val ?? null, 'higher', 'percent')) +
+    kpiCard('orange','🎯','Ponto de Equilíbrio',d.pontoEquilibrio ? fmtS(d.pontoEquilibrio) : '—',peSub,'', '', makeTrend(pontoEqPts.current?.val ?? null, pontoEqPts.previous?.val ?? null, 'lower', 'currency')) +
+    kpiCard('gold','📤','PMP',d.pmp !== null ? (d.pmp.toFixed(1)+' dias') : '—',pmpSub,'', '', null);
 }
 
 function renderResumoKpisFinanceiros(){
@@ -11314,6 +11452,8 @@ function renderInsightsResultado(){
 }
 
 function renderAll(){
+  updateScenarioSelectors();
+  updateScenarioTexts();
   try { document.getElementById('lastUpdateTime').textContent = D.data_atualizacao || new Date().toLocaleString('pt-BR'); } catch(e){}
   try { renderSaldos(); } catch(e){ console.error('renderSaldos:', e); }
   try { renderFluxo(); } catch(e){ console.error('renderFluxo:', e); }
@@ -11554,6 +11694,7 @@ function _renderDemoRows(){
 // 2. FLUXO
 // ════════════════════════════════════════
 function renderFluxo(){
+  updateScenarioTexts();
   const emp = _emp.fluxo;
   const m = {
     saldo: getM(emp,'saldo'), receita_total: getM(emp,'receita_total'),
@@ -11590,7 +11731,7 @@ function renderFluxo(){
     type:'bar',
     data:{labels:months,datasets:[
       {label:'Realizado',data:saldoReal,backgroundColor:saldoReal.map(v=>v>0?C.green+'cc':C.red+'cc'),borderRadius:5,order:2},
-      {label:_cenario==='atual'?'Cenário Atual':'Cenário '+(_cenario.charAt(0).toUpperCase()+_cenario.slice(1)),data:saldoPrev,type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:4,pointBackgroundColor:C.gold,order:1},
+      {label:nomeCenarioAtual(),data:saldoPrev,type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:4,pointBackgroundColor:C.gold,order:1},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
   });
@@ -11629,6 +11770,7 @@ function renderFluxo(){
 // 3. RECEITAS
 // ════════════════════════════════════════
 function renderReceitas(){
+  updateScenarioTexts();
   const emp = _emp.receitas;
   const m = {
     receita_total: getM(emp,'receita_total'),
@@ -11661,7 +11803,7 @@ function renderReceitas(){
     type:'bar',
     data:{labels:D.months,datasets:[
       {label:'Realizado',data:m.receita_total.real,backgroundColor:C.green+'bb',borderRadius:5,order:2},
-      {label:'Previsto',data:getPrev(emp, 'receita_total'),type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:3,pointBackgroundColor:C.gold,order:1},
+      {label:nomeCenarioAtual(),data:getPrev(emp, 'receita_total'),type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:3,pointBackgroundColor:C.gold,order:1},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
   });
@@ -11699,6 +11841,7 @@ function renderReceitas(){
 // 4. DESPESAS
 // ════════════════════════════════════════
 function renderDespesas(){
+  updateScenarioTexts();
   const emp = _emp.despesas;
   const m = {
     despesa_venda: getM(emp,'despesa_venda'),
@@ -11754,7 +11897,7 @@ function renderDespesas(){
     type:'bar',
     data:{labels:D.months,datasets:[
       {label:'Realizado',data:despMensal,backgroundColor:C.red+'aa',borderRadius:5,order:2},
-      {label:'Previsto',data:despPrevMensal,type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:3,pointBackgroundColor:C.gold,order:1},
+      {label:nomeCenarioAtual(),data:despPrevMensal,type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:3,pointBackgroundColor:C.gold,order:1},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
   });
@@ -11781,8 +11924,8 @@ function renderDespesas(){
 // ════════════════════════════════════════
 // 5. RESULTADO
 // ════════════════════════════════════════
-function renderResultado(){
-  const emp = _emp.resultado;
+
+function resultadoMetricas(emp){
   const m = {
     saldo: getM(emp,'saldo'),
     receita_total: getM(emp,'receita_total'),
@@ -11791,6 +11934,8 @@ function renderResultado(){
     impostos: getM(emp,'impostos'),
     pessoal: getM(emp,'pessoal'),
     financeira: getM(emp,'financeira'),
+    fat_bruto: getM(emp,'fat_bruto'),
+    outras_receitas: getM(emp,'outras_receitas'),
   };
   const a = {
     saldo: getA(emp,'saldo'),
@@ -11800,22 +11945,163 @@ function renderResultado(){
     impostos: getA(emp,'impostos'),
     pessoal: getA(emp,'pessoal'),
     financeira: getA(emp,'financeira'),
+    fat_bruto: getA(emp,'fat_bruto'),
+    outras_receitas: getA(emp,'outras_receitas'),
   };
+  const recAcum = a.receita_total || 0;
+  const despMerc = a.despesa_venda || 0;
+  const despOp = a.despesa_total || 0;
+  const impostos = a.impostos || 0;
+  const outrasReceitas = a.outras_receitas || 0;
+  const financeira = a.financeira || 0;
+  const saldoAcum = a.saldo || 0;
+  const despTotal = despMerc + despOp + impostos;
+  const margemOper = recAcum > 0 ? ((recAcum - despTotal) / recAcum * 100) : 0;
+  const compromet = recAcum > 0 ? (despTotal / recAcum * 100) : 0;
+  const despOpSobreBruta = a.fat_bruto > 0 ? (despOp / a.fat_bruto * 100) : 0;
+  const despOpSemFin = Math.max(0, despOp - financeira);
+  const ebitdaAjustado = recAcum + outrasReceitas - despMerc - despOpSemFin;
+  const margemEbitda = recAcum > 0 ? (ebitdaAjustado / recAcum * 100) : 0;
+  const margemLiquida = recAcum > 0 ? (saldoAcum / recAcum * 100) : 0;
+  const margemContrib = recAcum > 0 ? ((recAcum - despMerc - impostos) / recAcum) : 0;
+  const pontoEquilibrio = margemContrib > 0 ? (despOp / margemContrib) : null;
+  const pmpInfo = D.kpis?.pmp?.[emp] || D.kpis?.pmp?.emp || null;
+  const pmp = pmpInfo?.avg_pagamento ?? null;
 
-  const saldoAcum = a.saldo;
-  const recAcum = a.receita_total;
-  const despTotal = a.despesa_venda + a.despesa_total + a.impostos;
-  const margemOper = recAcum>0?((recAcum-despTotal)/recAcum*100):0;
-  const compromet = recAcum>0?(despTotal/recAcum*100):0;
+  const recPts = lastTwoNonZeroPoints(m.receita_total?.real || []);
+  const despMensal = D.months.map((_,i)=> (Number(m.despesa_venda?.real?.[i])||0) + (Number(m.despesa_total?.real?.[i])||0) + (Number(m.impostos?.real?.[i])||0));
+  const despPts = lastTwoNonZeroPoints(despMensal);
+  const saldoPts = lastTwoNonZeroPoints(m.saldo?.real || []);
+  const margemMensal = D.months.map((_,i)=>{
+    const rec = Number(m.receita_total?.real?.[i]) || 0;
+    const desp = (Number(m.despesa_venda?.real?.[i])||0) + (Number(m.despesa_total?.real?.[i])||0) + (Number(m.impostos?.real?.[i])||0);
+    return rec > 0 ? ((rec - desp) / rec * 100) : 0;
+  });
+  const margemPts = lastTwoNonZeroPoints(margemMensal);
+  const despOpBrutaMensal = D.months.map((_,i)=>{
+    const bruto = Number(m.fat_bruto?.real?.[i]) || 0;
+    const op = Number(m.despesa_total?.real?.[i]) || 0;
+    return bruto > 0 ? (op / bruto * 100) : 0;
+  });
+  const despOpBrutaPts = lastTwoNonZeroPoints(despOpBrutaMensal);
+  const ebitdaMensal = D.months.map((_,i)=>{
+    const rec = Number(m.receita_total?.real?.[i]) || 0;
+    const outras = Number(m.outras_receitas?.real?.[i]) || 0;
+    const merc = Number(m.despesa_venda?.real?.[i]) || 0;
+    const op = Number(m.despesa_total?.real?.[i]) || 0;
+    const fin = Number(m.financeira?.real?.[i]) || 0;
+    const opSemFin = Math.max(0, op - fin);
+    return rec + outras - merc - opSemFin;
+  });
+  const ebitdaPts = lastTwoNonZeroPoints(ebitdaMensal);
+  const margemEbitdaMensal = D.months.map((_,i)=>{
+    const rec = Number(m.receita_total?.real?.[i]) || 0;
+    return rec > 0 ? ((Number(ebitdaMensal[i])||0) / rec * 100) : 0;
+  });
+  const margemEbitdaPts = lastTwoNonZeroPoints(margemEbitdaMensal);
+  const margemLiquidaMensal = D.months.map((_,i)=>{
+    const rec = Number(m.receita_total?.real?.[i]) || 0;
+    const saldo = Number(m.saldo?.real?.[i]) || 0;
+    return rec > 0 ? (saldo / rec * 100) : 0;
+  });
+  const margemLiquidaPts = lastTwoNonZeroPoints(margemLiquidaMensal);
+
+  const fluxoPrev = getPrev(emp,'saldo') || [];
+  const riscoIdx = fluxoPrev.findIndex(v => Number(v) < 0);
+  const menorSaldo = fluxoPrev.length ? Math.min(...fluxoPrev.map(v=>Number(v)||0)) : 0;
+  const ultSaldoReal = saldoPts.current?.val || 0;
+  const mediaQueima = despPts.current && recPts.current ? Math.max(0, despPts.current.val - recPts.current.val) : 0;
+  const diasCobertura = mediaQueima > 0 ? (ultSaldoReal / (mediaQueima / 30)) : null;
+
+  return {
+    m,a, saldoAcum, recAcum, despTotal, margemOper, compromet, despOpSobreBruta,
+    ebitdaAjustado, margemEbitda, margemLiquida, pontoEquilibrio, pmpInfo, pmp,
+    recPts, despPts, saldoPts, margemPts, despOpBrutaPts, ebitdaPts, margemEbitdaPts, margemLiquidaPts,
+    fluxoPrev, riscoIdx, menorSaldo, ultSaldoReal, mediaQueima, diasCobertura
+  };
+}
+
+function renderPredicoesResultado(){
+  const emp = _emp.resultado;
+  const d = resultadoMetricas(emp);
+  const cards = [];
+  if(d.diasCobertura !== null){
+    if(d.mediaQueima > 0){
+      cards.push({
+        cls: d.diasCobertura <= 30 ? 'danger' : d.diasCobertura <= 60 ? 'warn' : 'success',
+        title: 'Cobertura de caixa no ritmo atual',
+        text: `Mantido o ritmo recente, o caixa cobre cerca de <b>${d.diasCobertura.toFixed(0)} dias</b> de operação. A leitura considera o último saldo mensal realizado frente à queima líquida recente.`
+      });
+    }else{
+      cards.push({
+        cls: 'success',
+        title: 'Cobertura de caixa no ritmo atual',
+        text: `No ritmo recente, a operação não apresenta queima líquida recorrente. Isso reduz a pressão imediata sobre o caixa operacional.`
+      });
+    }
+  }
+
+  if(d.riscoIdx >= 0){
+    cards.push({
+      cls: 'danger',
+      title: 'Ponto de ruptura projetado',
+      text: `No ${nomeCenarioAtual()}, o saldo mensal fica negativo a partir de <b>${D.months[d.riscoIdx]}</b>, com piso estimado em <b>${fmtS(d.menorSaldo)}</b>.`
+    });
+  }else{
+    cards.push({
+      cls: 'success',
+      title: 'Trajetória projetada do saldo',
+      text: `No ${nomeCenarioAtual()}, o fluxo não projeta saldo mensal negativo. O menor nível esperado permanece em <b>${fmtS(d.menorSaldo)}</b>.`
+    });
+  }
+
+  if(d.pmp !== null){
+    cards.push({
+      cls: d.pmp < 20 ? 'warn' : d.pmp >= 35 ? 'success' : 'warn',
+      title: 'Dependência de fornecedores',
+      text: d.pmp < 20
+        ? `O PMP está em <b>${d.pmp.toFixed(1)} dias</b>, em patamar curto para financiar capital de giro. Qualquer pressão em receita tende a bater mais rápido no caixa.`
+        : d.pmp >= 35
+          ? `O PMP está em <b>${d.pmp.toFixed(1)} dias</b>, considerando somente compras de mercadorias para revenda, ajudando a sustentar capital de giro no curto prazo.`
+          : `O PMP está em <b>${d.pmp.toFixed(1)} dias</b>, em faixa intermediária. Ganhos adicionais de prazo podem melhorar a folga financeira.`
+    });
+  } else {
+    cards.push({
+      cls: 'warn',
+      title: 'Dependência de fornecedores',
+      text: `Ainda não há base suficiente para leitura preditiva do PMP considerando apenas compras de mercadorias para revenda.`
+    });
+  }
+
+  const el = document.getElementById('predicoesResultado');
+  if(el){
+    el.innerHTML = cards.slice(0,3).map(c=>`
+      <div class="pred-item ${c.cls}">
+        <div class="pred-title">${c.title}</div>
+        <div class="pred-text">${c.text}</div>
+      </div>
+    `).join('');
+  }
+}
+
+
+function renderResultado(){
+  updateScenarioTexts();
+  const emp = _emp.resultado;
+  const d = resultadoMetricas(emp);
+  const m = d.m;
+  const a = d.a;
+  const lastIdx = getLastRealizedMonthIndex(emp);
+  const scenarioName = _cenario;
+  const nomeScenario = tituloCenarioAtual();
 
   document.getElementById('kpiResultado').innerHTML =
-    kpiCard('gold','⚖️','Resultado Acumulado',fmtS(saldoAcum),'Saldo líquido 2026','badge-pos',fmtS(saldoAcum)) +
-    kpiCard('green','📥','Receita',fmtS(recAcum),'Realizado 2026') +
-    kpiCard('red','📤','Despesas',fmtS(despTotal),'Realizado 2026') +
-    kpiCard('teal','📊','Margem Operacional',pct(margemOper),'(Receita − Despesa) / Receita') +
-    kpiCard('orange','🧾','Comprometimento',pct(compromet),'Despesa / Receita');
+    kpiCard('gold','⚖️','Resultado Acumulado',fmtS(d.saldoAcum),'Saldo líquido 2026','', '', makeTrend(d.saldoPts.current?.val ?? null, d.saldoPts.previous?.val ?? null, 'higher', 'currency')) +
+    kpiCard('green','📥','Receita',fmtS(d.recAcum),'Realizado 2026','', '', makeTrend(d.recPts.current?.val ?? null, d.recPts.previous?.val ?? null, 'higher', 'currency')) +
+    kpiCard('red','📤','Despesas',fmtS(d.despTotal),'Realizado 2026','', '', makeTrend(d.despPts.current?.val ?? null, d.despPts.previous?.val ?? null, 'lower', 'currency')) +
+    kpiCard('teal','📊','Margem Operacional',pct(d.margemOper),'(Receita − Despesa) / Receita','', '', makeTrend(d.margemPts.current?.val ?? null, d.margemPts.previous?.val ?? null, 'higher', 'percent')) +
+    kpiCard('orange','🧾','Comprometimento',pct(d.compromet),'Despesa / Receita','', '', (()=>{const arr=D.months.map((_,i)=>{const rec=Number(d.m.receita_total?.real?.[i])||0; const desp=(Number(d.m.despesa_venda?.real?.[i])||0)+(Number(d.m.despesa_total?.real?.[i])||0)+(Number(d.m.impostos?.real?.[i])||0); return rec>0?(desp/rec*100):0;}); const pts=lastTwoNonZeroPoints(arr); return makeTrend(pts.current?.val ?? null, pts.previous?.val ?? null, 'lower', 'percent');})());
 
-  // Saldo acumulado progressivo
   let acumProg = 0;
   const acumLine = m.saldo.real.map(v=>{acumProg+=v; return acumProg;});
 
@@ -11830,40 +12116,99 @@ function renderResultado(){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
   });
 
-  const saldoCenario = getPrev(emp, 'saldo');
-  const gaps = D.months.map((_,i)=>(Number(m.saldo.real[i])||0) - (Number(saldoCenario[i])||0));
+  const saldoCenario = getScenarioSamePeriod(emp, 'saldo', scenarioName);
+  const saldoReal = D.months.map((_,i)=> i <= lastIdx ? (Number(m.saldo.real[i])||0) : null);
+  const gaps = D.months.map((_,i)=> i <= lastIdx ? ((Number(m.saldo.real[i])||0) - (Number(saldoCenario[i])||0)) : null);
+
   killChart('chartGapPrevisto');
   charts.chartGapPrevisto = new Chart(document.getElementById('chartGapPrevisto'),{
-    type:'bar',
-    data:{labels:D.months,datasets:[{
-      label:'Realizado − Cenário',data:gaps,
-      backgroundColor:gaps.map(v=>v>=0?C.green+'bb':C.red+'bb'),borderRadius:5,
-    }]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'Gap: '+fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
+    data:{labels:D.months,datasets:[
+      {
+        type:'bar',
+        label:'Gap (Realizado − Cenário)',
+        data:gaps,
+        yAxisID:'yGap',
+        backgroundColor:gaps.map(v=>v==null?'rgba(0,0,0,0)':(v>=0?C.green+'88':C.red+'88')),
+        borderRadius:5,
+        order:3,
+      },
+      {
+        type:'line',
+        label:'Resultado Realizado',
+        data:saldoReal,
+        yAxisID:'yValor',
+        borderColor:C.navy,
+        backgroundColor:'transparent',
+        tension:.35,
+        pointRadius:4,
+        pointBackgroundColor:C.navy,
+        order:1,
+      },
+      {
+        type:'line',
+        label:nomeScenario,
+        data:saldoCenario,
+        yAxisID:'yValor',
+        borderColor:C.gold,
+        backgroundColor:'transparent',
+        borderDash:[6,4],
+        tension:.35,
+        pointRadius:4,
+        pointBackgroundColor:C.gold,
+        order:2,
+      }
+    ]},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},
+        tooltip:{callbacks:{
+          label:ctx=>{
+            if(ctx.raw==null) return 'Sem dado realizado no período';
+            return ctx.dataset.label+': '+fmtS(ctx.raw);
+          }
+        }}
+      },
+      scales:{
+        yValor:{position:'left',grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},
+        yGap:{position:'right',grid:{display:false},ticks:{callback:v=>fmtS(v),font:{size:10}}},
+        x:{grid:{display:false}}
+      }
+    }
   });
 
   const tRows = [
-    {label:'Receita Total',real:a.receita_total,prev:getPrevAcum(emp, 'receita_total')},
-    {label:'Desp. c/ Mercadoria',real:a.despesa_venda,prev:getPrevAcum(emp, 'despesa_venda'),neg:true},
-    {label:'Impostos',real:a.impostos,prev:getPrevAcum(emp, 'impostos'),neg:true},
-    {label:'Despesa Operacional',real:a.despesa_total,prev:getPrevAcum(emp, 'despesa_total'),neg:true},
-    {label:'→ Pessoal',real:a.pessoal,prev:getPrevAcum(emp, 'pessoal'),neg:true},
-    {label:'→ Financeira',real:a.financeira,prev:getPrevAcum(emp, 'financeira'),neg:true},
-    {label:'Saldo Líquido',real:a.saldo,prev:getPrevAcum(emp, 'saldo'),bold:true},
+    {label:'Receita Total', key:'receita_total', real:a.receita_total, prev:getScenarioAccumSamePeriod(emp, 'receita_total', scenarioName), kind:'receita'},
+    {label:'Desp. c/ Mercadoria', key:'despesa_venda', real:a.despesa_venda, prev:getScenarioAccumSamePeriod(emp, 'despesa_venda', scenarioName), kind:'variavel'},
+    {label:'Impostos', key:'impostos', real:a.impostos, prev:getScenarioAccumSamePeriod(emp, 'impostos', scenarioName), kind:'variavel'},
+    {label:'Despesa Operacional', key:'despesa_total', real:a.despesa_total, prev:getScenarioAccumSamePeriod(emp, 'despesa_total', scenarioName), kind:'controlavel'},
+    {label:'→ Pessoal', key:'pessoal', real:a.pessoal, prev:getScenarioAccumSamePeriod(emp, 'pessoal', scenarioName), kind:'controlavel'},
+    {label:'→ Financeira', key:'financeira', real:a.financeira, prev:getScenarioAccumSamePeriod(emp, 'financeira', scenarioName), kind:'controlavel'},
+    {label:'Saldo Líquido', key:'saldo', real:a.saldo, prev:getScenarioAccumSamePeriod(emp, 'saldo', scenarioName), kind:'resultado', bold:true},
   ];
-  document.getElementById('tabelaResultado').innerHTML = tRows.map(row=>{
+document.getElementById('tabelaResultado').innerHTML = tRows.map(row=>{
     const diff = row.real - row.prev;
     const pctVar = row.prev > 0 ? pct((diff/row.prev)*100) : '—';
-    const bg = row.bold?'background:var(--gray-50);font-weight:700':'';
-    const diffCls = diff>0?'pos':diff<0?'neg':'';
+    const bg = row.bold ? 'background:var(--gray-50);font-weight:700' : '';
+    const diffCls = classResultadoComparativo(row.kind, diff);
+    const realCls = row.kind === 'receita' || row.kind === 'resultado'
+      ? (row.real > 0 ? 'pos' : '')
+      : row.kind === 'controlavel'
+        ? (row.real > 0 ? 'neg' : '')
+        : '';
+    const obs = row.kind === 'variavel' && diff > 0
+      ? '<div style="font-size:10px;color:var(--gray-400);margin-top:3px">Acima do cenário, mas ligado ao volume operacional</div>'
+      : '';
     return `<tr style="${bg}">
-      <td>${row.label}</td>
-      <td class="num ${row.neg&&row.real>0?'neg':row.real>0?'pos':''}">${fmtS(row.real)}</td>
+      <td>${row.label}${badgeResultadoComparativo(row.kind)}${obs}</td>
+      <td class="num ${realCls}">${fmtS(row.real)}</td>
       <td class="num" style="color:var(--gray-400)">${row.prev!==0?fmtS(row.prev):'—'}</td>
       <td class="num ${diffCls}">${row.prev!==0?(diff>0?'+':'')+fmtS(diff):'—'}</td>
       <td class="num ${row.prev > 0 ? diffCls : ''}">${pctVar}</td>
     </tr>`;
   }).join('');
+  renderPredicoesResultado();
   renderKpisFinanceiros();
   renderResumoKpisFinanceiros();
   renderAlertasExecutivos();
