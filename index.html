@@ -10579,9 +10579,6 @@ function getSheetScenarioForEmp(emp){
 function getScenarioRaw(emp, key){
   const base = getM(emp, key);
   if(_cenario === 'atual'){
-    const ma = (emp==='marck' ? D.monthly_atual_marck : emp==='grattano' ? D.monthly_atual_grattano : D.monthly_atual)?.[key];
-    if(ma && Array.isArray(ma.prev)) return D.months.map((_,i)=>Number(ma.prev[i] ?? 0));
-    if(D.monthly_atual?.[key]?.prev) return D.months.map((_,i)=>Number(D.monthly_atual[key].prev[i] ?? 0));
     return D.months.map((_,i)=>Number(base.prev?.[i] ?? 0));
   }
   const targetMult = CENARIO_MULT[_cenario] ?? 1.0;
@@ -10598,6 +10595,23 @@ function getScenarioRaw(emp, key){
 function getPrev(emp, key){
   return getScenarioRaw(emp, key);
 }
+
+function getScenarioSeriesFromDemoNode(desc){
+  const months = D.months || ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const node = (D.demo_tree || []).find(n => n.desc === desc);
+  return months.map(mn => {
+    if(_cenario === 'atual'){
+      return Number(node?.m?.[mn]?.[1] ?? 0);
+    }
+    const sheetPrev = Number(node?.m?.[mn]?.[1] ?? 0);
+    const srcScenario = D.sheet_scenario || 'pessimista';
+    if(srcScenario === _cenario) return sheetPrev;
+    const srcMult = CENARIO_MULT[srcScenario] ?? 1.0;
+    const targetMult = CENARIO_MULT[_cenario] ?? 1.0;
+    const baseVal = srcMult === 0 ? sheetPrev : (sheetPrev / srcMult);
+    return baseVal === 0 ? 0 : Math.round(baseVal * targetMult * 100) / 100;
+  });
+}
 function getPrevAcum(emp, key){
   return getPrev(emp, key).reduce((s,v)=>s+(Number(v)||0), 0);
 }
@@ -10605,8 +10619,6 @@ function getPrevAcum(emp, key){
 function getScenarioRawByName(emp, key, scenarioName='otimista'){
   const base = getM(emp, key);
   if(scenarioName === 'atual'){
-    const ma = D.monthly_atual?.[key];
-    if(ma && Array.isArray(ma.prev)) return D.months.map((_,i)=>Number(ma.prev[i] ?? 0));
     return D.months.map((_,i)=>Number(base.prev?.[i] ?? 0));
   }
   const mult = CENARIO_MULT[scenarioName] ?? 1.0;
@@ -11705,8 +11717,7 @@ function _renderDemoRows(){
 
   function getPrevForNode(node, mn, sheetPrev){
     if(_cenario === 'atual'){
-      const da = D.desc_atual?.[node.desc];
-      return da ? (da[mn] ?? 0) : sheetPrev;
+      return Number(sheetPrev || 0);
     }
     const srcScenario = D.sheet_scenario || 'pessimista';
     if(srcScenario === _cenario) return sheetPrev;
@@ -12074,7 +12085,10 @@ function renderDespesas(){
 
   // Despesa total mensal
   const despMensal = D.months.map((_,i)=>(m.despesa_venda.real[i]||0)+(m.despesa_total.real[i]||0)+(m.impostos.real[i]||0));
-  const despPrevMensal = D.months.map((_,i)=>(getPrev(emp, 'despesa_venda')[i]||0)+(getPrev(emp, 'despesa_total')[i]||0)+(getPrev(emp, 'impostos')[i]||0));
+  const despPrevVenda = getScenarioSeriesFromDemoNode('Despesa Relativas a Venda');
+  const despPrevOper = getScenarioSeriesFromDemoNode('Despesa Total');
+  const despPrevImp  = getScenarioSeriesFromDemoNode('Impostos');
+  const despPrevMensal = D.months.map((_,i)=>(despPrevVenda[i]||0)+(despPrevOper[i]||0)+(despPrevImp[i]||0));
   killChart('chartDespMensal');
   charts.chartDespMensal = new Chart(document.getElementById('chartDespMensal'),{
     type:'bar',
