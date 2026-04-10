@@ -10603,10 +10603,11 @@ function getScenarioSeriesFromDemoNode(desc){
   const months = D.months || ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   const node = (D.demo_tree || []).find(n => n.desc === desc);
   return months.map(mn => {
-    if(_cenario === 'atual'){
-      return Number(D.desc_atual?.[desc]?.[mn] ?? 0);
-    }
     const sheetPrev = Number(node?.m?.[mn]?.[1] ?? 0);
+    if(_cenario === 'atual'){
+      const cur = D.desc_atual?.[desc]?.[mn];
+      return Number((cur ?? sheetPrev) || 0);
+    }
     const srcScenario = D.sheet_scenario || 'pessimista';
     if(srcScenario === _cenario) return sheetPrev;
     const srcMult = CENARIO_MULT[srcScenario] ?? 1.0;
@@ -10622,8 +10623,6 @@ function getPrevAcum(emp, key){
 function getScenarioRawByName(emp, key, scenarioName='otimista'){
   const base = getM(emp, key);
   if(scenarioName === 'atual'){
-    const ma = D.monthly_atual?.[key];
-    if(ma && Array.isArray(ma.prev)) return D.months.map((_,i)=>Number(ma.prev[i] ?? 0));
     return D.months.map((_,i)=>Number(base.prev?.[i] ?? 0));
   }
   const mult = CENARIO_MULT[scenarioName] ?? 1.0;
@@ -11722,8 +11721,8 @@ function _renderDemoRows(){
 
   function getPrevForNode(node, mn, sheetPrev){
     if(_cenario === 'atual'){
-      const da = D.desc_atual?.[node.desc];
-      return da ? (da[mn] ?? 0) : sheetPrev;
+      const cur = D.desc_atual?.[node.desc]?.[mn];
+      return Number((cur ?? sheetPrev) || 0);
     }
     const srcScenario = D.sheet_scenario || 'pessimista';
     if(srcScenario === _cenario) return sheetPrev;
@@ -12849,19 +12848,25 @@ function parseCashFlow(buf){
     return {monthly:monthly2, acum:acum2, desc_atual:descAtual};
   }
 
-  const atualData = readCurrentSheet(findSheetName({
+  let atualData = readCurrentSheet(findSheetName({
     exact:['Fluxo de Caixa Atual','Fluxo Caixa Atual','Atual'],
     includes:['atual'],
     excludes:['marck','grattano']
   }));
-  const atualMarckData = readCurrentSheet(findSheetName({
+  let atualMarckData = readCurrentSheet(findSheetName({
     exact:['Fluxo de Caixa Marck Atual','Fluxo Caixa Marck Atual','Atual Marck'],
     includes:['atual','marck']
   }));
-  const atualGrattanoData = readCurrentSheet(findSheetName({
+  let atualGrattanoData = readCurrentSheet(findSheetName({
     exact:['Fluxo de Caixa Grattano Atual','Fluxo Caixa Grattano Atual','Atual Grattano'],
     includes:['atual','grattano']
   }));
+  // Se a própria planilha consolidada já estiver salva com C1 = Atual, usar essas abas como fonte do cenário atual.
+  if((WORKBOOK_SCENARIO||'').toLowerCase() === 'atual'){
+    if(!atualData) atualData = readCurrentSheet('Fluxo de Caixa Empresas');
+    if(!atualMarckData) atualMarckData = readCurrentSheet('Fluxo de Caixa Marck');
+    if(!atualGrattanoData) atualGrattanoData = readCurrentSheet('Fluxo de Caixa Grattano');
+  }
 
   const marckData    = readSheet('Fluxo de Caixa Marck');
   const grattanoData = readSheet('Fluxo de Caixa Grattano');
