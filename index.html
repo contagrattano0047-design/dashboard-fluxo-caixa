@@ -618,6 +618,13 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 <!-- Cenário + colunas extras -->
 <div class="cenario-bar">
+<div class="cenario-label">📊 Cenário Previsto:</div>
+<select class="cenario-select scenario-sync" id="cenarioSelectFluxo" onchange="setCenario(this.value)">
+<option value="atual">Atual (base do sistema)</option>
+<option value="pessimista">Pessimista (histórico ×1,00)</option>
+<option value="realista">Realista (histórico ×1,17)</option>
+<option value="otimista" selected>Otimista (histórico ×1,30)</option>
+</select>
 <div style="flex:1"></div>
 <div class="cenario-label">Colunas extras:</div>
 <div class="col-tog-group" id="colToggles">
@@ -644,8 +651,8 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 <div class="card" style="margin-bottom:16px">
 <div class="card-header">
-<div><div class="card-title" id="tituloChartSaldo">Saldo Mensal — Realizado vs. Cenário</div><div class="card-subtitle" id="subtituloChartSaldo">Resultado líquido (Receita − Despesas) por mês vs cenário de referência</div></div>
-<div class="recorte-tag">📅 2026</div><div class="scenario-inline compact"><span class="scenario-inline-label">Cenário</span><select class="cenario-select scenario-sync" onchange="setCenario(this.value)"><option value="atual">Atual (base do sistema)</option><option value="pessimista">Pessimista (AA ×1,00)</option><option value="realista">Realista (AA ×1,17)</option><option value="otimista" selected>Otimista (AA ×1,30)</option></select></div>
+<div><div class="card-title" id="tituloChartSaldo">Saldo Mensal — Cobertura e Zona de Segurança</div><div class="card-subtitle" id="subtituloChartSaldo">Barras: saldo mensal · Linha: cobertura estimada de caixa em dias</div></div>
+<div class="recorte-tag">📅 2026</div>
 </div>
 <div class="chart-wrap" style="height:280px"><canvas height="0" id="chartSaldo" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0"></canvas></div>
 </div>
@@ -1261,7 +1268,7 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 </div>
 <div class="card">
-<div class="card-header"><div class="card-title">Faturamento Mensal — Bruto e Líquido</div><div class="card-subtitle">Comparativo com o realizado de receita</div></div>
+<div class="card-header"><div class="card-title">Faturamento Mensal — Bruto e Líquido</div><div class="card-subtitle">Comparativo com o cenário selecionado</div></div>
 <div class="chart-wrap" style="height:260px"><canvas height="0" id="chartFatMensal" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0"></canvas></div>
 </div>
 <div class="ag-card">
@@ -10403,7 +10410,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="chart-wrap" style="height:260px"><canvas id="chartResultadoAcum"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-title" id="tituloChartGapResultado">Resultado Mensal vs. Cenário</div><div class="card-subtitle" id="subtituloChartGapResultado">Linhas: realizado e cenário selecionado · Barras: gap mensal</div></div><div class="scenario-inline compact"><span class="scenario-inline-label">Cenário</span><select class="cenario-select scenario-sync" onchange="setCenario(this.value)"><option value="atual">Atual (base do sistema)</option><option value="pessimista">Pessimista (AA ×1,00)</option><option value="realista">Realista (AA ×1,17)</option><option value="otimista" selected>Otimista (AA ×1,30)</option></select></div>
+      <div class="card-header"><div class="card-title" id="tituloChartGapResultado">Resultado Operacional &amp; Margem</div><div class="card-subtitle" id="subtituloChartGapResultado">Barras: resultado operacional mensal · Linha: margem operacional</div></div>
       <div class="chart-wrap" style="height:260px"><canvas id="chartGapPrevisto"></canvas></div>
     </div>
   </div>
@@ -10723,12 +10730,49 @@ function updateScenarioSelectors(){
 function tituloCenarioAtual(){
   return _cenario === 'atual' ? 'Cenário Atual' : 'Cenário ' + (_cenario.charAt(0).toUpperCase() + _cenario.slice(1));
 }
+
+const cashSafetyBandsPlugin = {
+  id:'cashSafetyBandsPlugin',
+  beforeDraw(chart, args, pluginOptions){
+    const y = chart.scales?.yCob;
+    const area = chart.chartArea;
+    if(!y || !area) return;
+    const crit = Number(pluginOptions?.critical ?? 20);
+    const att = Number(pluginOptions?.attention ?? 40);
+    const max = Number(y.max ?? att);
+    const ctx = chart.ctx;
+    const clamp = v => Math.max(y.min, Math.min(max, v));
+    const bands = [
+      {from: clamp(att), to: max, color:'rgba(64,145,108,0.10)'},
+      {from: clamp(crit), to: clamp(att), color:'rgba(244,162,97,0.12)'},
+      {from: y.min, to: clamp(crit), color:'rgba(230,57,70,0.10)'}
+    ];
+    ctx.save();
+    bands.forEach(b=>{
+      const top = y.getPixelForValue(b.to);
+      const bottom = y.getPixelForValue(b.from);
+      ctx.fillStyle = b.color;
+      ctx.fillRect(area.left, top, area.right - area.left, bottom - top);
+    });
+    [crit, att].forEach(v=>{
+      const py = y.getPixelForValue(v);
+      ctx.strokeStyle = v === crit ? 'rgba(230,57,70,0.40)' : 'rgba(244,162,97,0.45)';
+      ctx.setLineDash([5,4]);
+      ctx.beginPath();
+      ctx.moveTo(area.left, py);
+      ctx.lineTo(area.right, py);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+};
+
 function updateScenarioTexts(){
   const nome = tituloCenarioAtual();
   const map = {
     subtituloFluxo: `Realizado vs. ${nome} · 2026`,
-    tituloChartSaldo: 'Saldo Mensal — Realizado vs. Cenário',
-    subtituloChartSaldo: `Resultado líquido (Receita − Despesas) por mês vs ${nome.toLowerCase()}`,
+    tituloChartSaldo: 'Saldo Mensal — Cobertura e Zona de Segurança',
+    subtituloChartSaldo: 'Barras: saldo mensal · Linha: cobertura estimada de caixa em dias',
     subtituloTabelaFluxo: `Realizado vs. ${nome} · 2026`,
     tituloChartReceitaMensal: 'Receita Total Mensal — Realizado vs. Cenário',
     subtituloChartReceitaMensal: `R$ em milhares · comparação com ${nome.toLowerCase()}`,
@@ -11723,29 +11767,157 @@ function renderFluxo(){
     kpiCard('red','📤','Despesas Acumuladas',fmtS(despAcum),'Total saídas realizadas') +
     kpiCard('teal','📅','Último Saldo Mensal',fmtS(ultimoSaldo),'Resultado do mês mais recente');
 
-  // Saldo chart
-  const saldoReal = m.saldo.real;
-  const saldoPrev = getPrev(emp, 'saldo');
+  // Saldo chart | visão gerencial: saldo mensal + cobertura de caixa
+  const saldoReal = m.saldo.real.map(v=>Number(v||0));
+  const despReal = months.map((_,i)=>(Number(m.despesa_venda.real[i]||0)+Number(m.despesa_total.real[i]||0)+Number(m.impostos.real[i]||0)));
+  const coberturaDias = months.map((_,i)=>{
+    const saldo = Number(saldoReal[i]||0);
+    const desp = Math.abs(Number(despReal[i]||0));
+    if(saldo <= 0 || desp <= 0) return null;
+    return Math.round((saldo / (desp / 30)) * 10) / 10;
+  });
+  const coberturaVals = coberturaDias.filter(v=>v!=null && Number.isFinite(v));
+  const coberturaMax = Math.max(60, ...(coberturaVals.length ? coberturaVals.map(v=>v) : [0]));
+  const coberturaTickMax = Math.ceil(coberturaMax / 10) * 10;
   killChart('chartSaldo');
   charts.chartSaldo = new Chart(document.getElementById('chartSaldo'),{
     type:'bar',
     data:{labels:months,datasets:[
-      {label:'Realizado',data:saldoReal,backgroundColor:saldoReal.map(v=>v>0?C.green+'cc':C.red+'cc'),borderRadius:5,order:2},
-      {label:nomeCenarioAtual(),data:saldoPrev,type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:4,pointBackgroundColor:C.gold,order:1},
+      {
+        label:'Saldo Mensal',
+        data:saldoReal,
+        yAxisID:'ySaldo',
+        backgroundColor:saldoReal.map((v,i)=>{
+          const c = coberturaDias[i];
+          if(c == null) return C.gray_200 || '#d9dee7';
+          if(c < 20) return C.red + 'cc';
+          if(c < 40) return C.orange + 'cc';
+          return C.green + 'cc';
+        }),
+        borderRadius:5,
+        order:2
+      },
+      {
+        label:'Cobertura de Caixa (dias)',
+        data:coberturaDias,
+        yAxisID:'yCob',
+        type:'line',
+        borderColor:C.navy,
+        backgroundColor:'transparent',
+        tension:.32,
+        pointRadius:4,
+        pointHoverRadius:5,
+        pointBackgroundColor:coberturaDias.map(v=>{
+          if(v == null) return C.gray_400 || '#9aa3b2';
+          if(v < 20) return C.red;
+          if(v < 40) return C.orange;
+          return C.green;
+        }),
+        spanGaps:false,
+        order:1
+      }
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        cashSafetyBandsPlugin:{critical:20, attention:40},
+        legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},
+        tooltip:{callbacks:{
+          label:ctx=>{
+            if(ctx.dataset.yAxisID === 'yCob'){
+              return ctx.dataset.label + ': ' + (ctx.raw==null ? 'sem dado' : `${ctx.raw.toFixed(1)} dias`);
+            }
+            return ctx.dataset.label + ': ' + fmtS(ctx.raw);
+          },
+          afterBody:items=>{
+            const first = items?.[0];
+            if(!first) return [];
+            const idx = first.dataIndex;
+            const cobertura = coberturaDias[idx];
+            if(cobertura == null) return ['Zona: sem leitura'];
+            if(cobertura < 20) return ['Zona: crítica'];
+            if(cobertura < 40) return ['Zona: atenção'];
+            return ['Zona: confortável'];
+          }
+        }}
+      },
+      scales:{
+        ySaldo:{
+          position:'left',
+          grid:{color:'#f0f2f5'},
+          ticks:{callback:v=>fmtS(v),font:{size:10}}
+        },
+        yCob:{
+          position:'right',
+          min:0,
+          max:coberturaTickMax,
+          grid:{display:false},
+          ticks:{callback:v=>`${v}d`,font:{size:10}}
+        },
+        x:{grid:{display:false}}
+      }
+    },
+    plugins:[cashSafetyBandsPlugin]
   });
 
-  // Receita vs Despesa
-  const despReal = months.map((_,i)=>(m.despesa_venda.real[i]||0)+(m.despesa_total.real[i]||0)+(m.impostos.real[i]||0));
+  // Receita vs Despesa + linha de cenário da receita
+  const receitaCenario = getScenarioRaw(emp,'receita_total').map(v=>Number(v||0));
   killChart('chartRecDesp');
   charts.chartRecDesp = new Chart(document.getElementById('chartRecDesp'),{
-    type:'bar',
     data:{labels:months,datasets:[
-      {label:'Receita',data:m.receita_total.real,backgroundColor:C.green+'aa',borderRadius:4},
-      {label:'Despesas',data:despReal,backgroundColor:C.red+'aa',borderRadius:4},
+      {
+        type:'bar',
+        label:'Receita',
+        data:m.receita_total.real,
+        backgroundColor:C.green+'aa',
+        borderRadius:4,
+        order:2
+      },
+      {
+        type:'bar',
+        label:'Despesas',
+        data:despReal,
+        backgroundColor:C.red+'aa',
+        borderRadius:4,
+        order:2
+      },
+      {
+        type:'line',
+        label:nomeCenarioAtual(),
+        data:receitaCenario,
+        borderColor:C.gold,
+        backgroundColor:'transparent',
+        borderDash:[6,4],
+        borderWidth:2.5,
+        tension:.3,
+        pointRadius:3,
+        pointHoverRadius:4,
+        pointBackgroundColor:C.gold,
+        pointBorderColor:C.gold,
+        fill:false,
+        order:1
+      }
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},
+        tooltip:{
+          callbacks:{
+            label:ctx=>{
+              const valor = ctx.raw;
+              return ctx.dataset.label+': '+fmtS(valor);
+            }
+          }
+        }
+      },
+      scales:{
+        y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},
+        x:{grid:{display:false}}
+      }
+    }
   });
 
   // Composição donut
@@ -11827,7 +11999,7 @@ function renderReceitas(){
     data:{labels:D.months,datasets:[
       {label:'Fat. Bruto',data:m.fat_bruto.real,backgroundColor:C.navy+'99',borderRadius:4},
       {label:'Fat. Líquido',data:m.fat_liquido.real,backgroundColor:C.green+'bb',borderRadius:4},
-      {label:'Receita Recebida',data:m.receita_total.real,type:'line',borderColor:C.gold,backgroundColor:'transparent',tension:.3,pointRadius:3,pointBackgroundColor:C.gold},
+      {label:nomeCenarioAtual(),data:getPrev(emp,'fat_liquido'),type:'line',borderColor:C.gold,backgroundColor:'transparent',borderDash:[5,4],tension:.3,pointRadius:3,pointBackgroundColor:C.gold},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
   });
@@ -11891,7 +12063,7 @@ function renderDespesas(){
 
   // Despesa total mensal
   const despMensal = D.months.map((_,i)=>(m.despesa_venda.real[i]||0)+(m.despesa_total.real[i]||0)+(m.impostos.real[i]||0));
-  const despPrevMensal = D.months.map((_,i)=>(getPrev(emp, 'despesa_venda')[i]||0)+(getPrev(emp, 'despesa_total')[i]||0));
+  const despPrevMensal = D.months.map((_,i)=>(getPrev(emp, 'despesa_venda')[i]||0)+(getPrev(emp, 'despesa_total')[i]||0)+(getPrev(emp, 'impostos')[i]||0));
   killChart('chartDespMensal');
   charts.chartDespMensal = new Chart(document.getElementById('chartDespMensal'),{
     type:'bar',
@@ -12116,46 +12288,41 @@ function renderResultado(){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
   });
 
-  const saldoCenario = getScenarioSamePeriod(emp, 'saldo', scenarioName);
-  const saldoReal = D.months.map((_,i)=> i <= lastIdx ? (Number(m.saldo.real[i])||0) : null);
-  const gaps = D.months.map((_,i)=> i <= lastIdx ? ((Number(m.saldo.real[i])||0) - (Number(saldoCenario[i])||0)) : null);
+  const resultadoMensal = D.months.map((_,i)=> i <= lastIdx ? (Number(m.saldo.real[i])||0) : null);
+  const margemMensal = D.months.map((_,i)=>{
+    if(i > lastIdx) return null;
+    const rec = Number(m.receita_total.real[i])||0;
+    const res = Number(m.saldo.real[i])||0;
+    return rec > 0 ? (res/rec)*100 : null;
+  });
 
   killChart('chartGapPrevisto');
   charts.chartGapPrevisto = new Chart(document.getElementById('chartGapPrevisto'),{
     data:{labels:D.months,datasets:[
       {
         type:'bar',
-        label:'Gap (Realizado − Cenário)',
-        data:gaps,
-        yAxisID:'yGap',
-        backgroundColor:gaps.map(v=>v==null?'rgba(0,0,0,0)':(v>=0?C.green+'88':C.red+'88')),
+        label:'Resultado Operacional',
+        data:resultadoMensal,
+        yAxisID:'yValor',
+        backgroundColor:resultadoMensal.map(v=>v==null?'rgba(0,0,0,0)':(v>=0?C.green+'bb':C.red+'bb')),
+        borderColor:resultadoMensal.map(v=>v==null?'rgba(0,0,0,0)':(v>=0?C.green:C.red)),
+        borderWidth:1,
         borderRadius:5,
-        order:3,
+        order:2,
       },
       {
         type:'line',
-        label:'Resultado Realizado',
-        data:saldoReal,
-        yAxisID:'yValor',
-        borderColor:C.navy,
-        backgroundColor:'transparent',
-        tension:.35,
-        pointRadius:4,
-        pointBackgroundColor:C.navy,
-        order:1,
-      },
-      {
-        type:'line',
-        label:nomeScenario,
-        data:saldoCenario,
-        yAxisID:'yValor',
+        label:'Margem Operacional',
+        data:margemMensal,
+        yAxisID:'yPct',
         borderColor:C.gold,
         backgroundColor:'transparent',
         borderDash:[6,4],
         tension:.35,
         pointRadius:4,
         pointBackgroundColor:C.gold,
-        order:2,
+        pointBorderColor:C.gold,
+        order:1,
       }
     ]},
     options:{
@@ -12166,13 +12333,15 @@ function renderResultado(){
         tooltip:{callbacks:{
           label:ctx=>{
             if(ctx.raw==null) return 'Sem dado realizado no período';
-            return ctx.dataset.label+': '+fmtS(ctx.raw);
+            return ctx.dataset.yAxisID==='yPct'
+              ? ctx.dataset.label+': '+pct(ctx.raw)
+              : ctx.dataset.label+': '+fmtS(ctx.raw);
           }
         }}
       },
       scales:{
         yValor:{position:'left',grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},
-        yGap:{position:'right',grid:{display:false},ticks:{callback:v=>fmtS(v),font:{size:10}}},
+        yPct:{position:'right',grid:{display:false},ticks:{callback:v=>pct(v),font:{size:10}}},
         x:{grid:{display:false}}
       }
     }
