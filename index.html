@@ -10579,6 +10579,9 @@ function getSheetScenarioForEmp(emp){
 function getScenarioRaw(emp, key){
   const base = getM(emp, key);
   if(_cenario === 'atual'){
+    const ma = (emp==='marck' ? D.monthly_atual_marck : emp==='grattano' ? D.monthly_atual_grattano : D.monthly_atual)?.[key];
+    if(ma && Array.isArray(ma.prev)) return D.months.map((_,i)=>Number(ma.prev[i] ?? 0));
+    if(D.monthly_atual?.[key]?.prev) return D.months.map((_,i)=>Number(D.monthly_atual[key].prev[i] ?? 0));
     return D.months.map((_,i)=>Number(base.prev?.[i] ?? 0));
   }
   const targetMult = CENARIO_MULT[_cenario] ?? 1.0;
@@ -10601,7 +10604,7 @@ function getScenarioSeriesFromDemoNode(desc){
   const node = (D.demo_tree || []).find(n => n.desc === desc);
   return months.map(mn => {
     if(_cenario === 'atual'){
-      return Number(node?.m?.[mn]?.[1] ?? 0);
+      return Number(D.desc_atual?.[desc]?.[mn] ?? 0);
     }
     const sheetPrev = Number(node?.m?.[mn]?.[1] ?? 0);
     const srcScenario = D.sheet_scenario || 'pessimista';
@@ -10619,6 +10622,8 @@ function getPrevAcum(emp, key){
 function getScenarioRawByName(emp, key, scenarioName='otimista'){
   const base = getM(emp, key);
   if(scenarioName === 'atual'){
+    const ma = D.monthly_atual?.[key];
+    if(ma && Array.isArray(ma.prev)) return D.months.map((_,i)=>Number(ma.prev[i] ?? 0));
     return D.months.map((_,i)=>Number(base.prev?.[i] ?? 0));
   }
   const mult = CENARIO_MULT[scenarioName] ?? 1.0;
@@ -11717,7 +11722,8 @@ function _renderDemoRows(){
 
   function getPrevForNode(node, mn, sheetPrev){
     if(_cenario === 'atual'){
-      return Number(sheetPrev || 0);
+      const da = D.desc_atual?.[node.desc];
+      return da ? (da[mn] ?? 0) : sheetPrev;
     }
     const srcScenario = D.sheet_scenario || 'pessimista';
     if(srcScenario === _cenario) return sheetPrev;
@@ -12779,6 +12785,84 @@ function parseCashFlow(buf){
     return {monthly:monthly2, acum:acum2, sheet_scenario:scenario2};
   }
 
+
+  function findSheetName(opts={}){
+    const names = wb.SheetNames || [];
+    const includes = (opts.includes || []).map(normTxt);
+    const excludes = (opts.excludes || []).map(normTxt);
+    const exact = (opts.exact || []).map(normTxt);
+    for(const name of names){
+      const nn = normTxt(name);
+      if(exact.includes(nn)) return name;
+    }
+    for(const name of names){
+      const nn = normTxt(name);
+      if(includes.every(tok => nn.includes(tok)) && !excludes.some(tok => nn.includes(tok))){
+        return name;
+      }
+    }
+    return null;
+  }
+
+  function readCurrentSheet(sheetName){
+    if(!sheetName || !wb.Sheets[sheetName]) return null;
+    const ws2 = wb.Sheets[sheetName];
+    const fc2 = XLSX.utils.sheet_to_json(ws2,{header:1,defval:null});
+    const colMap2 = detectColMap(fc2);
+    const keyRows2 = detectRowMap(fc2);
+    function v2(fc,row,col){
+      if(!fc[row]||col>=fc[row].length) return 0;
+      const x=fc[row][col];
+      if(x===null||x===undefined) return 0;
+      if(typeof x==='number') return x===-1?0:x;
+      const n=parseFloat(String(x).replace(/\./g,'').replace(',','.'));
+      return isNaN(n)||n===-1?0:n;
+    }
+    const monthly2={}, acum2={};
+    for(const [k,row] of Object.entries(keyRows2)){
+      monthly2[k]={real:[],prev:[],evo:[],prop:[],cresc:[]};
+      acum2[k]=v2(fc2,row,2);
+      for(const m of MONTHS){
+        const pair = colMap2[m] || [null,null];
+        const rc = pair[0], pc = pair[1];
+        monthly2[k].real.push(rc===null?0:Math.round(v2(fc2,row,rc)*100)/100);
+        monthly2[k].prev.push(pc===null?0:Math.round(v2(fc2,row,pc)*100)/100);
+        monthly2[k].evo.push(null); monthly2[k].prop.push(null); monthly2[k].cresc.push(null);
+      }
+    }
+
+    const SKIP_DT_CUR=new Set(['Movimentação Financeira Total','Entradas Financeiras','Saídas Financeiras','Entrada de Capital','Entrada Aporte','Resgate de Investimentos','Retirada Aporte','Retirada Investimento','Saída de Capital','Faturado','Cancelado','Devolvido','Faturamento Líquido','Faturamento Bruto']);
+    const descAtual={};
+    for(let i=5;i<Math.min(199,fc2.length);i++){
+      const desc = fc2[i]?.[1];
+      if(!desc||String(desc).trim()===''||String(desc)==='null') continue;
+      const ds = String(desc).trim();
+      if(SKIP_DT_CUR.has(ds)) continue;
+      descAtual[ds] = {};
+      for(let mi=0;mi<MONTHS.length;mi++){
+        const mn=MONTHS[mi];
+        const pair = colMap2[mn] || [null,null];
+        const pc = pair[1];
+        descAtual[ds][mn] = pc===null?0:Math.round(v2(fc2,i,pc)*100)/100;
+      }
+    }
+    return {monthly:monthly2, acum:acum2, desc_atual:descAtual};
+  }
+
+  const atualData = readCurrentSheet(findSheetName({
+    exact:['Fluxo de Caixa Atual','Fluxo Caixa Atual','Atual'],
+    includes:['atual'],
+    excludes:['marck','grattano']
+  }));
+  const atualMarckData = readCurrentSheet(findSheetName({
+    exact:['Fluxo de Caixa Marck Atual','Fluxo Caixa Marck Atual','Atual Marck'],
+    includes:['atual','marck']
+  }));
+  const atualGrattanoData = readCurrentSheet(findSheetName({
+    exact:['Fluxo de Caixa Grattano Atual','Fluxo Caixa Grattano Atual','Atual Grattano'],
+    includes:['atual','grattano']
+  }));
+
   const marckData    = readSheet('Fluxo de Caixa Marck');
   const grattanoData = readSheet('Fluxo de Caixa Grattano');
 
@@ -13203,6 +13287,10 @@ function parseCashFlow(buf){
   return {months:MONTHS,monthly,acum,saldos_hoje,
     saldo_dia:saldo_dia_fixed,projecao,hist_saldos,data_atualizacao,
     monthly_marck,acum_marck,monthly_grattano,acum_grattano,
+    monthly_atual:(atualData?.monthly || D.monthly_atual || {}),
+    monthly_atual_marck:(atualMarckData?.monthly || D.monthly_atual_marck || {}),
+    monthly_atual_grattano:(atualGrattanoData?.monthly || D.monthly_atual_grattano || {}),
+    desc_atual:(atualData?.desc_atual || D.desc_atual || {}),
     sheet_scenario:WORKBOOK_SCENARIO,sheet_scenario_marck,sheet_scenario_grattano,
     demo_tree,kpis,agendaData};
 }
