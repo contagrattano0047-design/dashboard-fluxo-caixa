@@ -10585,10 +10585,7 @@ function getScenarioRaw(emp, key){
   });
 }
 function getPrev(emp, key){
-  const raw = getScenarioRaw(emp, key);
-  const real = getM(emp, key).real || D.months.map(()=>0);
-  const start = getScenarioStartIndex();
-  return D.months.map((_,i)=> i < start ? Number(real[i] ?? 0) : Number(raw[i] ?? 0));
+  return getScenarioRaw(emp, key);
 }
 function getPrevAcum(emp, key){
   return getPrev(emp, key).reduce((s,v)=>s+(Number(v)||0), 0);
