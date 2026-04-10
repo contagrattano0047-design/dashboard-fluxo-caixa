@@ -11721,8 +11721,11 @@ function _renderDemoRows(){
 
   function getPrevForNode(node, mn, sheetPrev){
     if(_cenario === 'atual'){
-      const cur = D.desc_atual?.[node.desc]?.[mn];
-      return Number((cur ?? sheetPrev) || 0);
+      const curNode = (D.demo_tree_atual || []).find(n => n.desc === node.desc);
+      const cur = curNode?.m?.[mn]?.[1];
+      if(cur != null) return Number(cur || 0);
+      const curDesc = D.desc_atual?.[node.desc]?.[mn];
+      return Number((curDesc ?? sheetPrev) || 0);
     }
     const srcScenario = D.sheet_scenario || 'pessimista';
     if(srcScenario === _cenario) return sheetPrev;
@@ -12604,8 +12607,16 @@ function parseCashFlow(buf){
     const row = (sheetArr[headerRow] || []).map(normTxt);
     const map = {};
     Object.entries(MONTH_LABELS).forEach(([normMonth,label])=>{
-      const idx = row.indexOf(normMonth);
-      if(idx >= 0) map[label] = [idx + 1, idx + 4];
+      const idxs = [];
+      row.forEach((v,i)=>{ if(v === normMonth) idxs.push(i); });
+      if(idxs.length >= 2){
+        // Planilha no formato: Mês (REALIZADO) e, em seguida, o mesmo Mês (PREVISTO)
+        map[label] = [idxs[0], idxs[1]];
+      }else if(idxs.length === 1){
+        // Fallback para layouts antigos com uma única marcação do mês
+        const idx = idxs[0];
+        map[label] = [idx + 1, idx + 4];
+      }
     });
     return Object.keys(map).length === 12 ? map : fallback;
   }
@@ -12832,20 +12843,29 @@ function parseCashFlow(buf){
 
     const SKIP_DT_CUR=new Set(['Movimentação Financeira Total','Entradas Financeiras','Saídas Financeiras','Entrada de Capital','Entrada Aporte','Resgate de Investimentos','Retirada Aporte','Retirada Investimento','Saída de Capital','Faturado','Cancelado','Devolvido','Faturamento Líquido','Faturamento Bruto']);
     const descAtual={};
+    const demoTree2=[];
+    let curDtParent2=null;
     for(let i=5;i<Math.min(199,fc2.length);i++){
-      const desc = fc2[i]?.[1];
+      const cat = fc2[i]?.[0], desc = fc2[i]?.[1];
       if(!desc||String(desc).trim()===''||String(desc)==='null') continue;
       const ds = String(desc).trim();
       if(SKIP_DT_CUR.has(ds)) continue;
+      const isParent = !cat || String(cat).trim()==='' || String(cat)==='null';
+      if(isParent) curDtParent2 = ds;
       descAtual[ds] = {};
+      const mData2 = {};
       for(let mi=0;mi<MONTHS.length;mi++){
         const mn=MONTHS[mi];
         const pair = colMap2[mn] || [null,null];
-        const pc = pair[1];
-        descAtual[ds][mn] = pc===null?0:Math.round(v2(fc2,i,pc)*100)/100;
+        const rc = pair[0], pc = pair[1];
+        const realVal = rc===null?0:Math.round(v2(fc2,i,rc)*100)/100;
+        const prevVal = pc===null?0:Math.round(v2(fc2,i,pc)*100)/100;
+        descAtual[ds][mn] = prevVal;
+        mData2[mn] = [realVal, prevVal, null, null, null];
       }
+      demoTree2.push({id:i,parent_id:isParent?null:curDtParent2,desc:ds,is_parent:isParent,m:mData2});
     }
-    return {monthly:monthly2, acum:acum2, desc_atual:descAtual};
+    return {monthly:monthly2, acum:acum2, desc_atual:descAtual, demo_tree:demoTree2};
   }
 
   let atualData = readCurrentSheet(findSheetName({
@@ -13296,6 +13316,7 @@ function parseCashFlow(buf){
     monthly_atual_marck:(atualMarckData?.monthly || D.monthly_atual_marck || {}),
     monthly_atual_grattano:(atualGrattanoData?.monthly || D.monthly_atual_grattano || {}),
     desc_atual:(atualData?.desc_atual || D.desc_atual || {}),
+    demo_tree_atual:(atualData?.demo_tree || D.demo_tree_atual || []),
     sheet_scenario:WORKBOOK_SCENARIO,sheet_scenario_marck,sheet_scenario_grattano,
     demo_tree,kpis,agendaData};
 }
