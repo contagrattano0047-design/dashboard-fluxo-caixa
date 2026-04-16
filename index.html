@@ -10958,117 +10958,75 @@ function renderKpisFinanceiros(){
   const emp = _emp.resultado;
   const d = resultadoMetricas(emp);
 
+  const receitaMensal = D.months.map((_,i)=> (Number(d.m.receita_venda?.real?.[i])||0) || (Number(d.m.receita_total?.real?.[i])||0));
   const comprometMensal = D.months.map((_,i)=>{
-    const rec = Number(d.m.receita_total?.real?.[i]) || 0;
-    const desp = (Number(d.m.despesa_venda?.real?.[i])||0) + (Number(d.m.despesa_total?.real?.[i])||0) + (Number(d.m.impostos?.real?.[i])||0);
+    const rec = receitaMensal[i] || 0;
+    const desp = (Number(d.m.despesa_venda?.real?.[i])||0) + calcDespesaOperacionalElegivelFromMonthly(d.m, i) + (Number(d.m.impostos?.real?.[i])||0);
     return rec > 0 ? (desp / rec * 100) : 0;
   });
   const comprometPts = lastTwoNonZeroPoints(comprometMensal);
   const pontoEqMensal = D.months.map((_,i)=>{
-    const rec = Number(d.m.receita_total?.real?.[i]) || 0;
+    const rec = receitaMensal[i] || 0;
     const despMerc = Number(d.m.despesa_venda?.real?.[i]) || 0;
     const impostos = Number(d.m.impostos?.real?.[i]) || 0;
-    const despOp = Number(d.m.despesa_total?.real?.[i]) || 0;
+    const despOp = calcDespesaOperacionalElegivelFromMonthly(d.m, i);
     const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
     return margemContrib > 0 ? (despOp / margemContrib) : 0;
   });
   const pontoEqPts = lastTwoNonZeroPoints(pontoEqMensal);
 
   const peSub = d.pontoEquilibrio
-    ? (d.recAcum >= d.pontoEquilibrio ? 'Receita atual acima do equilíbrio' : 'Receita atual abaixo do equilíbrio')
+    ? (d.recAcum >= d.pontoEquilibrio ? 'Receita de venda acima do equilíbrio' : 'Receita de venda abaixo do equilíbrio')
     : 'Margem de contribuição insuficiente';
 
   const pmpSub = 'Somente compras de mercadorias para revenda';
 
   el.innerHTML =
-    kpiCard('navy','⚙️','Desp. Op. / Receita Bruta',pct(d.despOpSobreBruta),'Despesa operacional sobre faturamento bruto','', '', makeTrend(d.despOpBrutaPts.current?.val ?? null, d.despOpBrutaPts.previous?.val ?? null, 'lower', 'percent')) +
-    kpiCard('purple','📈','EBITDA Ajustado',fmtS(d.ebitdaAjustado),'Antes de impostos e financeiro','', '', makeTrend(d.ebitdaPts.current?.val ?? null, d.ebitdaPts.previous?.val ?? null, 'higher', 'currency')) +
-    kpiCard('teal','💹','Margem EBITDA',pct(d.margemEbitda),'EBITDA / Receita Total','', '', makeTrend(d.margemEbitdaPts.current?.val ?? null, d.margemEbitdaPts.previous?.val ?? null, 'higher', 'percent')) +
-    kpiCard('green','🧮','Margem Lucro Líquido',pct(d.margemLiquida),'Saldo líquido / Receita Total','', '', makeTrend(d.margemLiquidaPts.current?.val ?? null, d.margemLiquidaPts.previous?.val ?? null, 'higher', 'percent')) +
+    kpiCard('navy','⚙️','Desp. Op. / Receita Bruta',pct(d.despOpSobreBruta),'Despesas operacionais elegíveis sobre receita bruta de venda','', '', makeTrend(d.despOpBrutaPts.current?.val ?? null, d.despOpBrutaPts.previous?.val ?? null, 'lower', 'percent')) +
+    kpiCard('purple','📈','EBITDA Operacional Recorrente',fmtS(d.ebitdaAjustado),'Após custos, impostos e despesas operacionais elegíveis; antes do financeiro','', '', makeTrend(d.ebitdaPts.current?.val ?? null, d.ebitdaPts.previous?.val ?? null, 'higher', 'currency')) +
+    kpiCard('teal','💹','Margem EBITDA Operacional',pct(d.margemEbitda),'EBITDA operacional recorrente / Receita de venda','', '', makeTrend(d.margemEbitdaPts.current?.val ?? null, d.margemEbitdaPts.previous?.val ?? null, 'higher', 'percent')) +
+    kpiCard('green','🧮','Margem Lucro Líquido',pct(d.margemLiquida),'Lucro líquido / Receita de venda','', '', makeTrend(d.margemLiquidaPts.current?.val ?? null, d.margemLiquidaPts.previous?.val ?? null, 'higher', 'percent')) +
     kpiCard('orange','🎯','Ponto de Equilíbrio',d.pontoEquilibrio ? fmtS(d.pontoEquilibrio) : '—',peSub,'', '', makeTrend(pontoEqPts.current?.val ?? null, pontoEqPts.previous?.val ?? null, 'lower', 'currency')) +
     kpiCard('gold','📤','PMP',d.pmp !== null ? (d.pmp.toFixed(1)+' dias') : '—',pmpSub,'', '', null);
 }
 
 function renderResumoKpisFinanceiros(){
   const emp = _emp.resultado;
+  const d = resultadoMetricas(emp);
 
-  const rec = getA(emp,'receita_total') || 0;
-  const fatBruto = getA(emp,'fat_bruto') || 0;
-  const despMerc = getA(emp,'despesa_venda') || 0;
-  const despOp = getA(emp,'despesa_total') || 0;
-  const impostos = getA(emp,'impostos') || 0;
-  const outrasReceitas = getA(emp,'outras_receitas') || 0;
-  const financeira = getA(emp,'financeira') || 0;
-  const saldo = getA(emp,'saldo') || 0;
-
-  const despOpSobreBruta = fatBruto > 0 ? (despOp / fatBruto * 100) : 0;
-  const despOpSemFin = Math.max(0, despOp - financeira);
-  const ebitdaAjustado = rec + outrasReceitas - despMerc - despOpSemFin;
-  const margemEbitda = rec > 0 ? (ebitdaAjustado / rec * 100) : 0;
-  const margemLiquida = rec > 0 ? (saldo / rec * 100) : 0;
+  const rec = d.recAcum || 0;
+  const despMerc = Number(d.a.despesa_venda) || 0;
+  const despOp = calcDespesaOperacionalElegivelFromAcum(d.a);
+  const impostos = Number(d.a.impostos) || 0;
+  const lucroLiquido = d.lucroLiquido || 0;
+  const despOpSobreBruta = d.despOpSobreBruta || 0;
+  const ebitdaAjustado = d.ebitdaAjustado || 0;
+  const margemEbitda = d.margemEbitda || 0;
+  const margemLiquida = d.margemLiquida || 0;
   const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
   const pontoEquilibrio = margemContrib > 0 ? (despOp / margemContrib) : null;
   const comprometimento = rec > 0 ? ((despMerc + despOp + impostos) / rec * 100) : 0;
   const gapOperacional = rec - (despMerc + despOp + impostos);
-  const pmpInfo = D.kpis?.pmp?.[emp] || D.kpis?.pmp?.emp || null;
-  const pmp = pmpInfo?.avg_pagamento ?? null;
+  const pmpInfo = d.pmpInfo || null;
+  const pmp = d.pmp ?? null;
 
   let leituraResultado = '';
   if(rec <= 0){
-    leituraResultado = 'A receita ainda não é suficiente para uma leitura executiva consistente do resultado.';
-  }else if(gapOperacional < 0){
-    leituraResultado = `As despesas superam a receita em <b>${fmtS(Math.abs(gapOperacional))}</b>, indicando consumo de caixa no período e dependência maior da posição acumulada para sustentar a operação.`;
-  }else if(gapOperacional === 0){
-    leituraResultado = 'A operação está em equilíbrio, com receita cobrindo exatamente o nível atual de despesas.';
+    leituraResultado = 'Sem receita operacional realizada no período, a leitura de EBITDA e equilíbrio fica comprometida.';
+  }else if(ebitdaAjustado < 0){
+    leituraResultado = `A operação recorrente consumiu <b>${fmtS(Math.abs(ebitdaAjustado))}</b> antes do resultado financeiro, o que exige revisão imediata da estrutura operacional.`;
+  }else if(margemEbitda < 8){
+    leituraResultado = `O EBITDA operacional recorrente permanece positivo em <b>${fmtS(ebitdaAjustado)}</b>, mas com margem ainda curta de <b>${pct(margemEbitda)}</b>, pedindo disciplina adicional de custos.`;
   }else{
-    leituraResultado = `A operação gera excedente de <b>${fmtS(gapOperacional)}</b> sobre a estrutura de custos, reforçando a capacidade de transformar receita em resultado e preservar caixa.`;
-  }
-
-  let leituraComprometimento = '';
-  if(rec <= 0){
-    leituraComprometimento = 'Sem base de receita suficiente para leitura do comprometimento.';
-  }else if(comprometimento > 110){
-    leituraComprometimento = `O comprometimento está em <b>${pct(comprometimento)}</b>, acima de um patamar sustentável, o que exige revisão de custos, mix comercial ou recomposição de receita.`;
-  }else if(comprometimento > 100){
-    leituraComprometimento = `O comprometimento está em <b>${pct(comprometimento)}</b>, sinalizando que a operação trabalha acima do ponto de equilíbrio econômico e com pressão direta sobre a liquidez.`;
-  }else if(comprometimento > 85){
-    leituraComprometimento = `O comprometimento está em <b>${pct(comprometimento)}</b>, ainda controlado, mas com menor margem de segurança para absorver oscilações de receita.`;
-  }else{
-    leituraComprometimento = `O comprometimento está em <b>${pct(comprometimento)}</b>, indicando boa folga operacional entre receita e despesas.`;
-  }
-
-  const peTexto = pontoEquilibrio
-    ? (rec >= pontoEquilibrio
-        ? `A receita atual permanece <b>acima</b> do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, o que reduz a pressão estrutural sobre o resultado.`
-        : `A receita atual permanece <b>abaixo</b> do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, sinalizando necessidade de ganho de escala comercial ou revisão da base de custos.`)
-    : 'O ponto de equilíbrio não pôde ser estimado com segurança no cenário atual.';
-
-  const vencTexto = pmpInfo?.avg_venc !== null && pmpInfo?.avg_venc !== undefined
-    ? (pmpInfo.avg_venc === 0
-        ? 'Os pagamentos ocorrem, em média, no vencimento.'
-        : pmpInfo.avg_venc < 0
-          ? `Os pagamentos ocorrem, em média, <b>${Math.abs(pmpInfo.avg_venc).toFixed(1)} dia(s) antes</b> do vencimento.`
-          : `Os pagamentos ocorrem, em média, <b>${pmpInfo.avg_venc.toFixed(1)} dia(s) após</b> o vencimento.`)
-    : 'Ainda não há base suficiente para comparar pagamento e vencimento.';
-
-  let pmpLeitura = '';
-  if(pmp === null){
-    pmpLeitura = 'A leitura do PMP ainda depende de base suficiente de compras de mercadorias para revenda.';
-  }else if(pmp >= 40){
-    pmpLeitura = `O PMP está em <b>${pmp.toFixed(1)} dias</b>, mostrando forte alavancagem de fornecedores e maior fôlego para financiar parte da operação.`;
-  }else if(pmp >= 30){
-    pmpLeitura = `O PMP está em <b>${pmp.toFixed(1)} dias</b>, em um patamar saudável para sustentar capital de giro sem pressionar excessivamente o caixa.`;
-  }else{
-    pmpLeitura = `O PMP está em <b>${pmp.toFixed(1)} dias</b>, em patamar mais curto, o que exige disciplina maior na programação financeira de curto prazo.`;
+    leituraResultado = `A operação recorrente gerou <b>${fmtS(ebitdaAjustado)}</b>, com margem de <b>${pct(margemEbitda)}</b>, indicando melhor conversão da receita em resultado operacional.`;
   }
 
   const texto = `
-    <b>Resultado operacional:</b> A despesa operacional representa <b>${pct(despOpSobreBruta)}</b> da receita bruta, enquanto o EBITDA ajustado totaliza <b>${fmtS(ebitdaAjustado)}</b>, com margem EBITDA de <b>${pct(margemEbitda)}</b>. ${leituraResultado}<br><br>
-    <b>Pressão sobre a receita:</b> A margem de lucro líquido está em <b>${pct(margemLiquida)}</b>. ${leituraComprometimento}<br><br>
-    <b>Equilíbrio econômico:</b> ${peTexto}<br><br>
-    <b>Contas a pagar e capital de giro:</b> ${pmpLeitura} ${vencTexto} Essa leitura considera somente lançamentos da categoria <b>Compras de Mercadorias para Revenda</b>.
+    <b>Base operacional do KPI:</b> O EBITDA considera apenas a receita de venda recorrente de <b>${fmtS(rec)}</b>, descontando <b>${fmtS(despMerc)}</b> de despesas relativas à venda, <b>${fmtS(impostos)}</b> de impostos e <b>${fmtS(despOp)}</b> de despesas operacionais elegíveis. Já a margem líquida parte da mesma receita de venda e incorpora também consultoria, despesas de sócios, despesas financeiras e outras despesas.<br><br>
+    <b>Eficiência operacional:</b> As despesas operacionais elegíveis representam <b>${pct(despOpSobreBruta)}</b> da receita bruta de venda, enquanto o EBITDA operacional recorrente totaliza <b>${fmtS(ebitdaAjustado)}</b>, com margem EBITDA operacional de <b>${pct(margemEbitda)}</b>.<br><br>
+    <b>Rentabilidade e equilíbrio:</b> O lucro líquido estimado é de <b>${fmtS(lucroLiquido)}</b>, com margem de lucro líquido em <b>${pct(margemLiquida)}</b>, após considerar despesas operacionais elegíveis, consultoria estratégica, despesas de sócios, despesas financeiras e outras despesas recorrentes. O ponto de equilíbrio estimado é de <b>${pontoEquilibrio ? fmtS(pontoEquilibrio) : '—'}</b>. ${pontoEquilibrio ? (rec >= pontoEquilibrio ? 'No patamar atual, a receita de venda permanece acima do ponto de equilíbrio.' : 'No patamar atual, a receita de venda ainda está abaixo do ponto de equilíbrio estimado.') : 'No cenário atual, o ponto de equilíbrio não pôde ser estimado com segurança.'}<br><br>
+    <b>Leitura gerencial:</b> ${leituraResultado} O comprometimento da receita operacional está em <b>${pct(comprometimento)}</b>, com gap operacional de <b>${fmtS(gapOperacional)}</b>. ${pmp !== null ? `O PMP está em <b>${pmp.toFixed(1)} dias</b>, refletindo o prazo médio ponderado entre emissão e pagamento das compras de mercadorias para revenda.` : ''}
   `;
-
   const el = document.getElementById('resumoKpisFinanceiros');
   if(el) el.innerHTML = texto;
 }
@@ -11081,81 +11039,68 @@ function lastFinite(arr){
 
 function renderAlertasExecutivos(){
   const emp = _emp.resultado;
-  const rec = getA(emp,'receita_total') || 0;
-  const despMerc = getA(emp,'despesa_venda') || 0;
-  const despOp = getA(emp,'despesa_total') || 0;
-  const impostos = getA(emp,'impostos') || 0;
-  const outrasReceitas = getA(emp,'outras_receitas') || 0;
-  const financeira = getA(emp,'financeira') || 0;
-  const fatBruto = getA(emp,'fat_bruto') || 0;
-
+  const d = resultadoMetricas(emp);
+  const rec = d.recAcum || 0;
+  const despMerc = Number(d.a.despesa_venda) || 0;
+  const despOp = calcDespesaOperacionalElegivelFromAcum(d.a);
+  const impostos = Number(d.a.impostos) || 0;
   const compromet = rec > 0 ? ((despMerc + despOp + impostos) / rec * 100) : 0;
-  const despOpSobreBruta = fatBruto > 0 ? (despOp / fatBruto * 100) : 0;
-  const despOpSemFin = Math.max(0, despOp - financeira);
-  const ebitdaAjustado = rec + outrasReceitas - despMerc - despOpSemFin;
-  const margemEbitda = rec > 0 ? (ebitdaAjustado / rec * 100) : 0;
-  const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
-  const pontoEquilibrio = margemContrib > 0 ? (despOp / margemContrib) : null;
-  const pmpInfo = D.kpis?.pmp?.[emp] || D.kpis?.pmp?.emp || null;
-  const pmp = pmpInfo?.avg_pagamento ?? null;
-
-  const fluxoPrev = getPrev(emp,'saldo') || [];
-  const riscoIdx = fluxoPrev.findIndex(v => Number(v) < 0);
-  const menorSaldo = fluxoPrev.length ? Math.min(...fluxoPrev) : 0;
+  const margemEbitda = d.margemEbitda || 0;
+  const ebitdaAjustado = d.ebitdaAjustado || 0;
+  const pontoEquilibrio = d.pontoEquilibrio;
+  const pmp = d.pmp ?? null;
+  const fluxoPrev = d.fluxoPrev || [];
+  const riscoIdx = d.riscoIdx;
+  const menorSaldo = d.menorSaldo || 0;
 
   const alerts = [];
 
   alerts.push({
-    cls: compromet > 110 ? 'danger' : compromet > 100 ? 'danger' : compromet > 85 ? 'warn' : 'success',
-    title:'Comprometimento da receita',
+    cls: riscoIdx >= 0 ? 'danger' : 'success',
+    title:'Pressão de caixa projetada',
+    text: riscoIdx >= 0
+      ? `O fluxo projetado indica saldo negativo a partir de <b>${D.months[riscoIdx]}</b>, com piso estimado em <b>${fmtS(menorSaldo)}</b>.`
+      : `A projeção de caixa não indica saldo negativo no horizonte visível, preservando folga financeira mais confortável.`
+  });
+
+  alerts.push({
+    cls: compromet > 100 ? 'danger' : compromet > 85 ? 'warn' : 'success',
+    title:'Comprometimento da receita operacional',
     text: compromet > 100
-      ? `As despesas representam <b>${pct(compromet)}</b> da receita, configurando operação acima do limite sustentável e consumo direto de caixa.`
+      ? `As despesas elegíveis ao EBITDA representam <b>${pct(compromet)}</b> da receita operacional, configurando operação acima do limite sustentável.`
       : compromet > 85
-        ? `As despesas representam <b>${pct(compromet)}</b> da receita, mantendo a operação com folga curta e sensível a oscilações.`
-        : `As despesas representam <b>${pct(compromet)}</b> da receita, preservando folga operacional mais confortável.`
+        ? `As despesas elegíveis ao EBITDA representam <b>${pct(compromet)}</b> da receita operacional, mantendo folga curta e sensível a oscilações.`
+        : `As despesas elegíveis ao EBITDA representam <b>${pct(compromet)}</b> da receita operacional, preservando folga operacional mais confortável.`
   });
 
   alerts.push({
     cls: margemEbitda < 0 ? 'danger' : margemEbitda < 8 ? 'warn' : 'success',
-    title:'Qualidade da margem EBITDA',
+    title:'Qualidade da margem EBITDA operacional',
     text: margemEbitda < 0
-      ? `O EBITDA ajustado está negativo em <b>${fmtS(Math.abs(ebitdaAjustado))}</b>, mostrando que a operação ainda não gera resultado suficiente antes da pressão financeira.`
-      : `O EBITDA ajustado soma <b>${fmtS(ebitdaAjustado)}</b>, com margem de <b>${pct(margemEbitda)}</b>.`
+      ? `O EBITDA operacional recorrente está negativo em <b>${fmtS(Math.abs(ebitdaAjustado))}</b>, mostrando que a operação recorrente ainda não gera resultado suficiente.`
+      : `O EBITDA operacional recorrente soma <b>${fmtS(ebitdaAjustado)}</b>, com margem de <b>${pct(margemEbitda)}</b>.`
   });
 
   if(pontoEquilibrio){
     alerts.push({
-      cls: rec >= pontoEquilibrio ? 'success' : 'danger',
-      title:'Ponto de equilíbrio',
+      cls: rec >= pontoEquilibrio ? 'success' : 'warn',
+      title:'Receita frente ao ponto de equilíbrio',
       text: rec >= pontoEquilibrio
-        ? `A receita acumulada está acima do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, preservando sustentação econômica da operação.`
-        : `A receita acumulada ainda está abaixo do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, o que reforça a necessidade de recompor margem ou volume.`
+        ? `A receita de venda acumulada está acima do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>.`
+        : `A receita de venda acumulada ainda está abaixo do ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>.`
     });
   }
-
-  alerts.push({
-    cls: riscoIdx >= 0 ? 'danger' : 'success',
-    title:'Reflexo no caixa projetado',
-    text: riscoIdx >= 0
-      ? `No cenário atual, o fluxo projeta saldo negativo a partir de <b>${D.months[riscoIdx]}</b>, com piso estimado em <b>${fmtS(menorSaldo)}</b>.`
-      : `O cenário atual não projeta saldo mensal negativo; o menor saldo esperado permanece em <b>${fmtS(menorSaldo)}</b>.`
-  });
 
   if(pmp !== null){
     alerts.push({
-      cls: pmp < 20 ? 'warn' : pmp > 45 ? 'success' : 'success',
+      cls:'success',
       title:'Prazo médio de pagamento',
-      text: pmp < 20
-        ? `O PMP está em <b>${pmp.toFixed(1)} dias</b>, sugerindo menor financiamento operacional por fornecedores.`
-        : `O PMP está em <b>${pmp.toFixed(1)} dias</b>, considerando apenas compras de mercadorias para revenda, ajudando a sustentar capital de giro.`
+      text:`O PMP está em <b>${pmp.toFixed(1)} dias</b>, prazo que contribui para financiar parcialmente a operação de compra e revenda.`
     });
   }
 
-  renderAlertGrid('alertasExecutivos', alerts.slice(0,4));
+  renderAlertGrid('alertasExecutivos', alerts.slice(0,5));
 }
-
-
-
 
 function renderAlertGrid(elId, alerts){
   const el = document.getElementById(elId);
@@ -11509,40 +11454,21 @@ function renderInsightsDespesas(){
 
 function renderInsightsResultado(){
   const emp = _emp.resultado;
-  const rec = getA(emp,'receita_total') || 0;
-  const fatBruto = getA(emp,'fat_bruto') || 0;
-  const despMerc = getA(emp,'despesa_venda') || 0;
-  const despOp = getA(emp,'despesa_total') || 0;
-  const impostos = getA(emp,'impostos') || 0;
-  const outrasReceitas = getA(emp,'outras_receitas') || 0;
-  const financeira = getA(emp,'financeira') || 0;
-  const saldo = getA(emp,'saldo') || 0;
-  const despTotal = despMerc + despOp + impostos;
-  const despOpSobreBruta = fatBruto > 0 ? (despOp / fatBruto * 100) : 0;
-  const despOpSemFin = Math.max(0, despOp - financeira);
-  const ebitdaAjustado = rec + outrasReceitas - despMerc - despOpSemFin;
-  const margemEbitda = rec > 0 ? (ebitdaAjustado / rec * 100) : 0;
-  const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
-  const pontoEquilibrio = margemContrib > 0 ? (despOp / margemContrib) : null;
-  const pmpInfo = D.kpis?.pmp?.[emp] || D.kpis?.pmp?.emp || null;
-  const pmp = pmpInfo?.avg_pagamento ?? null;
+  const d = resultadoMetricas(emp);
+  const rec = d.recAcum || 0;
   const cards = [];
-  cards.push(insightCard('Qualidade do resultado',
-    `O EBITDA ajustado soma <b>${fmtS(ebitdaAjustado)}</b>, com margem EBITDA de <b>${pct(margemEbitda)}</b>. Isso mostra a capacidade da operação de gerar resultado antes da pressão financeira.`));
-  if(pontoEquilibrio){
+  cards.push(insightCard('Qualidade do resultado operacional',
+    `O EBITDA operacional recorrente soma <b>${fmtS(d.ebitdaAjustado)}</b>, com margem EBITDA operacional de <b>${pct(d.margemEbitda)}</b>, calculado sobre a receita recorrente de venda e a estrutura operacional elegível.`));
+  if(d.pontoEquilibrio){
     cards.push(insightCard('Distância do equilíbrio',
-      rec >= pontoEquilibrio
-        ? `A receita já supera o ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, o que melhora a sustentação econômica do negócio.`
-        : `A receita ainda não alcança o ponto de equilíbrio estimado em <b>${fmtS(pontoEquilibrio)}</b>, mantendo a estrutura pressionada.`));
+      rec >= d.pontoEquilibrio
+        ? `A receita de venda já supera o ponto de equilíbrio estimado em <b>${fmtS(d.pontoEquilibrio)}</b>, o que melhora a sustentação econômica do negócio.`
+        : `A receita de venda ainda não alcança o ponto de equilíbrio estimado em <b>${fmtS(d.pontoEquilibrio)}</b>, mantendo a estrutura pressionada.`));
   }
-  cards.push(insightCard('Estrutura operacional',
-    `A despesa operacional representa <b>${pct(despOpSobreBruta)}</b> da receita bruta. Esse indicador mostra quanto da capacidade comercial está sendo absorvido pela estrutura fixa.`));
-  if(pmp !== null){
-    cards.push(insightCard('Capital de giro via fornecedores',
-      `O PMP está em <b>${pmp.toFixed(1)} dias</b>, considerando apenas compras de mercadorias para revenda. Esse prazo mede quanto da operação está sendo financiada por fornecedores.`));
-  }
+  cards.push(insightCard('Estrutura considerada nos KPIs',
+    `No EBITDA entram <b>Despesa Relativas a Venda</b>, <b>Impostos</b> e as despesas operacionais elegíveis de <b>Fixa</b>, <b>Pessoal</b>, <b>Variável</b>, <b>Despesa Comercial</b> e <b>Despesa Logística</b>. Na margem líquida entram também <b>Consultoria</b>, <b>Despesa de Sócios</b>, <b>Despesa Financeira</b> e <b>Outras Despesas</b>. <b>Imobilizado</b> permanece fora para não misturar investimento com resultado do período.`));
   const el = document.getElementById('insightsResultado');
-  if(el) el.innerHTML = cards.slice(0,4).join('');
+  if(el) el.innerHTML = cards.join('');
 }
 
 function renderAll(){
@@ -12161,84 +12087,126 @@ function renderDespesas(){
 // 5. RESULTADO
 // ════════════════════════════════════════
 
+
+function calcEbitdaOperacional(receita, despMerc, impostos, despOpElegivel){
+  const rec = Number(receita) || 0;
+  const merc = Number(despMerc) || 0;
+  const imp = Number(impostos) || 0;
+  const op = Number(despOpElegivel) || 0;
+  return rec - merc - imp - op;
+}
+function calcDespesaOperacionalElegivelFromAcum(a){
+  return (Number(a.fixa)||0) + (Number(a.pessoal)||0) + (Number(a.variavel)||0) + (Number(a.comercial)||0) + (Number(a.logistica)||0);
+}
+function calcDespesaOperacionalElegivelFromMonthly(m, i){
+  return (Number(m.fixa?.real?.[i])||0) + (Number(m.pessoal?.real?.[i])||0) + (Number(m.variavel?.real?.[i])||0) + (Number(m.comercial?.real?.[i])||0) + (Number(m.logistica?.real?.[i])||0);
+}
+
 function resultadoMetricas(emp){
   const m = {
     saldo: getM(emp,'saldo'),
     receita_total: getM(emp,'receita_total'),
+    receita_venda: getM(emp,'receita_venda'),
     despesa_venda: getM(emp,'despesa_venda'),
     despesa_total: getM(emp,'despesa_total'),
-    impostos: getM(emp,'impostos'),
+    fixa: getM(emp,'fixa'),
     pessoal: getM(emp,'pessoal'),
+    variavel: getM(emp,'variavel'),
+    comercial: getM(emp,'comercial'),
+    logistica: getM(emp,'logistica'),
+    consultoria: getM(emp,'consultoria'),
+    socios: getM(emp,'socios'),
     financeira: getM(emp,'financeira'),
+    outras_despesas: getM(emp,'outras_despesas'),
+    imobilizado: getM(emp,'imobilizado'),
+    impostos: getM(emp,'impostos'),
     fat_bruto: getM(emp,'fat_bruto'),
     outras_receitas: getM(emp,'outras_receitas'),
   };
   const a = {
     saldo: getA(emp,'saldo'),
     receita_total: getA(emp,'receita_total'),
+    receita_venda: getA(emp,'receita_venda'),
     despesa_venda: getA(emp,'despesa_venda'),
     despesa_total: getA(emp,'despesa_total'),
-    impostos: getA(emp,'impostos'),
+    fixa: getA(emp,'fixa'),
     pessoal: getA(emp,'pessoal'),
+    variavel: getA(emp,'variavel'),
+    comercial: getA(emp,'comercial'),
+    logistica: getA(emp,'logistica'),
+    consultoria: getA(emp,'consultoria'),
+    socios: getA(emp,'socios'),
     financeira: getA(emp,'financeira'),
+    outras_despesas: getA(emp,'outras_despesas'),
+    imobilizado: getA(emp,'imobilizado'),
+    impostos: getA(emp,'impostos'),
     fat_bruto: getA(emp,'fat_bruto'),
     outras_receitas: getA(emp,'outras_receitas'),
   };
-  const recAcum = a.receita_total || 0;
-  const despMerc = a.despesa_venda || 0;
-  const despOp = a.despesa_total || 0;
-  const impostos = a.impostos || 0;
-  const outrasReceitas = a.outras_receitas || 0;
-  const financeira = a.financeira || 0;
-  const saldoAcum = a.saldo || 0;
+
+  const recAcum = Number(a.receita_venda) || 0;
+  const despMerc = Number(a.despesa_venda) || 0;
+  const despOp = calcDespesaOperacionalElegivelFromAcum(a);
+  const impostos = Number(a.impostos) || 0;
+  const consultoria = Number(a.consultoria) || 0;
+  const socios = Number(a.socios) || 0;
+  const financeira = Number(a.financeira) || 0;
+  const outrasDespesas = Number(a.outras_despesas) || 0;
+  const saldoAcum = Number(a.saldo) || 0;
   const despTotal = despMerc + despOp + impostos;
   const margemOper = recAcum > 0 ? ((recAcum - despTotal) / recAcum * 100) : 0;
   const compromet = recAcum > 0 ? (despTotal / recAcum * 100) : 0;
-  const despOpSobreBruta = a.fat_bruto > 0 ? (despOp / a.fat_bruto * 100) : 0;
-  const despOpSemFin = Math.max(0, despOp - financeira);
-  const ebitdaAjustado = recAcum + outrasReceitas - despMerc - despOpSemFin;
+  const despOpSobreBruta = recAcum > 0 ? (despOp / recAcum * 100) : 0;
+  const ebitdaAjustado = calcEbitdaOperacional(recAcum, despMerc, impostos, despOp);
   const margemEbitda = recAcum > 0 ? (ebitdaAjustado / recAcum * 100) : 0;
-  const margemLiquida = recAcum > 0 ? (saldoAcum / recAcum * 100) : 0;
+  const lucroLiquido = recAcum - despMerc - impostos - despOp - consultoria - socios - financeira - outrasDespesas;
+  const margemLiquida = recAcum > 0 ? (lucroLiquido / recAcum * 100) : 0;
   const margemContrib = recAcum > 0 ? ((recAcum - despMerc - impostos) / recAcum) : 0;
   const pontoEquilibrio = margemContrib > 0 ? (despOp / margemContrib) : null;
   const pmpInfo = D.kpis?.pmp?.[emp] || D.kpis?.pmp?.emp || null;
   const pmp = pmpInfo?.avg_pagamento ?? null;
 
-  const recPts = lastTwoNonZeroPoints(m.receita_total?.real || []);
-  const despMensal = D.months.map((_,i)=> (Number(m.despesa_venda?.real?.[i])||0) + (Number(m.despesa_total?.real?.[i])||0) + (Number(m.impostos?.real?.[i])||0));
+  const receitaMensal = D.months.map((_,i)=> Number(m.receita_venda?.real?.[i]) || 0);
+  const recPts = lastTwoNonZeroPoints(receitaMensal);
+  const despMensal = D.months.map((_,i)=> (Number(m.despesa_venda?.real?.[i])||0) + calcDespesaOperacionalElegivelFromMonthly(m, i) + (Number(m.impostos?.real?.[i])||0));
   const despPts = lastTwoNonZeroPoints(despMensal);
   const saldoPts = lastTwoNonZeroPoints(m.saldo?.real || []);
   const margemMensal = D.months.map((_,i)=>{
-    const rec = Number(m.receita_total?.real?.[i]) || 0;
-    const desp = (Number(m.despesa_venda?.real?.[i])||0) + (Number(m.despesa_total?.real?.[i])||0) + (Number(m.impostos?.real?.[i])||0);
+    const rec = receitaMensal[i] || 0;
+    const desp = despMensal[i] || 0;
     return rec > 0 ? ((rec - desp) / rec * 100) : 0;
   });
   const margemPts = lastTwoNonZeroPoints(margemMensal);
   const despOpBrutaMensal = D.months.map((_,i)=>{
-    const bruto = Number(m.fat_bruto?.real?.[i]) || 0;
-    const op = Number(m.despesa_total?.real?.[i]) || 0;
-    return bruto > 0 ? (op / bruto * 100) : 0;
+    const receitaBruta = receitaMensal[i] || 0;
+    const op = calcDespesaOperacionalElegivelFromMonthly(m, i);
+    return receitaBruta > 0 ? (op / receitaBruta * 100) : 0;
   });
   const despOpBrutaPts = lastTwoNonZeroPoints(despOpBrutaMensal);
   const ebitdaMensal = D.months.map((_,i)=>{
-    const rec = Number(m.receita_total?.real?.[i]) || 0;
-    const outras = Number(m.outras_receitas?.real?.[i]) || 0;
+    const rec = receitaMensal[i] || 0;
     const merc = Number(m.despesa_venda?.real?.[i]) || 0;
-    const op = Number(m.despesa_total?.real?.[i]) || 0;
-    const fin = Number(m.financeira?.real?.[i]) || 0;
-    const opSemFin = Math.max(0, op - fin);
-    return rec + outras - merc - opSemFin;
+    const imp = Number(m.impostos?.real?.[i]) || 0;
+    const op = calcDespesaOperacionalElegivelFromMonthly(m, i);
+    return calcEbitdaOperacional(rec, merc, imp, op);
   });
   const ebitdaPts = lastTwoNonZeroPoints(ebitdaMensal);
   const margemEbitdaMensal = D.months.map((_,i)=>{
-    const rec = Number(m.receita_total?.real?.[i]) || 0;
+    const rec = receitaMensal[i] || 0;
     return rec > 0 ? ((Number(ebitdaMensal[i])||0) / rec * 100) : 0;
   });
   const margemEbitdaPts = lastTwoNonZeroPoints(margemEbitdaMensal);
   const margemLiquidaMensal = D.months.map((_,i)=>{
-    const rec = Number(m.receita_total?.real?.[i]) || 0;
-    const saldo = Number(m.saldo?.real?.[i]) || 0;
-    return rec > 0 ? (saldo / rec * 100) : 0;
+    const rec = receitaMensal[i] || 0;
+    const merc = Number(m.despesa_venda?.real?.[i]) || 0;
+    const imp = Number(m.impostos?.real?.[i]) || 0;
+    const op = calcDespesaOperacionalElegivelFromMonthly(m, i);
+    const consult = Number(m.consultoria?.real?.[i]) || 0;
+    const soc = Number(m.socios?.real?.[i]) || 0;
+    const fin = Number(m.financeira?.real?.[i]) || 0;
+    const outras = Number(m.outras_despesas?.real?.[i]) || 0;
+    const lucro = rec - merc - imp - op - consult - soc - fin - outras;
+    return rec > 0 ? (lucro / rec * 100) : 0;
   });
   const margemLiquidaPts = lastTwoNonZeroPoints(margemLiquidaMensal);
 
@@ -12251,7 +12219,7 @@ function resultadoMetricas(emp){
 
   return {
     m,a, saldoAcum, recAcum, despTotal, margemOper, compromet, despOpSobreBruta,
-    ebitdaAjustado, margemEbitda, margemLiquida, pontoEquilibrio, pmpInfo, pmp,
+    ebitdaAjustado, lucroLiquido, margemEbitda, margemLiquida, pontoEquilibrio, pmpInfo, pmp,
     recPts, despPts, saldoPts, margemPts, despOpBrutaPts, ebitdaPts, margemEbitdaPts, margemLiquidaPts,
     fluxoPrev, riscoIdx, menorSaldo, ultSaldoReal, mediaQueima, diasCobertura
   };
@@ -12654,13 +12622,21 @@ function parseCashFlow(buf){
   function detectRowMap(sheetArr){
     const labels = {
       receita_total:'Receita Total',
+      receita_venda:'Clientes - Revenda de Mercadoria',
       despesa_venda:'Despesa Relativas a Venda',
       impostos:'Impostos',
       outras_receitas:'Outras Receitas',
       despesa_total:'Despesa Total',
+      fixa:'Fixa',
       pessoal:'Pessoal',
-      comercial:'Comercial',
-      financeira:'Financeira',
+      variavel:'Variável',
+      consultoria:'Consultoria',
+      comercial:'Despesa Comercial',
+      logistica:'Despesa Logística',
+      socios:'Despesa de Sócios',
+      financeira:'Despesa Financeira',
+      outras_despesas:'Outras Despesas',
+      imobilizado:'Imobilizado',
       saldo:'Saldo',
       fat_bruto:'Faturamento Bruto',
       fat_liquido:'Faturamento Líquido'
@@ -12674,7 +12650,25 @@ function parseCashFlow(buf){
       });
     });
     return Object.assign({
-      receita_total:6,despesa_venda:16,impostos:22,outras_receitas:30,despesa_total:41,pessoal:64,comercial:109,financeira:163,saldo:179,fat_bruto:194,fat_liquido:198
+      receita_total:6,
+      receita_venda:8,
+      despesa_venda:16,
+      impostos:22,
+      outras_receitas:30,
+      despesa_total:41,
+      fixa:42,
+      pessoal:63,
+      variavel:84,
+      consultoria:100,
+      comercial:109,
+      logistica:119,
+      socios:144,
+      financeira:163,
+      outras_despesas:172,
+      imobilizado:174,
+      saldo:179,
+      fat_bruto:194,
+      fat_liquido:198
     }, rows);
   }
 
