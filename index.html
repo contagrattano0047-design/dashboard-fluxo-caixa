@@ -10396,7 +10396,7 @@ html,body{max-width:100%;overflow-x:hidden}
   <div class="section-header">
     <div>
       <div class="section-title" id="tituloResultado">Resultado — Consolidado</div>
-      <div class="section-subtitle">Visão executiva · 2026</div>
+      <div class="section-subtitle">Visão executiva · competência e caixa · 2026</div>
     </div>
     <div class="emp-selector" id="empResultado">
       <button class="emp-pill active" onclick="setEmpresa(&#39;resultado&#39;,&#39;emp&#39;,this)">Consolidado</button>
@@ -10423,12 +10423,24 @@ html,body{max-width:100%;overflow-x:hidden}
   <div class="card" style="margin-bottom:16px">
     <div class="card-header">
       <div>
-        <div class="card-title">📌 KPIs Financeiros</div>
-        <div class="card-subtitle">Indicadores de eficiência operacional e equilíbrio econômico</div>
+        <div class="card-title">📘 KPIs de Resultado (DRE / Faturamento)</div>
+        <div class="card-subtitle">Indicadores por competência, alinhados à lógica do DRE gerencial</div>
       </div>
     </div>
     <div class="card-body">
-      <div class="kpi-grid" id="kpiFinanceiros"></div>
+      <div class="kpi-grid" id="kpiFinanceirosDRE"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header">
+      <div>
+        <div class="card-title">💵 KPIs de Caixa (Recebimento)</div>
+        <div class="card-subtitle">Indicadores por recebimento, para leitura de liquidez e conversão em caixa</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="kpi-grid" id="kpiFinanceirosCaixa"></div>
     </div>
   </div>
 
@@ -10436,7 +10448,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="card-header">
         <div>
           <div class="card-title">📊 Leitura dos KPIs</div>
-          <div class="card-subtitle">Leitura automática e orientativa dos indicadores financeiros</div>
+          <div class="card-subtitle">Conciliação executiva entre resultado por competência e desempenho de caixa</div>
         </div>
       </div>
       <div class="card-body" id="resumoKpisFinanceiros" style="font-size:13px;line-height:1.65"></div>
@@ -10953,82 +10965,89 @@ function renderResumoDespesas(){
 
 
 function renderKpisFinanceiros(){
-  const el = document.getElementById('kpiFinanceiros');
-  if(!el) return;
+  const elDre = document.getElementById('kpiFinanceirosDRE');
+  const elCaixa = document.getElementById('kpiFinanceirosCaixa');
   const emp = _emp.resultado;
-  const d = resultadoMetricas(emp);
-
-  const receitaMensal = D.months.map((_,i)=> (Number(d.m.receita_venda?.real?.[i])||0) || (Number(d.m.receita_total?.real?.[i])||0));
-  const comprometMensal = D.months.map((_,i)=>{
-    const rec = receitaMensal[i] || 0;
-    const desp = (Number(d.m.despesa_venda?.real?.[i])||0) + calcDespesaOperacionalElegivelFromMonthly(d.m, i) + (Number(d.m.impostos?.real?.[i])||0);
-    return rec > 0 ? (desp / rec * 100) : 0;
-  });
-  const comprometPts = lastTwoNonZeroPoints(comprometMensal);
-  const pontoEqMensal = D.months.map((_,i)=>{
-    const rec = receitaMensal[i] || 0;
-    const despMerc = Number(d.m.despesa_venda?.real?.[i]) || 0;
-    const impostos = Number(d.m.impostos?.real?.[i]) || 0;
-    const despOp = calcDespesaOperacionalElegivelFromMonthly(d.m, i);
-    const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
-    return margemContrib > 0 ? (despOp / margemContrib) : 0;
-  });
-  const pontoEqPts = lastTwoNonZeroPoints(pontoEqMensal);
-
-  const peSub = d.pontoEquilibrio
-    ? (d.recAcum >= d.pontoEquilibrio ? 'Receita de venda acima do equilíbrio' : 'Receita de venda abaixo do equilíbrio')
-    : 'Margem de contribuição insuficiente';
-
+  const dre = resultadoMetricasDre(emp);
+  const caixa = resultadoMetricas(emp);
   const pmpSub = 'Somente compras de mercadorias para revenda';
 
-  el.innerHTML =
-    kpiCard('navy','⚙️','Desp. Op. / Receita Bruta',pct(d.despOpSobreBruta),'Despesas operacionais elegíveis sobre receita bruta de venda','', '', makeTrend(d.despOpBrutaPts.current?.val ?? null, d.despOpBrutaPts.previous?.val ?? null, 'lower', 'percent')) +
-    kpiCard('purple','📈','EBITDA Operacional Recorrente',fmtS(d.ebitdaAjustado),'Após custos, impostos e despesas operacionais elegíveis; antes do financeiro','', '', makeTrend(d.ebitdaPts.current?.val ?? null, d.ebitdaPts.previous?.val ?? null, 'higher', 'currency')) +
-    kpiCard('teal','💹','Margem EBITDA Operacional',pct(d.margemEbitda),'EBITDA operacional recorrente / Receita de venda','', '', makeTrend(d.margemEbitdaPts.current?.val ?? null, d.margemEbitdaPts.previous?.val ?? null, 'higher', 'percent')) +
-    kpiCard('green','🧮','Margem Lucro Líquido',pct(d.margemLiquida),'Lucro líquido / Receita de venda','', '', makeTrend(d.margemLiquidaPts.current?.val ?? null, d.margemLiquidaPts.previous?.val ?? null, 'higher', 'percent')) +
-    kpiCard('orange','🎯','Ponto de Equilíbrio',d.pontoEquilibrio ? fmtS(d.pontoEquilibrio) : '—',peSub,'', '', makeTrend(pontoEqPts.current?.val ?? null, pontoEqPts.previous?.val ?? null, 'lower', 'currency')) +
-    kpiCard('gold','📤','PMP',d.pmp !== null ? (d.pmp.toFixed(1)+' dias') : '—',pmpSub,'', '', null);
+  if(elDre){
+    const peSubDre = dre.pontoEquilibrio
+      ? (dre.faturamentoAcum >= dre.pontoEquilibrio ? 'Faturamento acima do equilíbrio' : 'Faturamento abaixo do equilíbrio')
+      : 'Margem de contribuição insuficiente';
+
+    elDre.innerHTML =
+      kpiCard('navy','⚙️','Desp. Op. / Faturamento Líquido',pct(dre.despOpSobreBruta),'Fixa + Pessoal + Variável + Comercial + Logística / faturamento líquido','', '', makeTrend(dre.despOpBrutaPts.current?.val ?? null, dre.despOpBrutaPts.previous?.val ?? null, 'lower', 'percent')) +
+      kpiCard('purple','📈','EBITDA DRE Gerencial',fmtS(dre.ebitda),'Faturamento líquido - venda - impostos - despesas gerenciais + reembolsos operacionais','', '', makeTrend(dre.ebitdaPts.current?.val ?? null, dre.ebitdaPts.previous?.val ?? null, 'higher', 'currency')) +
+      kpiCard('teal','💹','Margem EBITDA DRE',pct(dre.margemEbitda),'EBITDA DRE / faturamento líquido','', '', makeTrend(dre.margemEbitdaPts.current?.val ?? null, dre.margemEbitdaPts.previous?.val ?? null, 'higher', 'percent')) +
+      kpiCard('green','🧮','Margem Lucro Líquido DRE',pct(dre.margemLiquida),'EBITDA DRE + rendimentos de aplicações / faturamento líquido','', '', makeTrend(dre.margemLiquidaPts.current?.val ?? null, dre.margemLiquidaPts.previous?.val ?? null, 'higher', 'percent')) +
+      kpiCard('orange','🎯','Ponto de Equilíbrio DRE',dre.pontoEquilibrio ? fmtS(dre.pontoEquilibrio) : '—',peSubDre,'', '', makeTrend(dre.pontoEqPts.current?.val ?? null, dre.pontoEqPts.previous?.val ?? null, 'lower', 'currency'));
+  }
+
+  if(elCaixa){
+    const receitaMensalCaixa = D.months.map((_,i)=> Number(caixa.m.receita_venda?.real?.[i]) || 0);
+    const comprometMensalCaixa = D.months.map((_,i)=>{
+      const rec = receitaMensalCaixa[i] || 0;
+      const desp = (Number(caixa.m.despesa_venda?.real?.[i])||0) + calcDespesaOperacionalElegivelFromMonthly(caixa.m, i) + (Number(caixa.m.impostos?.real?.[i])||0);
+      return rec > 0 ? (desp / rec * 100) : 0;
+    });
+    const comprometPtsCaixa = lastTwoNonZeroPoints(comprometMensalCaixa);
+    const pontoEqMensalCaixa = D.months.map((_,i)=>{
+      const rec = receitaMensalCaixa[i] || 0;
+      const despMerc = Number(caixa.m.despesa_venda?.real?.[i]) || 0;
+      const impostos = Number(caixa.m.impostos?.real?.[i]) || 0;
+      const despOp = calcDespesaOperacionalElegivelFromMonthly(caixa.m, i);
+      const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
+      return margemContrib > 0 ? (despOp / margemContrib) : 0;
+    });
+    const pontoEqPtsCaixa = lastTwoNonZeroPoints(pontoEqMensalCaixa);
+    const peSubCaixa = caixa.pontoEquilibrio
+      ? (caixa.recAcum >= caixa.pontoEquilibrio ? 'Recebimento acima do equilíbrio' : 'Recebimento abaixo do equilíbrio')
+      : 'Margem de contribuição insuficiente';
+
+    elCaixa.innerHTML =
+      kpiCard('navy','💵','Desp. Op. / Recebimento',pct(caixa.despOpSobreBruta),'Fixa + Pessoal + Variável + Comercial + Logística / recebimentos','', '', makeTrend(caixa.despOpBrutaPts.current?.val ?? null, caixa.despOpBrutaPts.previous?.val ?? null, 'lower', 'percent')) +
+      kpiCard('purple','📥','Resultado Operacional Caixa',fmtS(caixa.ebitdaAjustado),'Recebimentos - venda - impostos - despesas operacionais elegíveis','', '', makeTrend(caixa.ebitdaPts.current?.val ?? null, caixa.ebitdaPts.previous?.val ?? null, 'higher', 'currency')) +
+      kpiCard('teal','📊','Margem Operacional Caixa',pct(caixa.margemEbitda),'Resultado operacional caixa / recebimentos','', '', makeTrend(caixa.margemEbitdaPts.current?.val ?? null, caixa.margemEbitdaPts.previous?.val ?? null, 'higher', 'percent')) +
+      kpiCard('green','🧾','Margem Líquida Caixa',pct(caixa.margemLiquida),'Resultado caixa após despesas não operacionais / recebimentos','', '', makeTrend(caixa.margemLiquidaPts.current?.val ?? null, caixa.margemLiquidaPts.previous?.val ?? null, 'higher', 'percent')) +
+      kpiCard('orange','🎯','Ponto de Equilíbrio Caixa',caixa.pontoEquilibrio ? fmtS(caixa.pontoEquilibrio) : '—',peSubCaixa,'', '', makeTrend(pontoEqPtsCaixa.current?.val ?? null, pontoEqPtsCaixa.previous?.val ?? null, 'lower', 'currency')) +
+      kpiCard('gold','📤','PMP',caixa.pmp !== null ? (caixa.pmp.toFixed(1)+' dias') : '—',pmpSub,'', '', null);
+  }
 }
 
 function renderResumoKpisFinanceiros(){
   const emp = _emp.resultado;
-  const d = resultadoMetricas(emp);
+  const dre = resultadoMetricasDre(emp);
+  const caixa = resultadoMetricas(emp);
+  const el = document.getElementById('resumoKpisFinanceiros');
+  if(!el) return;
 
-  const rec = d.recAcum || 0;
-  const despMerc = Number(d.a.despesa_venda) || 0;
-  const despOp = calcDespesaOperacionalElegivelFromAcum(d.a);
-  const impostos = Number(d.a.impostos) || 0;
-  const lucroLiquido = d.lucroLiquido || 0;
-  const despOpSobreBruta = d.despOpSobreBruta || 0;
-  const ebitdaAjustado = d.ebitdaAjustado || 0;
-  const margemEbitda = d.margemEbitda || 0;
-  const margemLiquida = d.margemLiquida || 0;
-  const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
-  const pontoEquilibrio = margemContrib > 0 ? (despOp / margemContrib) : null;
-  const comprometimento = rec > 0 ? ((despMerc + despOp + impostos) / rec * 100) : 0;
-  const gapOperacional = rec - (despMerc + despOp + impostos);
-  const pmpInfo = d.pmpInfo || null;
-  const pmp = d.pmp ?? null;
+  const gapBase = (dre.faturamentoAcum || 0) - (caixa.recAcum || 0);
+  const gapClass = gapBase >= 0 ? 'acima' : 'abaixo';
 
-  let leituraResultado = '';
-  if(rec <= 0){
-    leituraResultado = 'Sem receita operacional realizada no período, a leitura de EBITDA e equilíbrio fica comprometida.';
-  }else if(ebitdaAjustado < 0){
-    leituraResultado = `A operação recorrente consumiu <b>${fmtS(Math.abs(ebitdaAjustado))}</b> antes do resultado financeiro, o que exige revisão imediata da estrutura operacional.`;
-  }else if(margemEbitda < 8){
-    leituraResultado = `O EBITDA operacional recorrente permanece positivo em <b>${fmtS(ebitdaAjustado)}</b>, mas com margem ainda curta de <b>${pct(margemEbitda)}</b>, pedindo disciplina adicional de custos.`;
+  let leituraDre = '';
+  if((dre.faturamentoAcum || 0) <= 0){
+    leituraDre = 'Sem faturamento realizado no período, a leitura do bloco de resultado por competência fica comprometida.';
+  }else if((dre.ebitda || 0) < 0){
+    leituraDre = `Na ótica de competência, o DRE gerencial mostra EBITDA negativo de <b>${fmtS(Math.abs(dre.ebitda || 0))}</b>, indicando pressão estrutural sobre o faturamento realizado.`;
   }else{
-    leituraResultado = `A operação recorrente gerou <b>${fmtS(ebitdaAjustado)}</b>, com margem de <b>${pct(margemEbitda)}</b>, indicando melhor conversão da receita em resultado operacional.`;
+    leituraDre = `Na ótica de competência, o DRE gerencial mostra EBITDA positivo de <b>${fmtS(dre.ebitda || 0)}</b>, com margem de <b>${pct(dre.margemEbitda || 0)}</b>, alinhando o dashboard à leitura de faturamento da diretoria.`;
   }
 
-  const texto = `
-    <b>Base operacional do KPI:</b> O EBITDA considera apenas a receita de venda recorrente de <b>${fmtS(rec)}</b>, descontando <b>${fmtS(despMerc)}</b> de despesas relativas à venda, <b>${fmtS(impostos)}</b> de impostos e <b>${fmtS(despOp)}</b> de despesas operacionais elegíveis. Já a margem líquida parte da mesma receita de venda e incorpora também consultoria, despesas de sócios, despesas financeiras e outras despesas.<br><br>
-    <b>Eficiência operacional:</b> As despesas operacionais elegíveis representam <b>${pct(despOpSobreBruta)}</b> da receita bruta de venda, enquanto o EBITDA operacional recorrente totaliza <b>${fmtS(ebitdaAjustado)}</b>, com margem EBITDA operacional de <b>${pct(margemEbitda)}</b>.<br><br>
-    <b>Rentabilidade e equilíbrio:</b> O lucro líquido estimado é de <b>${fmtS(lucroLiquido)}</b>, com margem de lucro líquido em <b>${pct(margemLiquida)}</b>, após considerar despesas operacionais elegíveis, consultoria estratégica, despesas de sócios, despesas financeiras e outras despesas recorrentes. O ponto de equilíbrio estimado é de <b>${pontoEquilibrio ? fmtS(pontoEquilibrio) : '—'}</b>. ${pontoEquilibrio ? (rec >= pontoEquilibrio ? 'No patamar atual, a receita de venda permanece acima do ponto de equilíbrio.' : 'No patamar atual, a receita de venda ainda está abaixo do ponto de equilíbrio estimado.') : 'No cenário atual, o ponto de equilíbrio não pôde ser estimado com segurança.'}<br><br>
-    <b>Leitura gerencial:</b> ${leituraResultado} O comprometimento da receita operacional está em <b>${pct(comprometimento)}</b>, com gap operacional de <b>${fmtS(gapOperacional)}</b>. ${pmp !== null ? `O PMP está em <b>${pmp.toFixed(1)} dias</b>, refletindo o prazo médio ponderado entre emissão e pagamento das compras de mercadorias para revenda.` : ''}
-  `;
-  const el = document.getElementById('resumoKpisFinanceiros');
-  if(el) el.innerHTML = texto;
+  let leituraCaixa = '';
+  if((caixa.recAcum || 0) <= 0){
+    leituraCaixa = 'Sem recebimentos de venda realizados no período, a leitura do bloco de caixa fica comprometida.';
+  }else if((caixa.ebitdaAjustado || 0) < 0){
+    leituraCaixa = `Na ótica de caixa, os recebimentos de venda ainda não cobrem custos, impostos e despesas operacionais elegíveis, gerando resultado operacional de <b>${fmtS(caixa.ebitdaAjustado || 0)}</b>.`;
+  }else{
+    leituraCaixa = `Na ótica de caixa, os recebimentos de venda já sustentam a operação, com resultado operacional de <b>${fmtS(caixa.ebitdaAjustado || 0)}</b> e margem de <b>${pct(caixa.margemEbitda || 0)}</b>.`;
+  }
+
+  el.innerHTML = `
+    <b>Bloco 1 — Resultado (DRE / Faturamento):</b> Este bloco usa <b>faturamento líquido</b> como base de receita, mantendo competência e DRE na mesma linguagem. Hoje o faturamento acumulado está em <b>${fmtS(dre.faturamentoAcum || 0)}</b>, enquanto o EBITDA DRE gerencial está em <b>${fmtS(dre.ebitda || 0)}</b> e a margem líquida DRE em <b>${pct(dre.margemLiquida || 0)}</b>. ${leituraDre}<br><br>
+    <b>Bloco 2 — Caixa (Recebimento):</b> Este bloco usa <b>recebimentos totais</b> como base de caixa. Hoje os recebimentos acumulados estão em <b>${fmtS(caixa.recAcum || 0)}</b>, com resultado operacional caixa de <b>${fmtS(caixa.ebitdaAjustado || 0)}</b> e margem líquida caixa de <b>${pct(caixa.margemLiquida || 0)}</b>. ${leituraCaixa}<br><br>
+    <b>Conciliação executiva:</b> A diferença entre <b>faturado</b> e <b>recebido</b> no período soma <b>${fmtS(gapBase)}</b>, mostrando que competência e caixa contam histórias diferentes no curto prazo. É por isso que os dois blocos coexistem: um para bater com o DRE da diretoria e outro para medir liquidez e conversão em caixa sem distorção.`;
 }
 
 
@@ -11297,24 +11316,20 @@ function renderAlertasDespesas(){
 
 function renderResumoResultado(){
   const emp = _emp.resultado;
+  const d = resultadoMetricas(emp);
+  const dre = resultadoMetricasDre(emp);
   const aSaldo = getA(emp,'saldo') || 0;
-  const aRec = getA(emp,'receita_total') || 0;
-  const despTotal = (getA(emp,'despesa_venda')||0) + (getA(emp,'despesa_total')||0) + (getA(emp,'impostos')||0);
-  const margemOper = aRec > 0 ? ((aRec - despTotal) / aRec * 100) : 0;
-  const compromet = aRec > 0 ? (despTotal / aRec * 100) : 0;
+  const recebimentos = d.recAcum || 0;
+  const faturamento = dre.faturamentoAcum || 0;
+  const gapBase = faturamento - recebimentos;
   const cenSaldo = getPrevAcum(emp,'saldo') || 0;
-  const gap = aSaldo - cenSaldo;
-  const acao = compromet > 100
-    ? 'Atuar imediatamente sobre custos, mix de receita e estrutura operacional para interromper consumo de caixa.'
-    : compromet > 85
-      ? 'Preservar disciplina de despesas e monitorar o fluxo de perto, porque a folga operacional está mais estreita.'
-      : 'Manter o controle de custos e buscar expansão de margem sem perder ritmo operacional.';
+  const gapCaixa = aSaldo - cenSaldo;
 
   const texto = `
-    <b>Situação:</b> O resultado acumulado está em <b>${fmtS(aSaldo)}</b>, contra <b>${fmtS(cenSaldo)}</b> no <b>${nomeCenarioAtual()}</b>, com variação de <b>${gap>=0?'+':''}${fmtS(gap)}</b>.<br><br>
-    <b>Causa:</b> A margem operacional está em <b>${pct(margemOper)}</b> e o comprometimento da receita em <b>${pct(compromet)}</b>, refletindo o peso da estrutura de despesas sobre a geração de resultado.<br><br>
-    <b>Ação:</b> ${acao}
-  `;
+    <b>Situação:</b> O resultado desta aba passou a separar duas leituras executivas. Na ótica de <b>competência</b>, o faturamento acumulado está em <b>${fmtS(faturamento)}</b> e o EBITDA DRE gerencial em <b>${fmtS(dre.ebitda)}</b>. Na ótica de <b>caixa</b>, os recebimentos de venda somam <b>${fmtS(recebimentos)}</b> e o caixa acumulado está em <b>${fmtS(aSaldo)}</b>.<br><br>
+    <b>Causa da divergência:</b> A diferença entre <b>faturado</b> e <b>recebido</b> soma <b>${fmtS(gapBase)}</b>. Quando esse gap cresce, o DRE pode mostrar resultado melhor do que o caixa do período, sem que isso represente erro de cálculo.<br><br>
+    <b>Ação gerencial:</b> Para a diretoria, o bloco <b>DRE / Faturamento</b> passa a bater com a lógica de competência. Para tesouraria e liquidez, o bloco <b>Caixa / Recebimento</b> mostra a conversão real em caixa. Frente ao <b>${nomeCenarioAtual()}</b>, o caixa acumulado está em <b>${gapCaixa>=0?'+':''}${fmtS(gapCaixa)}</b> vs. cenário.`;
+
   const el = document.getElementById('resumoResultado');
   if(el) el.innerHTML = texto;
 }
@@ -12102,7 +12117,166 @@ function calcDespesaOperacionalElegivelFromMonthly(m, i){
   return (Number(m.fixa?.real?.[i])||0) + (Number(m.pessoal?.real?.[i])||0) + (Number(m.variavel?.real?.[i])||0) + (Number(m.comercial?.real?.[i])||0) + (Number(m.logistica?.real?.[i])||0);
 }
 
+
+function calcDespesaGerencialDreFromAcum(a){
+  return calcDespesaOperacionalElegivelFromAcum(a)
+    + (Number(a.socios)||0)
+    + (Number(a.financeira)||0);
+}
+function calcDespesaGerencialDreFromMonthly(m, i){
+  return calcDespesaOperacionalElegivelFromMonthly(m, i)
+    + (Number(m.socios?.real?.[i])||0)
+    + (Number(m.financeira?.real?.[i])||0);
+}
+function calcReceitaDreAcum(a){
+  const fatLiq = Number(a.fat_liquido) || 0;
+  const faturado = Number(a.faturado) || 0;
+  const cancelado = Number(a.cancelado) || 0;
+  const devolvido = Number(a.devolvido) || 0;
+  const fatBruto = Number(a.fat_bruto) || 0;
+  if(fatLiq > 0) return fatLiq;
+  const derivado = faturado - cancelado + devolvido;
+  return derivado > 0 ? derivado : fatBruto;
+}
+function calcReceitaDreMensal(m, i){
+  const fatLiq = Number(m.fat_liquido?.real?.[i]) || 0;
+  const faturado = Number(m.faturado?.real?.[i]) || 0;
+  const cancelado = Number(m.cancelado?.real?.[i]) || 0;
+  const devolvido = Number(m.devolvido?.real?.[i]) || 0;
+  const fatBruto = Number(m.fat_bruto?.real?.[i]) || 0;
+  if(fatLiq > 0) return fatLiq;
+  const derivado = faturado - cancelado + devolvido;
+  return derivado > 0 ? derivado : fatBruto;
+}
+function calcReceitaCaixaAcum(a){
+  return (Number(a.receita_total) || 0) || (Number(a.receita_venda) || 0);
+}
+function calcReceitaCaixaMensal(m, i){
+  return (Number(m.receita_total?.real?.[i]) || 0) || (Number(m.receita_venda?.real?.[i]) || 0);
+}
+function calcOutrasReceitasOperacionaisDreAcum(a){
+  return (Number(a.reembolso_operacional)||0) + (Number(a.reembolso_despesas)||0);
+}
+function calcOutrasReceitasOperacionaisDreMonthly(m, i){
+  return (Number(m.reembolso_operacional?.real?.[i])||0) + (Number(m.reembolso_despesas?.real?.[i])||0);
+}
+function calcReceitasFinanceirasDreAcum(a){
+  return Number(a.rendimentos_aplicacoes)||0;
+}
+function calcReceitasFinanceirasDreMonthly(m, i){
+  return Number(m.rendimentos_aplicacoes?.real?.[i])||0;
+}
+function resultadoMetricasDre(emp){
+  const m = {
+    fat_bruto: getM(emp,'fat_bruto'),
+    faturado: getM(emp,'faturado'),
+    cancelado: getM(emp,'cancelado'),
+    devolvido: getM(emp,'devolvido'),
+    fat_liquido: getM(emp,'fat_liquido'),
+    despesa_venda: getM(emp,'despesa_venda'),
+    fixa: getM(emp,'fixa'),
+    pessoal: getM(emp,'pessoal'),
+    variavel: getM(emp,'variavel'),
+    comercial: getM(emp,'comercial'),
+    logistica: getM(emp,'logistica'),
+    consultoria: getM(emp,'consultoria'),
+    socios: getM(emp,'socios'),
+    financeira: getM(emp,'financeira'),
+    outras_despesas: getM(emp,'outras_despesas'),
+    imobilizado: getM(emp,'imobilizado'),
+    impostos: getM(emp,'impostos'),
+    reembolso_operacional: getM(emp,'reembolso_operacional'),
+    reembolso_despesas: getM(emp,'reembolso_despesas'),
+    rendimentos_aplicacoes: getM(emp,'rendimentos_aplicacoes'),
+  };
+  const a = {
+    fat_bruto: getA(emp,'fat_bruto'),
+    faturado: getA(emp,'faturado'),
+    cancelado: getA(emp,'cancelado'),
+    devolvido: getA(emp,'devolvido'),
+    fat_liquido: getA(emp,'fat_liquido'),
+    despesa_venda: getA(emp,'despesa_venda'),
+    fixa: getA(emp,'fixa'),
+    pessoal: getA(emp,'pessoal'),
+    variavel: getA(emp,'variavel'),
+    comercial: getA(emp,'comercial'),
+    logistica: getA(emp,'logistica'),
+    consultoria: getA(emp,'consultoria'),
+    socios: getA(emp,'socios'),
+    financeira: getA(emp,'financeira'),
+    outras_despesas: getA(emp,'outras_despesas'),
+    imobilizado: getA(emp,'imobilizado'),
+    impostos: getA(emp,'impostos'),
+    reembolso_operacional: getA(emp,'reembolso_operacional'),
+    reembolso_despesas: getA(emp,'reembolso_despesas'),
+    rendimentos_aplicacoes: getA(emp,'rendimentos_aplicacoes'),
+  };
+
+  const faturamentoAcum = calcReceitaDreAcum(a);
+  const despMerc = Number(a.despesa_venda) || 0;
+  const impostos = Number(a.impostos) || 0;
+  const despOpElegivel = calcDespesaOperacionalElegivelFromAcum(a);
+  const despGerencial = calcDespesaGerencialDreFromAcum(a);
+  const outrasReceitasOperacionais = calcOutrasReceitasOperacionaisDreAcum(a);
+  const receitasFinanceiras = calcReceitasFinanceirasDreAcum(a);
+
+  const ebitda = faturamentoAcum - despMerc - impostos - despGerencial + outrasReceitasOperacionais;
+  const margemEbitda = faturamentoAcum > 0 ? (ebitda / faturamentoAcum * 100) : 0;
+  const lucroLiquido = ebitda + receitasFinanceiras;
+  const margemLiquida = faturamentoAcum > 0 ? (lucroLiquido / faturamentoAcum * 100) : 0;
+  const despOpSobreBruta = faturamentoAcum > 0 ? (despOpElegivel / faturamentoAcum * 100) : 0;
+  const margemContrib = faturamentoAcum > 0 ? ((faturamentoAcum - despMerc - impostos) / faturamentoAcum) : 0;
+  const pontoEquilibrio = margemContrib > 0 ? (despGerencial / margemContrib) : null;
+
+  const faturamentoMensal = D.months.map((_,i)=> calcReceitaDreMensal(m, i));
+  const despOpElegivelMensal = D.months.map((_,i)=> calcDespesaOperacionalElegivelFromMonthly(m, i));
+  const despGerencialMensal = D.months.map((_,i)=> calcDespesaGerencialDreFromMonthly(m, i));
+  const despMercMensal = D.months.map((_,i)=> Number(m.despesa_venda?.real?.[i]) || 0);
+  const impostosMensal = D.months.map((_,i)=> Number(m.impostos?.real?.[i]) || 0);
+  const outrasReceitasOperacionaisMensal = D.months.map((_,i)=> calcOutrasReceitasOperacionaisDreMonthly(m, i));
+  const receitasFinanceirasMensal = D.months.map((_,i)=> calcReceitasFinanceirasDreMonthly(m, i));
+
+  const ebitdaMensal = D.months.map((_,i)=>{
+    const fat = faturamentoMensal[i] || 0;
+    return fat - despMercMensal[i] - impostosMensal[i] - despGerencialMensal[i] + outrasReceitasOperacionaisMensal[i];
+  });
+  const margemEbitdaMensal = D.months.map((_,i)=>{
+    const fat = faturamentoMensal[i] || 0;
+    return fat > 0 ? ((Number(ebitdaMensal[i])||0) / fat * 100) : 0;
+  });
+  const lucroLiquidoMensal = D.months.map((_,i)=>{
+    const ebit = Number(ebitdaMensal[i]) || 0;
+    return ebit + receitasFinanceirasMensal[i];
+  });
+  const margemLiquidaMensal = D.months.map((_,i)=>{
+    const fat = faturamentoMensal[i] || 0;
+    return fat > 0 ? ((Number(lucroLiquidoMensal[i])||0) / fat * 100) : 0;
+  });
+  const despOpBrutaMensal = D.months.map((_,i)=>{
+    const fat = faturamentoMensal[i] || 0;
+    return fat > 0 ? ((Number(despOpElegivelMensal[i])||0) / fat * 100) : 0;
+  });
+  const pontoEqMensal = D.months.map((_,i)=>{
+    const fat = faturamentoMensal[i] || 0;
+    const mc = fat > 0 ? ((fat - despMercMensal[i] - impostosMensal[i]) / fat) : 0;
+    return mc > 0 ? ((Number(despGerencialMensal[i])||0) / mc) : 0;
+  });
+
+  return {
+    m,a, faturamentoAcum, despMerc, impostos, despOpElegivel, despGerencial,
+    outrasReceitasOperacionais, receitasFinanceiras, ebitda, margemEbitda,
+    lucroLiquido, margemLiquida, despOpSobreBruta, pontoEquilibrio,
+    fatPts: lastTwoNonZeroPoints(faturamentoMensal),
+    ebitdaPts: lastTwoNonZeroPoints(ebitdaMensal),
+    margemEbitdaPts: lastTwoNonZeroPoints(margemEbitdaMensal),
+    margemLiquidaPts: lastTwoNonZeroPoints(margemLiquidaMensal),
+    despOpBrutaPts: lastTwoNonZeroPoints(despOpBrutaMensal),
+    pontoEqPts: lastTwoNonZeroPoints(pontoEqMensal),
+  };
+}
+
 function resultadoMetricas(emp){
+
   const m = {
     saldo: getM(emp,'saldo'),
     receita_total: getM(emp,'receita_total'),
@@ -12144,7 +12318,7 @@ function resultadoMetricas(emp){
     outras_receitas: getA(emp,'outras_receitas'),
   };
 
-  const recAcum = Number(a.receita_venda) || 0;
+  const recAcum = calcReceitaCaixaAcum(a);
   const despMerc = Number(a.despesa_venda) || 0;
   const despOp = calcDespesaOperacionalElegivelFromAcum(a);
   const impostos = Number(a.impostos) || 0;
@@ -12166,7 +12340,7 @@ function resultadoMetricas(emp){
   const pmpInfo = D.kpis?.pmp?.[emp] || D.kpis?.pmp?.emp || null;
   const pmp = pmpInfo?.avg_pagamento ?? null;
 
-  const receitaMensal = D.months.map((_,i)=> Number(m.receita_venda?.real?.[i]) || 0);
+  const receitaMensal = D.months.map((_,i)=> calcReceitaCaixaMensal(m, i));
   const recPts = lastTwoNonZeroPoints(receitaMensal);
   const despMensal = D.months.map((_,i)=> (Number(m.despesa_venda?.real?.[i])||0) + calcDespesaOperacionalElegivelFromMonthly(m, i) + (Number(m.impostos?.real?.[i])||0));
   const despPts = lastTwoNonZeroPoints(despMensal);
@@ -12300,11 +12474,15 @@ function renderResultado(){
   const nomeScenario = tituloCenarioAtual();
 
   document.getElementById('kpiResultado').innerHTML =
-    kpiCard('gold','⚖️','Resultado Acumulado',fmtS(d.saldoAcum),'Saldo líquido 2026','', '', makeTrend(d.saldoPts.current?.val ?? null, d.saldoPts.previous?.val ?? null, 'higher', 'currency')) +
-    kpiCard('green','📥','Receita',fmtS(d.recAcum),'Realizado 2026','', '', makeTrend(d.recPts.current?.val ?? null, d.recPts.previous?.val ?? null, 'higher', 'currency')) +
-    kpiCard('red','📤','Despesas',fmtS(d.despTotal),'Realizado 2026','', '', makeTrend(d.despPts.current?.val ?? null, d.despPts.previous?.val ?? null, 'lower', 'currency')) +
-    kpiCard('teal','📊','Margem Operacional',pct(d.margemOper),'(Receita − Despesa) / Receita','', '', makeTrend(d.margemPts.current?.val ?? null, d.margemPts.previous?.val ?? null, 'higher', 'percent')) +
-    kpiCard('orange','🧾','Comprometimento',pct(d.compromet),'Despesa / Receita','', '', (()=>{const arr=D.months.map((_,i)=>{const rec=Number(d.m.receita_total?.real?.[i])||0; const desp=(Number(d.m.despesa_venda?.real?.[i])||0)+(Number(d.m.despesa_total?.real?.[i])||0)+(Number(d.m.impostos?.real?.[i])||0); return rec>0?(desp/rec*100):0;}); const pts=lastTwoNonZeroPoints(arr); return makeTrend(pts.current?.val ?? null, pts.previous?.val ?? null, 'lower', 'percent');})());
+    kpiCard('navy','🧾','Faturamento Bruto',fmtS(getA(emp,'fat_bruto')||0),'Competência 2026','', '', makeTrend(lastTwoNonZeroPoints(getM(emp,'fat_bruto')?.real || []).current?.val ?? null, lastTwoNonZeroPoints(getM(emp,'fat_bruto')?.real || []).previous?.val ?? null, 'higher', 'currency')) +
+    kpiCard('green','💵','Recebimentos Totais',fmtS(d.recAcum),'Caixa 2026','', '', makeTrend(d.recPts.current?.val ?? null, d.recPts.previous?.val ?? null, 'higher', 'currency')) +
+    kpiCard('gold','⚖️','Gap Faturado x Recebido',fmtS((getA(emp,'fat_bruto')||0) - (d.recAcum||0)),'Competência menos caixa','', '', makeTrend((((lastTwoNonZeroPoints(getM(emp,'fat_bruto')?.real || []).current?.val ?? 0) - (d.recPts.current?.val ?? 0)) || 0), (((lastTwoNonZeroPoints(getM(emp,'fat_bruto')?.real || []).previous?.val ?? 0) - (d.recPts.previous?.val ?? 0)) || 0), 'lower', 'currency')) +
+    kpiCard('purple','📈','EBITDA DRE Gerencial',fmtS(resultadoMetricasDre(emp).ebitda),'Base faturamento','', '', makeTrend(resultadoMetricasDre(emp).ebitdaPts.current?.val ?? null, resultadoMetricasDre(emp).ebitdaPts.previous?.val ?? null, 'higher', 'currency')) +
+    kpiCard('teal','🏦','Caixa Acumulado',fmtS(d.saldoAcum),'Saldo líquido 2026','', '', makeTrend(d.saldoPts.current?.val ?? null, d.saldoPts.previous?.val ?? null, 'higher', 'currency'));
+
+  document.getElementById('subtituloTabelaResultado').textContent = 'Acumulado 2026 vs. cenário de referência — visão de caixa';
+  document.getElementById('tituloChartGapResultado').textContent = 'Resultado de Caixa & Margem sobre Recebimentos';
+  document.getElementById('subtituloChartGapResultado').textContent = 'Barras: resultado operacional mensal de caixa · Linha: margem sobre recebimentos';
 
   let acumProg = 0;
   const acumLine = m.saldo.real.map(v=>{acumProg+=v; return acumProg;});
@@ -12626,6 +12804,9 @@ function parseCashFlow(buf){
       despesa_venda:'Despesa Relativas a Venda',
       impostos:'Impostos',
       outras_receitas:'Outras Receitas',
+      reembolso_operacional:'Reembolso Operacional',
+      reembolso_despesas:'Reembolso de Despesas',
+      rendimentos_aplicacoes:'Rendimentos de Aplicações',
       despesa_total:'Despesa Total',
       fixa:'Fixa',
       pessoal:'Pessoal',
@@ -12639,6 +12820,9 @@ function parseCashFlow(buf){
       imobilizado:'Imobilizado',
       saldo:'Saldo',
       fat_bruto:'Faturamento Bruto',
+      faturado:'Faturado',
+      cancelado:'Cancelado',
+      devolvido:'Devolvido',
       fat_liquido:'Faturamento Líquido'
     };
     const normLabels = Object.fromEntries(Object.entries(labels).map(([k,v])=>[k,normTxt(v)]));
@@ -12654,8 +12838,11 @@ function parseCashFlow(buf){
       receita_venda:8,
       despesa_venda:16,
       impostos:22,
-      outras_receitas:30,
-      despesa_total:41,
+      outras_receitas:31,
+      reembolso_operacional:33,
+      reembolso_despesas:34,
+      rendimentos_aplicacoes:37,
+      despesa_total:42,
       fixa:42,
       pessoal:63,
       variavel:84,
@@ -12666,9 +12853,12 @@ function parseCashFlow(buf){
       financeira:163,
       outras_despesas:172,
       imobilizado:174,
-      saldo:179,
-      fat_bruto:194,
-      fat_liquido:198
+      saldo:180,
+      fat_bruto:195,
+      faturado:196,
+      cancelado:197,
+      devolvido:198,
+      fat_liquido:199
     }, rows);
   }
 
