@@ -339,6 +339,44 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 @media(max-width:640px){.section-title{font-size:20px}.kpi-grid{grid-template-columns:1fr}.card-body,.chart-wrap,.ag-body,.ag-sections,.ag-summary{padding-left:14px;padding-right:14px}}
 
 
+
+/* AGENDA — FILTROS E SINALIZAÇÃO POR LINHA */
+.ag-filters{display:grid;grid-template-columns:2fr 1fr 1fr 1.1fr 1.2fr;gap:10px;margin-bottom:14px}
+.ag-filter-group{display:flex;flex-direction:column;gap:4px}
+.ag-filter-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--gray-600)}
+.ag-filter-input,.ag-filter-select{
+  width:100%;padding:8px 10px;border:1px solid var(--gray-200);border-radius:10px;
+  background:#fff;color:var(--navy);font-size:12px;font-family:'DM Sans',sans-serif;outline:none
+}
+.ag-filter-input:focus,.ag-filter-select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
+.ag-filter-hint{font-size:10px;color:var(--gray-400);margin-top:2px}
+.ag-empty-state{padding:12px 14px;border:1px dashed var(--gray-200);border-radius:12px;background:#fbfcfe;color:var(--gray-600);font-size:11px}
+.ag-day-summary{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.ag-mini{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800;border:1px solid transparent}
+.ag-mini.pago,.ag-mini.recebido{background:#e6f4ef;color:var(--green-light);border-color:#b7e1ce}
+.ag-mini.pendente{background:#fff8ef;color:#c97816;border-color:#f4d3a6}
+.ag-day.ag-has-overdue{background:#fffafa;border-left-color:var(--red)}
+.ag-day.ag-has-overdue .ag-day-toggle:hover{background:#fff4f5}
+.ag-day.ag-is-today{background:#fff8ef;border-left-color:var(--orange)}
+.ag-day.ag-is-today .ag-day-toggle:hover{background:#fff3e3}
+.ag-day.ag-has-overdue.ag-is-today{background:linear-gradient(90deg,#fffafa 0%,#fff8ef 100%);border-left-color:var(--red)}
+.ag-day-flag.info{background:#eef3f9;color:var(--navy);border:1px solid #d8e1ec}
+.ag-row-overdue td{background:#fff5f6}
+.ag-row-overdue:hover td{background:#ffeef1!important}
+.ag-row-overdue td:first-child{border-left:3px solid var(--red)}
+.ag-row-paid td,.ag-row-received td{background:#f4fbf7}
+.ag-row-paid:hover td,.ag-row-received:hover td{background:#ecf8f1!important}
+.ag-row-paid td:first-child,.ag-row-received td:first-child{border-left:3px solid var(--green-light)}
+.ag-row-today-pending td{background:#fff8ef}
+.ag-row-today-pending:hover td{background:#fff1df!important}
+.ag-row-today-pending td:first-child{border-left:3px solid var(--orange)}
+.ag-note{font-variant-numeric:tabular-nums;font-weight:700;color:var(--navy)}
+.ag-days-chip{display:inline-flex;align-items:center;justify-content:center;min-width:44px;padding:2px 8px;border-radius:999px;background:#eef3f9;color:#334155;font-size:10px;font-weight:800}
+.ag-days-chip.neg{background:var(--red-pale);color:var(--red)}
+.ag-days-chip.zero{background:#fff8ef;color:#c97816}
+@media(max-width:1200px){.ag-filters{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.ag-filters{grid-template-columns:1fr}}
+
 /* AJUSTE FINAL DE CONTENÇÃO — ABA RESULTADO */
 html,body{max-width:100%;overflow-x:hidden}
 .main,.view,.section-header,.card,.card-body,.grid-2,.grid-3,.grid-2-1,.grid-1-2,.kpi-grid,.chart-wrap{min-width:0}
@@ -11530,8 +11568,13 @@ function renderSaldos(){
   document.getElementById('tagDataSaldo').textContent = '📅 Posição: ' + (D.data_atualizacao||'—');
   document.getElementById('subtitleSaldos').textContent = 'Posição do dia: ' + (D.data_atualizacao||'—');
 
+  const projConsolidada = Number(p.marck?.projecao_caixa||0) + Number(p.grattano?.projecao_caixa||0);
+  const varProjConsolidada = projConsolidada - totalGeral;
+  const badgeProjCons = varProjConsolidada < 0 ? 'badge-danger' : varProjConsolidada > 0 ? 'badge-pos' : 'badge-warn';
+
   document.getElementById('kpiSaldos').innerHTML =
     kpiCard('gold', '💰', 'Saldo Total Consolidado', fmtS(totalGeral), 'Marck + Grattano') +
+    kpiCard('orange', '🧭', 'Projeção Consolidada', fmtS(projConsolidada), 'Fechamento projetado grupo', badgeProjCons, `${varProjConsolidada>=0?'+':''}${fmtS(varProjConsolidada)}`) +
     kpiCard('navy', '🏦', 'Saldo Marck', fmtS(sd.marck), 'Todas as contas', 'badge-pos', fmtS(sd.marck)) +
     kpiCard('teal', '🏦', 'Saldo Grattano', fmtS(sd.grattano), 'Todas as contas', 'badge-pos', fmtS(sd.grattano)) +
     kpiCard('green', '📈', 'Projeção Marck', fmtS(p.marck.projecao_caixa), 'Caixa projetado fim mês') +
@@ -12081,9 +12124,9 @@ function renderDespesas(){
 
   // Despesa total mensal
   const despMensal = D.months.map((_,i)=>(m.despesa_venda.real[i]||0)+(m.despesa_total.real[i]||0)+(m.impostos.real[i]||0));
-  const despPrevVenda = getScenarioSeriesFromDemoNode('Despesa Relativas a Venda');
-  const despPrevOper = getScenarioSeriesFromDemoNode('Despesa Total');
-  const despPrevImp  = getScenarioSeriesFromDemoNode('Impostos');
+  const despPrevVenda = getPrev(emp,'despesa_venda').map(v=>Number(v||0));
+  const despPrevOper = getPrev(emp,'despesa_total').map(v=>Number(v||0));
+  const despPrevImp  = getPrev(emp,'impostos').map(v=>Number(v||0));
   const despPrevMensal = D.months.map((_,i)=>(despPrevVenda[i]||0)+(despPrevOper[i]||0)+(despPrevImp[i]||0));
   killChart('chartDespMensal');
   charts.chartDespMensal = new Chart(document.getElementById('chartDespMensal'),{
@@ -13172,8 +13215,13 @@ function parseCashFlow(buf){
 
         const account = String(row['Conta Corrente']||'');
         const document = String(row['Documento']||row['Origem']||'');
-        const previsaoIso = _fmtDateBR(_xlDate(row['Previsão']));
-        const vencimentoIso = _fmtDateBR(_xlDate(row['Vencimento']));
+        const nota = String(
+          _getRowValue(row, ['numero da nota','n da nota','no da nota','nf','nota fiscal','numero nf','numero nota','n nota','n documento','numero do documento']) ||
+          ''
+        ).trim();
+        const emissaoIso = _fmtDateBR(_xlDate(_getRowValue(row, ['emissao','data emissao','dt emissao'])));
+        const previsaoIso = _fmtDateBR(_xlDate(_getRowValue(row, ['previsao','data previsao'])));
+        const vencimentoIso = _fmtDateBR(_xlDate(_getRowValue(row, ['vencimento','data vencimento'])));
         const isCard = _isCardAccount(account, document);
         const dataOperacionalIso = previsaoIso || vencimentoIso || _fmtDate(dt);
 
@@ -13188,12 +13236,13 @@ function parseCashFlow(buf){
           category: String(cat),
           account: account,
           document: document,
+          nota: nota,
           amount: Math.round(valor*100)/100,
           status: status,
           is_realizado: type==='pagamentos_real' || type==='recebimentos_real',
           source_type: type,
           obs: String(row['Observação da Conta']||row['Observação do Pagto ou Recbto']||''),
-          emissao: _fmtDateBR(_xlDate(row['Emissão'])),
+          emissao: emissaoIso,
           previsao: previsaoIso,
           venc_original: vencimentoIso,
           venc: dataOperacionalIso,
@@ -13436,15 +13485,17 @@ function agWeekRef(iso){
   const yearStart = new Date(Date.UTC(target.getUTCFullYear(),0,1));
   return Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
 }
+
 function agNormalizeCompanyData(companyData){
   const allItems = [];
-  const todayIso = new Date().toISOString().slice(0,10);
-  const refDate = (item) => agToISODate(item.ref_date || item.previsao || item.venc || item.date);
+  const todayIso = agTodayISO();
+  const refDate = (item) => agToISODate(item.ref_date || item.previsao || item.venc_original || item.venc || item.date);
   const statusOrder = (item) => {
     const ref = refDate(item) || item.date || '';
-    if(item.status === 'Pendente' && ref < todayIso) return 0;
-    if(item.status === 'Pendente' && ref === todayIso) return 1;
-    if(item.status === 'Pendente') return 2;
+    const s = String(item.status || '').toLowerCase();
+    if(s === 'pendente' && ref < todayIso) return 0;
+    if(s === 'pendente' && ref === todayIso) return 1;
+    if(s === 'pendente') return 2;
     return 3;
   };
   (companyData?.weeks || []).forEach(week=>{
@@ -13452,25 +13503,57 @@ function agNormalizeCompanyData(companyData){
       (day?.items || []).forEach(item=>{
         const clone = Object.assign({}, item);
         clone.date = agToISODate(clone.date || day?.date);
-        clone.previsao = agToISODate(clone.previsao || clone.ref_date || clone.date);
-        clone.venc_original = agToISODate(clone.venc_original || clone.venc || clone.date);
-        clone.ref_date = agToISODate(clone.ref_date || clone.previsao || clone.venc || clone.date);
-        clone.venc = agToISODate(clone.ref_date || clone.previsao || clone.venc || clone.date);
+        clone.emissao = agToISODate(clone.emissao);
+        clone.previsao = agToISODate(clone.previsao);
+        clone.venc_original = agToISODate(clone.venc_original || clone.venc);
+        clone.ref_date = agToISODate(clone.ref_date || clone.previsao || clone.venc_original || clone.venc || clone.date);
+        clone.venc = agToISODate(clone.venc || clone.ref_date || clone.previsao || clone.venc_original || clone.date);
         clone.amount = Number(clone.amount || 0);
         clone.status = clone.status || 'Pendente';
+        clone.document = clone.document || '—';
+        clone.nota = String(clone.nota || '').trim();
         allItems.push(clone);
       });
     });
   });
+
+  const monthHint = allItems[0]?.ref_date || allItems[0]?.date || todayIso;
+  const monthRef = new Date((monthHint || todayIso) + 'T00:00:00');
+  const monthStart = new Date(monthRef.getFullYear(), monthRef.getMonth(), 1);
+  const monthEnd = new Date(monthRef.getFullYear(), monthRef.getMonth()+1, 0);
+  if(todayIso >= agToISODate(monthStart) && todayIso <= agToISODate(monthEnd)){
+    const hasToday = allItems.some(item => (item.date || item.ref_date) === todayIso);
+    if(!hasToday){
+      allItems.push({
+        company: companyData?.company || '',
+        date: todayIso,
+        week: agWeekRef(todayIso),
+        ref_date: todayIso,
+        amount: 0,
+        status: 'Sem movimento',
+        name: '',
+        category: '',
+        account: '',
+        document: '',
+        nota: '',
+        obs: '',
+        emissao: '',
+        previsao: todayIso,
+        venc_original: todayIso,
+        _placeholder: true
+      });
+    }
+  }
+
   const weekMap = {};
   const accountTotals = {};
   const dayTotals = {};
   const statusCount = {Pago:0, Pendente:0, Recebido:0};
   const overdue = {count:0, amount:0};
   const today = {count:0, amount:0};
-  allItems.sort((a,b)=>(a.date||'').localeCompare(b.date||'') || statusOrder(a)-statusOrder(b) || (b.amount||0)-(a.amount||0));
+  allItems.sort((a,b)=>(String(a.date||'').localeCompare(String(b.date||''))) || statusOrder(a)-statusOrder(b) || (b.amount||0)-(a.amount||0));
   allItems.forEach(item=>{
-    const iso = agToISODate(item.date);
+    const iso = agToISODate(item.date || item.ref_date);
     if(!iso) return;
     const range = agBusinessWeekRange(iso);
     const ref = Number(item.week || agWeekRef(iso));
@@ -13480,10 +13563,10 @@ function agNormalizeCompanyData(companyData){
     weekMap[key].days[iso].push(item);
     dayTotals[iso] = (dayTotals[iso] || 0) + item.amount;
     if(item.account) accountTotals[item.account] = (accountTotals[item.account] || 0) + item.amount;
-    statusCount[item.status] = (statusCount[item.status] || 0) + 1;
+    if(!item._placeholder) statusCount[item.status] = (statusCount[item.status] || 0) + 1;
 
     const statusRef = refDate(item);
-    if(item.status === 'Pendente' && statusRef){
+    if(!item._placeholder && String(item.status) === 'Pendente' && statusRef){
       if(statusRef < todayIso){
         overdue.count += 1;
         overdue.amount += item.amount;
@@ -13501,7 +13584,7 @@ function agNormalizeCompanyData(companyData){
         const items = week.days[date].sort((a,b)=>statusOrder(a)-statusOrder(b) || (b.amount||0)-(a.amount||0));
         return {
           date,
-          count: items.length,
+          count: items.filter(i=>!i._placeholder).length,
           total: Math.round(items.reduce((sum,i)=>sum + (Number(i.amount)||0),0)*100)/100,
           items
         };
@@ -13528,7 +13611,7 @@ function agNormalizeCompanyData(companyData){
   return {
     summary: {
       total: Math.round(allItems.reduce((sum,i)=>sum + (Number(i.amount)||0),0)*100)/100,
-      count: allItems.length,
+      count: allItems.filter(i=>!i._placeholder).length,
       days: Object.keys(dayTotals).length,
       largest_day: topDay,
       top_account: topAccount,
@@ -13554,6 +13637,7 @@ function agNormalizeData(data){
 }
 AG_DATA = agNormalizeData(AG_DATA);
 
+
 function agFmtMoney(v){
   return new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL', minimumFractionDigits:2}).format(v||0);
 }
@@ -13564,11 +13648,12 @@ function agFmtShort(v){
   return agFmtMoney(v);
 }
 function agFmtDate(iso){
+  if(!iso) return '—';
   const [y,m,d] = iso.split('-');
   return `${d}/${m}/${y}`;
 }
 function agCompanyName(key){
-  return key === 'marck' ? 'Marck Distribuidora' : 'Grattano Distribuidora';
+  return key === 'marck' ? 'Marck Distribuidora' : key === 'grattano' ? 'Grattano Distribuidora' : 'Consolidado';
 }
 function agDayName(iso){
   const dt = new Date(iso + 'T00:00:00');
@@ -13577,39 +13662,90 @@ function agDayName(iso){
 function agEsc(s){
   return String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 }
+function agTodayISO(){
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
 function agStatusClass(status){
   const s = String(status || '').toLowerCase();
   if(s === 'pago') return 'pago';
   if(s === 'recebido') return 'recebido';
   return 'pendente';
 }
-
 function agOperationalDate(item){
-  return item?.ref_date || item?.previsao || item?.venc || item?.date || null;
+  return item?.ref_date || item?.previsao || item?.venc_original || item?.venc || item?.date || null;
 }
 function agIsPendingItem(item){
   const s = String(item?.status || '').toLowerCase();
   return s !== 'pago' && s !== 'recebido';
 }
+function agInferNota(item){
+  const nota = String(item?.nota || '').trim();
+  if(nota) return nota;
+  const doc = String(item?.document || '').trim();
+  const nfMatch = doc.match(/(?:nf|nfe|nota)\s*[:#-]?\s*(\d{3,})/i);
+  if(nfMatch) return nfMatch[1];
+  return /^\d{3,}$/.test(doc) ? doc : '';
+}
+function agCalcPrazoDias(item){
+  const em = agToISODate(item?.emissao);
+  const prev = agToISODate(item?.previsao || item?.ref_date || item?.venc_original || item?.venc);
+  if(!em || !prev) return null;
+  const d1 = new Date(em + 'T00:00:00');
+  const d2 = new Date(prev + 'T00:00:00');
+  return Math.round((d2 - d1) / 86400000);
+}
+function agItemVisualState(item){
+  const status = String(item?.status || '').toLowerCase();
+  const ref = agOperationalDate(item);
+  const todayIso = agTodayISO();
+  if(status === 'pago' || status === 'recebido'){
+    return {rowClass: status === 'pago' ? 'ag-row-paid' : 'ag-row-received'};
+  }
+  if(ref && ref < todayIso){
+    return {rowClass:'ag-row-overdue'};
+  }
+  if(ref && ref === todayIso){
+    return {rowClass:'ag-row-today-pending'};
+  }
+  return {rowClass:''};
+}
 function agDaySignal(day){
-  const todayIso = new Date().toISOString().slice(0,10);
+  const todayIso = agTodayISO();
   let overdue = 0;
-  let today = 0;
+  let todayPending = 0;
   (day?.items || []).forEach(item => {
-    if(!agIsPendingItem(item)) return;
+    if(item?._placeholder) return;
     const ref = agOperationalDate(item);
     if(!ref) return;
+    const status = String(item.status || '').toLowerCase();
+    if(status === 'pago' || status === 'recebido') return;
     if(ref < todayIso) overdue++;
-    else if(ref === todayIso) today++;
+    if(ref === todayIso) todayPending++;
   });
-  if(overdue > 0) return { className:'ag-overdue', badge:'Atrasado', badgeClass:'danger' };
-  if(today > 0) return { className:'ag-today', badge:'Hoje', badgeClass:'warn' };
-  return { className:'', badge:'', badgeClass:'' };
+  const isTodayDay = (day?.date === todayIso);
+  const classParts = [];
+  if(overdue > 0) classParts.push('ag-has-overdue');
+  if(isTodayDay) classParts.push('ag-is-today');
+  let badge = '';
+  let badgeClass = '';
+  if(isTodayDay){
+    badge = 'Hoje';
+    badgeClass = 'warn';
+  }else if(overdue > 0){
+    badge = 'Atrasado';
+    badgeClass = 'danger';
+  }else if(todayPending > 0){
+    badge = 'Hoje';
+    badgeClass = 'warn';
+  }
+  return { className: classParts.join(' '), badge, badgeClass, overdue, todayPending, isTodayDay };
 }
-
 function agDaySummary(items, type){
   const counts = { pendente:0, pago:0, recebido:0 };
   (items || []).forEach(item => {
+    if(item?._placeholder) return;
     const s = String(item.status || '').toLowerCase();
     if(s === 'pago') counts.pago++;
     else if(s === 'recebido') counts.recebido++;
@@ -13625,7 +13761,121 @@ function agDaySummary(items, type){
   }
   return parts.join('');
 }
-
+const AG_UI_STATE = {};
+function agStateKey(type, companyKey){
+  return `${type}|${companyKey}`;
+}
+function agGetState(type, companyKey, categories=[]){
+  const key = agStateKey(type, companyKey);
+  if(!AG_UI_STATE[key]){
+    AG_UI_STATE[key] = { q:'', status:'todos', categoria:'todos', empresa:'todos', ordem:'venc_asc' };
+  }
+  const state = AG_UI_STATE[key];
+  if(state.categoria !== 'todos' && categories.length && !categories.includes(state.categoria)) state.categoria = 'todos';
+  return state;
+}
+function agCollectCategories(companyData){
+  const set = new Set();
+  (companyData?.weeks || []).forEach(week=>{
+    (week?.days || []).forEach(day=>{
+      (day?.items || []).forEach(item=>{
+        if(item?._placeholder) return;
+        const cat = String(item.category || '').trim();
+        if(cat) set.add(cat);
+      });
+    });
+  });
+  return Array.from(set).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+}
+function agSetFilter(type, companyKey, field, value){
+  const state = agGetState(type, companyKey);
+  state[field] = value;
+  agRenderAgenda(type, type === 'receitas' ? 'agendaReceitasContainer' : 'agendaDespesasContainer');
+}
+function agSortItems(items, ordem){
+  const arr = [...items];
+  const getVenc = item => agOperationalDate(item) || '';
+  const getEmi = item => agToISODate(item.emissao) || '';
+  arr.sort((a,b)=>{
+    if(ordem === 'valor_desc') return (b.amount||0) - (a.amount||0);
+    if(ordem === 'valor_asc') return (a.amount||0) - (b.amount||0);
+    if(ordem === 'emissao_asc') return getEmi(a).localeCompare(getEmi(b)) || getVenc(a).localeCompare(getVenc(b));
+    if(ordem === 'emissao_desc') return getEmi(b).localeCompare(getEmi(a)) || getVenc(b).localeCompare(getVenc(a));
+    if(ordem === 'venc_desc') return getVenc(b).localeCompare(getVenc(a)) || (b.amount||0)-(a.amount||0);
+    return getVenc(a).localeCompare(getVenc(b)) || (b.amount||0)-(a.amount||0);
+  });
+  return arr;
+}
+function agFilterItems(items, type, state){
+  const q = String(state.q || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const todayIso = agTodayISO();
+  return agSortItems((items || []).filter(item=>{
+    if(item?._placeholder) return false;
+    const ref = agOperationalDate(item) || '';
+    const status = String(item.status || '').toLowerCase();
+    const nota = agInferNota(item);
+    if(state.empresa !== 'todos' && String(item.company || '') !== state.empresa) return false;
+    if(state.categoria !== 'todos' && String(item.category || '') !== state.categoria) return false;
+    if(state.status === 'atrasado' && !(status === 'pendente' && ref && ref < todayIso)) return false;
+    if(state.status === 'hoje' && !(status === 'pendente' && ref === todayIso)) return false;
+    if(state.status === 'pendente' && status !== 'pendente') return false;
+    if(state.status === 'pago' && !(status === 'pago' || status === 'recebido')) return false;
+    if(q){
+      const hay = [item.name,item.category,item.account,item.document,item.obs,item.emissao,item.previsao,item.ref_date,nota,agCompanyLabel(item.company)].join(' ')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  }), state.ordem);
+}
+function agRenderFilters(type, companyKey, companyData, opts={}){
+  const categories = agCollectCategories(companyData);
+  const state = agGetState(type, companyKey, categories);
+  const empresaOptions = opts.showCompanyCol
+    ? `<option value="todos">Todas</option><option value="marck"${state.empresa==='marck'?' selected':''}>Marck</option><option value="grattano"${state.empresa==='grattano'?' selected':''}>Grattano</option>`
+    : `<option value="todos">Empresa atual</option>`;
+  return `
+    <div class="ag-filters">
+      <div class="ag-filter-group">
+        <label class="ag-filter-label">Busca</label>
+        <input class="ag-filter-input" type="text" value="${agEsc(state.q)}" placeholder="Cliente, fornecedor, documento, nota, conta..." oninput="agSetFilter('${type}','${companyKey}','q',this.value)">
+        <div class="ag-filter-hint">Filtra cliente/fornecedor, documento, nota, conta e observação</div>
+      </div>
+      <div class="ag-filter-group">
+        <label class="ag-filter-label">Status</label>
+        <select class="ag-filter-select" onchange="agSetFilter('${type}','${companyKey}','status',this.value)">
+          <option value="todos"${state.status==='todos'?' selected':''}>Todos</option>
+          <option value="atrasado"${state.status==='atrasado'?' selected':''}>Em atraso</option>
+          <option value="hoje"${state.status==='hoje'?' selected':''}>Hoje pendente</option>
+          <option value="pendente"${state.status==='pendente'?' selected':''}>Pendentes</option>
+          <option value="pago"${state.status==='pago'?' selected':''}>Pagos / Recebidos</option>
+        </select>
+      </div>
+      <div class="ag-filter-group">
+        <label class="ag-filter-label">Categoria</label>
+        <select class="ag-filter-select" onchange="agSetFilter('${type}','${companyKey}','categoria',this.value)">
+          <option value="todos">Todas</option>
+          ${categories.map(cat=>`<option value="${agEsc(cat)}"${state.categoria===cat?' selected':''}>${agEsc(cat)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ag-filter-group">
+        <label class="ag-filter-label">Empresa</label>
+        <select class="ag-filter-select" onchange="agSetFilter('${type}','${companyKey}','empresa',this.value)">${empresaOptions}</select>
+      </div>
+      <div class="ag-filter-group">
+        <label class="ag-filter-label">Ordenação</label>
+        <select class="ag-filter-select" onchange="agSetFilter('${type}','${companyKey}','ordem',this.value)">
+          <option value="venc_asc"${state.ordem==='venc_asc'?' selected':''}>Previsão crescente</option>
+          <option value="venc_desc"${state.ordem==='venc_desc'?' selected':''}>Previsão decrescente</option>
+          <option value="valor_desc"${state.ordem==='valor_desc'?' selected':''}>Maior valor</option>
+          <option value="valor_asc"${state.ordem==='valor_asc'?' selected':''}>Menor valor</option>
+          <option value="emissao_asc"${state.ordem==='emissao_asc'?' selected':''}>Emissão crescente</option>
+          <option value="emissao_desc"${state.ordem==='emissao_desc'?' selected':''}>Emissão decrescente</option>
+        </select>
+      </div>
+    </div>
+  `;
+}
 function agToggleDay(id){
   const el = document.getElementById(id);
   if(el) el.classList.toggle('open');
@@ -13741,6 +13991,7 @@ function agMergeCompanyData(type){
 
   return merged;
 }
+
 function agRenderPanel(type, companyKey, companyData, opts={}){
 
   const cls = type === 'receitas' ? 'ag-receita' : 'ag-despesa';
@@ -13784,18 +14035,18 @@ function agRenderPanel(type, companyKey, companyData, opts={}){
       </div>
     `);
   }
-  const weeksHtml = companyData.weeks.map((week,widx) => `
-    <div class="ag-week">
-      <div class="ag-week-head">
-        <div>Semana ${week.week} <span class="ag-week-range">· ${agFmtDate(week.start)} a ${agFmtDate(week.end)}</span></div>
-        <div class="ag-num">${week.days.length} dias</div>
-        <div class="ag-num">${week.count} lanç.</div>
-        <div class="ag-num">${agFmtShort(week.total)}</div>
-      </div>
-      <div class="ag-week-body">
-        ${week.days.map((day,didx) => {
-          const signal = agDaySignal(day);
-          return `
+
+  const state = agGetState(type, companyKey, agCollectCategories(companyData));
+  const weeksHtml = companyData.weeks.map((week,widx) => {
+    const daysHtml = week.days.map((day,didx) => {
+      const filteredItems = agFilterItems(day.items, type, state);
+      const signal = agDaySignal(day);
+      const displayCount = filteredItems.length;
+      const displayTotal = filteredItems.reduce((sum,item)=>sum + (Number(item.amount)||0),0);
+      const emptyMessage = day.items.some(i=>i?._placeholder)
+        ? 'Sem contas programadas para hoje.'
+        : 'Nenhum lançamento atende aos filtros selecionados.';
+      return `
           <div class="ag-day ${signal.className}" id="ag-${type}-${companyKey}-${widx}-${didx}">
             <button class="ag-day-toggle" onclick="agToggleDay('ag-${type}-${companyKey}-${widx}-${didx}')">
               <div class="ag-day-main">
@@ -13805,12 +14056,13 @@ function agRenderPanel(type, companyKey, companyData, opts={}){
                   ${signal.badge ? `<span class="ag-day-flag ${signal.badgeClass}">${signal.badge}</span>` : ''}
                 </div>
               </div>
-              <div class="ag-day-summary">${agDaySummary(day.items, type)}</div>
-              <div class="ag-num"><span class="ag-badge">${day.count} lanç.</span></div>
-              <div class="ag-num ag-day-total ${cls}">${agFmtMoney(day.total)}</div>
+              <div class="ag-day-summary">${agDaySummary(filteredItems, type)}</div>
+              <div class="ag-num"><span class="ag-badge">${displayCount} lanç.</span></div>
+              <div class="ag-num ag-day-total ${cls}">${agFmtMoney(displayTotal)}</div>
             </button>
             <div class="ag-items">
               <div class="ag-table-wrap">
+              ${filteredItems.length ? `
               <table class="ag-table">
                 <thead>
                   <tr>
@@ -13820,16 +14072,23 @@ function agRenderPanel(type, companyKey, companyData, opts={}){
                     <th>Status</th>
                     <th>Conta Corrente</th>
                     <th>Documento</th>
+                    <th>Nº Nota</th>
                     <th>Emissão</th>
                     <th>Previsão</th>
+                    <th>Dias</th>
                     <th class="ag-num">Valor</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${day.items.map(item => `
-                    <tr>
+                  ${filteredItems.map(item => {
+                    const visual = agItemVisualState(item);
+                    const prazoDias = agCalcPrazoDias(item);
+                    const nota = agInferNota(item);
+                    const previsao = agToISODate(item.previsao || item.ref_date || item.venc_original || item.venc);
+                    return `
+                    <tr class="${visual.rowClass}">
                       <td>
-                        <div><strong>${agEsc(item.name)}</strong></div>
+                        <div><strong>${agEsc(item.name || '—')}</strong></div>
                         <div class="ag-obs">${agEsc(item.obs && item.obs !== 'N/D' ? item.obs.slice(0,140) : '')}</div>
                       </td>
                       ${opts.showCompanyCol ? `<td><span class="ag-company-chip">${agCompanyLabel(item.company)}</span></td>` : ''}
@@ -13837,21 +14096,33 @@ function agRenderPanel(type, companyKey, companyData, opts={}){
                       <td><span class="ag-status ${agStatusClass(item.status)}">${agEsc(item.status || '—')}</span></td>
                       <td><span class="ag-acc">${agEsc(item.account || 'Sem conta')}</span></td>
                       <td>${agEsc(item.document || '—')}</td>
+                      <td><span class="ag-note">${agEsc(nota || '—')}</span></td>
                       <td>${item.emissao ? agFmtDate(item.emissao) : '—'}</td>
-                      <td>${(item.ref_date || item.previsao || item.venc) ? agFmtDate(item.ref_date || item.previsao || item.venc) : '—'}</td>
+                      <td>${previsao ? agFmtDate(previsao) : '—'}</td>
+                      <td>${prazoDias == null ? '—' : `<span class="ag-days-chip ${prazoDias<0?'neg':prazoDias===0?'zero':''}">${prazoDias}</span>`}</td>
                       <td class="ag-num"><strong>${agFmtMoney(item.amount)}</strong></td>
-                    </tr>
-                  `).join('')}
+                    </tr>`;
+                  }).join('')}
                 </tbody>
-              </table>
+              </table>` : `<div class="ag-empty-state">${emptyMessage}</div>`}
               </div>
             </div>
           </div>
         `;
-        }).join('')}
+    }).join('');
+
+    return `
+    <div class="ag-week">
+      <div class="ag-week-head">
+        <div>Semana ${week.week} <span class="ag-week-range">· ${agFmtDate(week.start)} a ${agFmtDate(week.end)}</span></div>
+        <div class="ag-num">${week.days.length} dias</div>
+        <div class="ag-num">${week.count} lanç.</div>
+        <div class="ag-num">${agFmtShort(week.total)}</div>
       </div>
-    </div>
-  `).join('');
+      <div class="ag-week-body">${daysHtml}</div>
+    </div>`;
+  }).join('');
+
   return `
     <div class="ag-panel">
       <div class="ag-panel-head">
@@ -13889,6 +14160,7 @@ function agRenderPanel(type, companyKey, companyData, opts={}){
       </div>
       <div class="ag-sections">
         <div class="ag-alerts">${alerts.join('')}</div>
+        ${agRenderFilters(type, companyKey, companyData, opts)}
         ${weeksHtml}
       </div>
     </div>
