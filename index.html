@@ -111,6 +111,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 .scenario-inline-label{font-size:11px;color:var(--gray-600);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 .scenario-inline .cenario-select{min-width:190px}
 .scenario-inline.compact{margin-left:0}.card-header .scenario-inline{margin-left:auto}.scenario-inline.compact .scenario-inline-label{font-size:10px}
+#toggleKpisResultado{margin-left:auto}
+@media(max-width:900px){
+  #toggleKpisResultado{width:100%;justify-content:flex-start}
+}
+
 
 
 /* KPI */
@@ -10396,7 +10401,7 @@ html,body{max-width:100%;overflow-x:hidden}
   <div class="section-header">
     <div>
       <div class="section-title" id="tituloResultado">Resultado — Consolidado</div>
-      <div class="section-subtitle">Visão executiva · competência e caixa · 2026</div>
+      <div class="section-subtitle">Visão executiva · 2026</div>
     </div>
     <div class="emp-selector" id="empResultado">
       <button class="emp-pill active" onclick="setEmpresa(&#39;resultado&#39;,&#39;emp&#39;,this)">Consolidado</button>
@@ -10420,29 +10425,23 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
   </div>
 
+  
   <div class="card" style="margin-bottom:16px">
     <div class="card-header">
       <div>
-        <div class="card-title">📘 KPIs de Resultado (DRE / Faturamento)</div>
-        <div class="card-subtitle">Indicadores por competência, alinhados à lógica do DRE gerencial</div>
+        <div class="card-title" id="tituloKpisFinanceirosResultado">💵 KPIs de Caixa (Recebimento)</div>
+        <div class="card-subtitle" id="subtituloKpisFinanceirosResultado">Indicadores por recebimento, para leitura de liquidez e conversão em caixa</div>
+      </div>
+      <div class="pill-group" id="toggleKpisResultado">
+        <button class="pill active" onclick="setResultadoKpiView('caixa',this)">Caixa</button>
+        <button class="pill" onclick="setResultadoKpiView('dre',this)">DRE</button>
       </div>
     </div>
     <div class="card-body">
-      <div class="kpi-grid" id="kpiFinanceirosDRE"></div>
+      <div class="kpi-grid" id="kpiFinanceirosToggle"></div>
     </div>
   </div>
 
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-header">
-      <div>
-        <div class="card-title">💵 KPIs de Caixa (Recebimento)</div>
-        <div class="card-subtitle">Indicadores por recebimento, para leitura de liquidez e conversão em caixa</div>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="kpi-grid" id="kpiFinanceirosCaixa"></div>
-    </div>
-  </div>
 
     <div class="card" style="margin-bottom:16px">
       <div class="card-header">
@@ -10456,7 +10455,7 @@ html,body{max-width:100%;overflow-x:hidden}
 
     <div class="grid-2">
     <div class="card">
-      <div class="card-header"><div class="card-title">Saldo Acumulado</div><div class="card-subtitle">Evolução do resultado acumulado mês a mês</div></div>
+      <div class="card-header"><div class="card-title">Caixa Acumulado</div><div class="card-subtitle">Evolução do saldo acumulado mês a mês</div></div>
       <div class="chart-wrap" style="height:260px"><canvas id="chartResultadoAcum"></canvas></div>
     </div>
     <div class="card">
@@ -10964,59 +10963,92 @@ function renderResumoDespesas(){
 
 
 
+
+let _resultadoKpiView = 'caixa';
+
+function setResultadoKpiView(view, btn){
+  _resultadoKpiView = view === 'dre' ? 'dre' : 'caixa';
+  const wrap = document.getElementById('toggleKpisResultado');
+  if(wrap){
+    [...wrap.querySelectorAll('.pill')].forEach(p=>p.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    else {
+      const target = [...wrap.querySelectorAll('.pill')].find(p => p.textContent.trim().toLowerCase() === _resultadoKpiView);
+      if(target) target.classList.add('active');
+    }
+  }
+  renderKpisFinanceiros();
+}
+
 function renderKpisFinanceiros(){
-  const elDre = document.getElementById('kpiFinanceirosDRE');
-  const elCaixa = document.getElementById('kpiFinanceirosCaixa');
+  const el = document.getElementById('kpiFinanceirosToggle');
+  const titleEl = document.getElementById('tituloKpisFinanceirosResultado');
+  const subEl = document.getElementById('subtituloKpisFinanceirosResultado');
+  const wrap = document.getElementById('toggleKpisResultado');
   const emp = _emp.resultado;
   const dre = resultadoMetricasDre(emp);
   const caixa = resultadoMetricas(emp);
   const pmpSub = 'Somente compras de mercadorias para revenda';
 
-  if(elDre){
+  if(wrap){
+    [...wrap.querySelectorAll('.pill')].forEach(p=>p.classList.remove('active'));
+    const target = [...wrap.querySelectorAll('.pill')].find(p => p.textContent.trim().toLowerCase() === _resultadoKpiView);
+    if(target) target.classList.add('active');
+  }
+
+  if(!el) return;
+
+  if(_resultadoKpiView === 'dre'){
+    if(titleEl) titleEl.textContent = '📘 KPIs de Resultado (DRE / Faturamento)';
+    if(subEl) subEl.textContent = 'Indicadores por competência, alinhados à lógica do DRE gerencial';
+
     const peSubDre = dre.pontoEquilibrio
       ? (dre.faturamentoAcum >= dre.pontoEquilibrio ? 'Faturamento acima do equilíbrio' : 'Faturamento abaixo do equilíbrio')
       : 'Margem de contribuição insuficiente';
 
-    elDre.innerHTML =
+    el.innerHTML =
       kpiCard('navy','⚙️','Desp. Op. / Faturamento Líquido',pct(dre.despOpSobreBruta),'Fixa + Pessoal + Variável + Comercial + Logística / faturamento líquido','', '', makeTrend(dre.despOpBrutaPts.current?.val ?? null, dre.despOpBrutaPts.previous?.val ?? null, 'lower', 'percent')) +
       kpiCard('purple','📈','EBITDA DRE Gerencial',fmtS(dre.ebitda),'Faturamento líquido - venda - impostos - despesas gerenciais + reembolsos operacionais','', '', makeTrend(dre.ebitdaPts.current?.val ?? null, dre.ebitdaPts.previous?.val ?? null, 'higher', 'currency')) +
       kpiCard('teal','💹','Margem EBITDA DRE',pct(dre.margemEbitda),'EBITDA DRE / faturamento líquido','', '', makeTrend(dre.margemEbitdaPts.current?.val ?? null, dre.margemEbitdaPts.previous?.val ?? null, 'higher', 'percent')) +
       kpiCard('green','🧮','Margem Lucro Líquido DRE',pct(dre.margemLiquida),'EBITDA DRE + rendimentos de aplicações / faturamento líquido','', '', makeTrend(dre.margemLiquidaPts.current?.val ?? null, dre.margemLiquidaPts.previous?.val ?? null, 'higher', 'percent')) +
       kpiCard('orange','🎯','Ponto de Equilíbrio DRE',dre.pontoEquilibrio ? fmtS(dre.pontoEquilibrio) : '—',peSubDre,'', '', makeTrend(dre.pontoEqPts.current?.val ?? null, dre.pontoEqPts.previous?.val ?? null, 'lower', 'currency'));
+    return;
   }
 
-  if(elCaixa){
-    const receitaMensalCaixa = D.months.map((_,i)=> Number(caixa.m.receita_venda?.real?.[i]) || 0);
-    const comprometMensalCaixa = D.months.map((_,i)=>{
-      const rec = receitaMensalCaixa[i] || 0;
-      const desp = (Number(caixa.m.despesa_venda?.real?.[i])||0) + calcDespesaOperacionalElegivelFromMonthly(caixa.m, i) + (Number(caixa.m.impostos?.real?.[i])||0);
-      return rec > 0 ? (desp / rec * 100) : 0;
-    });
-    const comprometPtsCaixa = lastTwoNonZeroPoints(comprometMensalCaixa);
-    const pontoEqMensalCaixa = D.months.map((_,i)=>{
-      const rec = receitaMensalCaixa[i] || 0;
-      const despMerc = Number(caixa.m.despesa_venda?.real?.[i]) || 0;
-      const impostos = Number(caixa.m.impostos?.real?.[i]) || 0;
-      const despOp = calcDespesaOperacionalElegivelFromMonthly(caixa.m, i);
-      const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
-      return margemContrib > 0 ? (despOp / margemContrib) : 0;
-    });
-    const pontoEqPtsCaixa = lastTwoNonZeroPoints(pontoEqMensalCaixa);
-    const peSubCaixa = caixa.pontoEquilibrio
-      ? (caixa.recAcum >= caixa.pontoEquilibrio ? 'Recebimento acima do equilíbrio' : 'Recebimento abaixo do equilíbrio')
-      : 'Margem de contribuição insuficiente';
+  if(titleEl) titleEl.textContent = '💵 KPIs de Caixa (Recebimento)';
+  if(subEl) subEl.textContent = 'Indicadores por recebimento, para leitura de liquidez e conversão em caixa';
 
-    elCaixa.innerHTML =
-      kpiCard('navy','💵','Desp. Op. / Recebimento',pct(caixa.despOpSobreBruta),'Fixa + Pessoal + Variável + Comercial + Logística / recebimentos','', '', makeTrend(caixa.despOpBrutaPts.current?.val ?? null, caixa.despOpBrutaPts.previous?.val ?? null, 'lower', 'percent')) +
-      kpiCard('purple','📥','Resultado Operacional Caixa',fmtS(caixa.ebitdaAjustado),'Recebimentos - venda - impostos - despesas operacionais elegíveis','', '', makeTrend(caixa.ebitdaPts.current?.val ?? null, caixa.ebitdaPts.previous?.val ?? null, 'higher', 'currency')) +
-      kpiCard('teal','📊','Margem Operacional Caixa',pct(caixa.margemEbitda),'Resultado operacional caixa / recebimentos','', '', makeTrend(caixa.margemEbitdaPts.current?.val ?? null, caixa.margemEbitdaPts.previous?.val ?? null, 'higher', 'percent')) +
-      kpiCard('green','🧾','Margem Líquida Caixa',pct(caixa.margemLiquida),'Resultado caixa após despesas não operacionais / recebimentos','', '', makeTrend(caixa.margemLiquidaPts.current?.val ?? null, caixa.margemLiquidaPts.previous?.val ?? null, 'higher', 'percent')) +
-      kpiCard('orange','🎯','Ponto de Equilíbrio Caixa',caixa.pontoEquilibrio ? fmtS(caixa.pontoEquilibrio) : '—',peSubCaixa,'', '', makeTrend(pontoEqPtsCaixa.current?.val ?? null, pontoEqPtsCaixa.previous?.val ?? null, 'lower', 'currency')) +
-      kpiCard('gold','📤','PMP',caixa.pmp !== null ? (caixa.pmp.toFixed(1)+' dias') : '—',pmpSub,'', '', null);
-  }
+  const receitaMensalCaixa = D.months.map((_,i)=> Number(caixa.m.receita_venda?.real?.[i]) || 0);
+  const comprometMensalCaixa = D.months.map((_,i)=>{
+    const rec = receitaMensalCaixa[i] || 0;
+    const desp = (Number(caixa.m.despesa_venda?.real?.[i])||0) + calcDespesaOperacionalElegivelFromMonthly(caixa.m, i) + (Number(caixa.m.impostos?.real?.[i])||0);
+    return rec > 0 ? (desp / rec * 100) : 0;
+  });
+  const comprometPtsCaixa = lastTwoNonZeroPoints(comprometMensalCaixa);
+  const pontoEqMensalCaixa = D.months.map((_,i)=>{
+    const rec = receitaMensalCaixa[i] || 0;
+    const despMerc = Number(caixa.m.despesa_venda?.real?.[i]) || 0;
+    const impostos = Number(caixa.m.impostos?.real?.[i]) || 0;
+    const despOp = calcDespesaOperacionalElegivelFromMonthly(caixa.m, i);
+    const margemContrib = rec > 0 ? ((rec - despMerc - impostos) / rec) : 0;
+    return margemContrib > 0 ? (despOp / margemContrib) : 0;
+  });
+  const pontoEqPtsCaixa = lastTwoNonZeroPoints(pontoEqMensalCaixa);
+  const peSubCaixa = caixa.pontoEquilibrio
+    ? (caixa.recAcum >= caixa.pontoEquilibrio ? 'Recebimento acima do equilíbrio' : 'Recebimento abaixo do equilíbrio')
+    : 'Margem de contribuição insuficiente';
+
+  el.innerHTML =
+    kpiCard('navy','💵','Desp. Op. / Recebimento',pct(caixa.despOpSobreBruta),'Fixa + Pessoal + Variável + Comercial + Logística / recebimentos','', '', makeTrend(caixa.despOpBrutaPts.current?.val ?? null, caixa.despOpBrutaPts.previous?.val ?? null, 'lower', 'percent')) +
+    kpiCard('purple','📥','Resultado Operacional Caixa',fmtS(caixa.ebitdaAjustado),'Recebimentos - venda - impostos - despesas operacionais elegíveis','', '', makeTrend(caixa.ebitdaPts.current?.val ?? null, caixa.ebitdaPts.previous?.val ?? null, 'higher', 'currency')) +
+    kpiCard('teal','📊','Margem Operacional Caixa',pct(caixa.margemEbitda),'Resultado operacional caixa / recebimentos','', '', makeTrend(caixa.margemEbitdaPts.current?.val ?? null, caixa.margemEbitdaPts.previous?.val ?? null, 'higher', 'percent')) +
+    kpiCard('green','🧾','Margem Líquida Caixa',pct(caixa.margemLiquida),'Resultado caixa após despesas não operacionais / recebimentos','', '', makeTrend(caixa.margemLiquidaPts.current?.val ?? null, caixa.margemLiquidaPts.previous?.val ?? null, 'higher', 'percent')) +
+    kpiCard('orange','🎯','Ponto de Equilíbrio Caixa',caixa.pontoEquilibrio ? fmtS(caixa.pontoEquilibrio) : '—',peSubCaixa,'', '', makeTrend(pontoEqPtsCaixa.current?.val ?? null, pontoEqPtsCaixa.previous?.val ?? null, 'lower', 'currency')) +
+    kpiCard('gold','📤','PMP',caixa.pmp !== null ? (caixa.pmp.toFixed(1)+' dias') : '—',pmpSub,'', '', null);
 }
 
-function renderResumoKpisFinanceiros(){
+function renderResumoKpisFinanceiros(
+){
   const emp = _emp.resultado;
   const dre = resultadoMetricasDre(emp);
   const caixa = resultadoMetricas(emp);
@@ -12399,16 +12431,70 @@ function resultadoMetricas(emp){
   };
 }
 
+
+function resultadoCardsMetricas(emp){
+  const d = resultadoMetricas(emp);
+  const receitaMensal = (D.months || []).map((_,i)=> calcReceitaCaixaMensal(d.m, i));
+  const despesasMensais = (D.months || []).map((_,i)=>
+    (Number(d.m.despesa_venda?.real?.[i]) || 0)
+    + calcDespesaOperacionalElegivelFromMonthly(d.m, i)
+    + (Number(d.m.impostos?.real?.[i]) || 0)
+  );
+  const margemMensal = receitaMensal.map((rec, i)=>{
+    const desp = Number(despesasMensais[i]) || 0;
+    return rec > 0 ? (((Number(rec) || 0) - desp) / rec * 100) : 0;
+  });
+  const comprometimentoMensal = receitaMensal.map((rec, i)=>{
+    const desp = Number(despesasMensais[i]) || 0;
+    return rec > 0 ? (desp / rec * 100) : 0;
+  });
+
+  const caixaAcumulado = Number(d.saldoAcum) || 0;
+  const receita = Number(d.recAcum) || 0;
+  const despesas = Number(d.despTotal) || 0;
+  const margemOperacional = Number(d.margemOper) || 0;
+  const comprometimentoReceita = Number(d.compromet) || 0;
+  const gapInfo = D.kpis?.gap_fat_receb_2026?.[emp] || D.kpis?.gap_fat_receb_2026?.emp || null;
+
+  const caixaPts = lastTwoNonZeroPoints(d.m.saldo?.real || []);
+  const receitaPts = lastTwoNonZeroPoints(receitaMensal);
+  const despesaPts = lastTwoNonZeroPoints(despesasMensais);
+  const margemPts = lastTwoNonZeroPoints(margemMensal);
+  const comprometimentoPts = lastTwoNonZeroPoints(comprometimentoMensal);
+  const gapPts = lastTwoNonZeroPoints(gapInfo?.monthly_gap || []);
+
+  return {
+    caixaAcumulado,
+    receita,
+    despesas,
+    margemOperacional,
+    comprometimentoReceita,
+    gapFaturadoRecebido: Number(gapInfo?.gap) || 0,
+    gapInfo,
+    trendCaixaAcumulado: makeTrend(caixaPts.current?.val ?? null, caixaPts.previous?.val ?? null, 'higher', 'currency'),
+    trendReceita: makeTrend(receitaPts.current?.val ?? null, receitaPts.previous?.val ?? null, 'higher', 'currency'),
+    trendDespesas: makeTrend(despesaPts.current?.val ?? null, despesaPts.previous?.val ?? null, 'lower', 'currency'),
+    trendMargem: makeTrend(margemPts.current?.val ?? null, margemPts.previous?.val ?? null, 'higher', 'percent'),
+    trendComprometimento: makeTrend(comprometimentoPts.current?.val ?? null, comprometimentoPts.previous?.val ?? null, 'lower', 'percent'),
+    trendGap: makeTrend(gapPts.current?.val ?? null, gapPts.previous?.val ?? null, 'lower', 'currency')
+  };
+}
+
+
 function renderPredicoesResultado(){
   const emp = _emp.resultado;
   const d = resultadoMetricas(emp);
+  const cenarioSelecionado = _cenario;
+  _cenario = 'atual';
+  const dAtual = resultadoMetricas(emp);
+  _cenario = cenarioSelecionado;
   const cards = [];
   if(d.diasCobertura !== null){
     if(d.mediaQueima > 0){
       cards.push({
         cls: d.diasCobertura <= 30 ? 'danger' : d.diasCobertura <= 60 ? 'warn' : 'success',
         title: 'Cobertura de caixa no ritmo atual',
-        text: `Mantido o ritmo recente, o caixa cobre cerca de <b>${d.diasCobertura.toFixed(0)} dias</b> de operação. A leitura considera o último saldo mensal realizado frente à queima líquida recente.`
+        text: `Mantido o ritmo recente, o caixa cobre cerca de <b>${d.diasCobertura.toFixed(0)} dias</b> de operação. A leitura considera o último saldo mensal realizado frente ao consumo líquido recente de caixa.`
       });
     }else{
       cards.push({
@@ -12419,17 +12505,17 @@ function renderPredicoesResultado(){
     }
   }
 
-  if(d.riscoIdx >= 0){
+  if(dAtual.riscoIdx >= 0){
     cards.push({
       cls: 'danger',
       title: 'Ponto de ruptura projetado',
-      text: `No ${nomeCenarioAtual()}, o saldo mensal fica negativo a partir de <b>${D.months[d.riscoIdx]}</b>, com piso estimado em <b>${fmtS(d.menorSaldo)}</b>.`
+      text: `No Cenário Atual, o saldo mensal fica negativo a partir de <b>${D.months[dAtual.riscoIdx]}</b>, com piso estimado em <b>${fmtS(dAtual.menorSaldo)}</b>.`
     });
   }else{
     cards.push({
       cls: 'success',
       title: 'Trajetória projetada do saldo',
-      text: `No ${nomeCenarioAtual()}, o fluxo não projeta saldo mensal negativo. O menor nível esperado permanece em <b>${fmtS(d.menorSaldo)}</b>.`
+      text: `No Cenário Atual, o fluxo não projeta saldo mensal negativo. O menor nível esperado permanece em <b>${fmtS(dAtual.menorSaldo)}</b>.`
     });
   }
 
@@ -12473,36 +12559,49 @@ function renderResultado(){
   const scenarioName = _cenario;
   const nomeScenario = tituloCenarioAtual();
 
+  const cards = resultadoCardsMetricas(emp);
+
   document.getElementById('kpiResultado').innerHTML =
-    kpiCard('navy','🧾','Faturamento Bruto',fmtS(getA(emp,'fat_bruto')||0),'Competência 2026','', '', makeTrend(lastTwoNonZeroPoints(getM(emp,'fat_bruto')?.real || []).current?.val ?? null, lastTwoNonZeroPoints(getM(emp,'fat_bruto')?.real || []).previous?.val ?? null, 'higher', 'currency')) +
-    kpiCard('green','💵','Recebimentos Totais',fmtS(d.recAcum),'Caixa 2026','', '', makeTrend(d.recPts.current?.val ?? null, d.recPts.previous?.val ?? null, 'higher', 'currency')) +
-    kpiCard('gold','⚖️','Gap Faturado x Recebido',fmtS((getA(emp,'fat_bruto')||0) - (d.recAcum||0)),'Competência menos caixa','', '', makeTrend((((lastTwoNonZeroPoints(getM(emp,'fat_bruto')?.real || []).current?.val ?? 0) - (d.recPts.current?.val ?? 0)) || 0), (((lastTwoNonZeroPoints(getM(emp,'fat_bruto')?.real || []).previous?.val ?? 0) - (d.recPts.previous?.val ?? 0)) || 0), 'lower', 'currency')) +
-    kpiCard('purple','📈','EBITDA DRE Gerencial',fmtS(resultadoMetricasDre(emp).ebitda),'Base faturamento','', '', makeTrend(resultadoMetricasDre(emp).ebitdaPts.current?.val ?? null, resultadoMetricasDre(emp).ebitdaPts.previous?.val ?? null, 'higher', 'currency')) +
-    kpiCard('teal','🏦','Caixa Acumulado',fmtS(d.saldoAcum),'Saldo líquido 2026','', '', makeTrend(d.saldoPts.current?.val ?? null, d.saldoPts.previous?.val ?? null, 'higher', 'currency'));
+    kpiCard('gold','💰','Caixa Acumulado',fmtS(cards.caixaAcumulado),'Realizado 2026','', '', cards.trendCaixaAcumulado) +
+    kpiCard('teal','📊','Receita',fmtS(cards.receita),'Realizado 2026','', '', cards.trendReceita) +
+    kpiCard('red','📥','Despesas',fmtS(cards.despesas),'Realizado 2026','', '', cards.trendDespesas) +
+    kpiCard('green','📈','Margem de Caixa',pct(cards.margemOperacional),'(Receita - Despesa) / Receita','', '', cards.trendMargem) +
+    kpiCard('orange','🧾','Comprometimento de Caixa',pct(cards.comprometimentoReceita),'Despesa / Receita','', '', cards.trendComprometimento);
 
   document.getElementById('subtituloTabelaResultado').textContent = 'Acumulado 2026 vs. cenário de referência — visão de caixa';
-  document.getElementById('tituloChartGapResultado').textContent = 'Resultado de Caixa & Margem sobre Recebimentos';
-  document.getElementById('subtituloChartGapResultado').textContent = 'Barras: resultado operacional mensal de caixa · Linha: margem sobre recebimentos';
+  document.getElementById('tituloChartGapResultado').textContent = 'Geração/Consumo de Caixa & Margem de Caixa';
+  document.getElementById('subtituloChartGapResultado').textContent = 'Barras: recebimentos menos saídas do mês · Linha: margem de caixa';
 
-  let acumProg = 0;
-  const acumLine = m.saldo.real.map(v=>{acumProg+=v; return acumProg;});
+  const caixaAcumuladoMensal = D.months.map((_,i)=> i <= lastIdx ? (Number(m.saldo.real?.[i]) || 0) : null);
 
   killChart('chartResultadoAcum');
   charts.chartResultadoAcum = new Chart(document.getElementById('chartResultadoAcum'),{
     type:'line',
     data:{labels:D.months,datasets:[{
-      label:'Saldo Acumulado',data:acumLine,
+      label:'Caixa Acumulado',data:caixaAcumuladoMensal,
       borderColor:C.gold,backgroundColor:C.gold+'33',fill:true,tension:.4,
       pointRadius:4,pointBackgroundColor:C.gold,
     }]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmtS(ctx.raw)}}},scales:{y:{grid:{color:'#f0f2f5'},ticks:{callback:v=>fmtS(v),font:{size:10}}},x:{grid:{display:false}}}}
   });
 
-  const resultadoMensal = D.months.map((_,i)=> i <= lastIdx ? (Number(m.saldo.real[i])||0) : null);
+  const receitaMensalChart = D.months.map((_,i)=> i <= lastIdx ? calcReceitaCaixaMensal(m, i) : null);
+  const despesasMensalChart = D.months.map((_,i)=> {
+    if(i > lastIdx) return null;
+    return (Number(m.despesa_venda?.real?.[i]) || 0)
+      + calcDespesaOperacionalElegivelFromMonthly(m, i)
+      + (Number(m.impostos?.real?.[i]) || 0);
+  });
+  const resultadoMensal = D.months.map((_,i)=>{
+    if(i > lastIdx) return null;
+    const rec = Number(receitaMensalChart[i]) || 0;
+    const desp = Number(despesasMensalChart[i]) || 0;
+    return rec - desp;
+  });
   const margemMensal = D.months.map((_,i)=>{
     if(i > lastIdx) return null;
-    const rec = Number(m.receita_total.real[i])||0;
-    const res = Number(m.saldo.real[i])||0;
+    const rec = Number(receitaMensalChart[i]) || 0;
+    const res = Number(resultadoMensal[i]) || 0;
     return rec > 0 ? (res/rec)*100 : null;
   });
 
@@ -12511,7 +12610,7 @@ function renderResultado(){
     data:{labels:D.months,datasets:[
       {
         type:'bar',
-        label:'Resultado Operacional',
+        label:'Geração/Consumo de Caixa',
         data:resultadoMensal,
         yAxisID:'yValor',
         backgroundColor:resultadoMensal.map(v=>v==null?'rgba(0,0,0,0)':(v>=0?C.green+'bb':C.red+'bb')),
@@ -12522,7 +12621,7 @@ function renderResultado(){
       },
       {
         type:'line',
-        label:'Margem Operacional',
+        label:'Margem de Caixa',
         data:margemMensal,
         yAxisID:'yPct',
         borderColor:C.gold,
@@ -13149,7 +13248,7 @@ function parseCashFlow(buf){
   }
 
   // ── KPI: PMP (prazo médio de pagamento) ──
-  const kpis = { pmp: { emp:null, marck:null, grattano:null } };
+  const kpis = { pmp: { emp:null, marck:null, grattano:null }, gap_fat_receb_2026: { emp:null, marck:null, grattano:null } };
   try{
     const wsBP = wb.Sheets['Base Pagamentos'];
     if(wsBP){
@@ -13230,6 +13329,82 @@ function parseCashFlow(buf){
           avg_pagamento: a.sumPeso ? Math.round((a.sumPrazo / a.sumPeso) * 10) / 10 : null,
           avg_venc: a.sumPesoVenc ? Math.round((a.sumVenc / a.sumPesoVenc) * 10) / 10 : null,
           valor_base: Math.round((a.sumPeso || 0) * 100) / 100
+        };
+      });
+    }
+  }catch(e){}
+
+
+  // ── KPI: GAP faturado x recebido (somente recebimentos de notas emitidas no ano de referência) ──
+  try{
+    const wsRec = wb.Sheets['Base Recebimentos'];
+    if(wsRec){
+      const recRows = XLSX.utils.sheet_to_json(wsRec,{defval:null, raw:true});
+      const refYear = (()=> {
+        try{
+          const parts = String(data_atualizacao||'').split('/');
+          const y = parseInt(parts[2],10);
+          return isNaN(y) ? (new Date()).getFullYear() : y;
+        }catch(e){ return (new Date()).getFullYear(); }
+      })();
+
+      const gapAcc = {
+        emp:{recebido:0, monthly:new Array(12).fill(0)},
+        marck:{recebido:0, monthly:new Array(12).fill(0)},
+        grattano:{recebido:0, monthly:new Array(12).fill(0)}
+      };
+
+      const toNumGap = x => {
+        if(x===null||x===undefined||x==='') return 0;
+        if(typeof x === 'string'){
+          const clean = x.replace(/\./g,'').replace(',','.');
+          const n = parseFloat(clean);
+          return isNaN(n) ? 0 : n;
+        }
+        const n = parseFloat(x);
+        return isNaN(n) ? 0 : n;
+      };
+
+      recRows.forEach(row=>{
+        const empresa = String(row['Minha Empresa (Nome Fantasia)']||'').toUpperCase();
+        const bucket = empresa.includes('GRATTANO') ? 'grattano' : empresa.includes('MARCK') ? 'marck' : null;
+        if(!bucket) return;
+
+        const dtRec = _xlDate(row['Data de Crédito ou Débito (No Extrato)']);
+        const dtEm = _xlDate(row['Emissão']);
+        const recebido = Math.abs(toNumGap(row['Recebido'] || row['Pago ou Recebido']));
+
+        if(!(dtRec instanceof Date) || !(dtEm instanceof Date) || recebido <= 0) return;
+        if(dtRec.getFullYear() !== refYear) return;
+        if(dtEm.getFullYear() !== refYear) return;
+
+        gapAcc.emp.recebido += recebido;
+        gapAcc.emp.monthly[dtRec.getMonth()] += recebido;
+        gapAcc[bucket].recebido += recebido;
+        gapAcc[bucket].monthly[dtRec.getMonth()] += recebido;
+      });
+
+      const fatAcumByBucket = {
+        emp: (acum?.fat_bruto || 0),
+        marck: (acum_marck?.fat_bruto || 0),
+        grattano: (acum_grattano?.fat_bruto || 0)
+      };
+      const fatMonthlyByBucket = {
+        emp: (monthly?.fat_bruto?.real || new Array(12).fill(0)),
+        marck: (monthly_marck?.fat_bruto?.real || new Array(12).fill(0)),
+        grattano: (monthly_grattano?.fat_bruto?.real || new Array(12).fill(0))
+      };
+
+      ['emp','marck','grattano'].forEach(key=>{
+        const faturado = Number(fatAcumByBucket[key]) || 0;
+        const recebido = Math.round((gapAcc[key].recebido || 0) * 100) / 100;
+        const monthlyGap = new Array(12).fill(0).map((_,i)=> ((Number(fatMonthlyByBucket[key]?.[i]) || 0) - (Number(gapAcc[key].monthly?.[i]) || 0)));
+        kpis.gap_fat_receb_2026[key] = {
+          faturado: Math.round(faturado * 100) / 100,
+          recebido,
+          gap: Math.round((faturado - recebido) * 100) / 100,
+          monthly_gap: monthlyGap.map(v=>Math.round(v * 100) / 100),
+          monthly_recebido: gapAcc[key].monthly.map(v=>Math.round(v * 100) / 100)
         };
       });
     }
