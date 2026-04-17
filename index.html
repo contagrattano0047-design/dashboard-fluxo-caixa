@@ -12698,15 +12698,11 @@ document.getElementById('tabelaResultado').innerHTML = tRows.map(row=>{
 // ═══════════════════════════════════════════════════════
 // MICROSOFT AUTH (MSAL.js)
 // ═══════════════════════════════════════════════════════
-const APP_REDIRECT_URI = (location.protocol === 'http:' || location.protocol === 'https:')
-  ? location.origin + location.pathname
-  : 'https://contagrattano0047-design.github.io/dashboard-fluxo-caixa/';
-
 const msalConfig = {
   auth: {
     clientId: 'a946d3c1-864f-469a-8254-fd3e664417fa',
     authority: 'https://login.microsoftonline.com/a1847b36-b768-4044-b5eb-240a381d0724',
-    redirectUri: APP_REDIRECT_URI,
+    redirectUri: 'https://contagrattano0047-design.github.io/dashboard-fluxo-caixa/',
     navigateToLoginRequestUrl: false,
   },
   cache: { cacheLocation:'localStorage', storeAuthStateInCookie:false },
