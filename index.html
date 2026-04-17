@@ -12897,7 +12897,7 @@ async function readFromSharePoint(){
 
     setLoading(true,'Processando dados…');
     const parsed = parseCashFlow(buf);
-    if(!parsed || !parsed.months || !parsed.m) throw new Error('Falha ao processar a planilha do SharePoint.');
+    if(!parsed || !parsed.months || !parsed.monthly) throw new Error('Falha ao processar a planilha do SharePoint.');
     D = {...parsed, demo_tree: parsed.demo_tree || D.demo_tree || DEFAULT_DATA.demo_tree};
 
     if(parsed.agendaData){
