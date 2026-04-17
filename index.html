@@ -10616,21 +10616,22 @@ function getSheetScenarioForEmp(emp){
 }
 function getScenarioRaw(emp, key){
   const base = getM(emp, key);
+  const months = D.months || [];
   if(_cenario === 'atual'){
     const ma = (emp==='marck' ? D.monthly_atual_marck : emp==='grattano' ? D.monthly_atual_grattano : D.monthly_atual)?.[key];
-    if(ma && Array.isArray(ma.prev)) return D.months.map((_,i)=>Number(ma.prev[i] ?? 0));
-    if(D.monthly_atual?.[key]?.prev) return D.months.map((_,i)=>Number(D.monthly_atual[key].prev[i] ?? 0));
-    return D.months.map((_,i)=>Number(base.prev?.[i] ?? 0));
+    if(ma && Array.isArray(ma.prev)) return months.map((_,i)=>Number(ma.prev[i] ?? 0));
+    if(D.monthly_atual?.[key]?.prev) return months.map((_,i)=>Number(D.monthly_atual[key].prev[i] ?? 0));
+    return months.map((_,i)=>Number(base.prev?.[i] ?? 0));
   }
-  const targetMult = CENARIO_MULT[_cenario] ?? 1.0;
   const srcScenario = getSheetScenarioForEmp(emp);
-  if(srcScenario === _cenario && Array.isArray(base.prev)) {
-    return D.months.map((_,i)=>Number(base.prev?.[i] ?? 0));
-  }
-  const sourceBase = Array.isArray(base.base_prev) ? base.base_prev : (Array.isArray(base.prev) ? base.prev : []);
-  return D.months.map((_,i)=>{
-    const v = Number(sourceBase[i] ?? 0);
-    return v === 0 ? 0 : Math.round(v * targetMult * 100) / 100;
+  const srcMult = CENARIO_MULT[srcScenario] ?? 1.0;
+  const targetMult = CENARIO_MULT[_cenario] ?? 1.0;
+  const ratio = srcMult > 0 ? (targetMult / srcMult) : targetMult;
+  return months.map((_,i)=>{
+    const v = Number(base.prev?.[i] ?? 0);
+    if(!v) return 0;
+    if(Math.abs(ratio - 1) < 1e-9) return Math.round(v * 100) / 100;
+    return Math.round(v * ratio * 100) / 100;
   });
 }
 function getPrev(emp, key){
