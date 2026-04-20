@@ -12167,10 +12167,11 @@ function setReceitasGapScenario(key){
 }
 function receitaGapCard(info){
   const recebido = Number(info?.recebido) || 0;
+  const recebidoAcumulado = Number(info?.recebido_acumulado) || recebido;
   const faturado = Number(info?.faturado) || 0;
   const pctRecebido = Number(info?.pct_recebido) || 0;
-  const saldoAberto = Math.max(0, faturado - recebido);
-  const gapDisplay = saldoAberto > 0 ? -saldoAberto : Math.max(0, recebido - faturado);
+  const saldoAberto = Math.max(0, faturado - recebidoAcumulado);
+  const gapDisplay = saldoAberto > 0 ? -saldoAberto : Math.max(0, recebidoAcumulado - faturado);
   return `
     <div class="kpi-card orange gap-kpi-card">
       <div class="gap-kpi-head">
@@ -12199,7 +12200,7 @@ function receitaGapCard(info){
         </div>
       </div>
 
-      <div class="gap-kpi-foot">Em aberto no cenário: <strong>${fmtS(saldoAberto)}</strong></div>
+      <div class="gap-kpi-foot">Em aberto após abatimento do cenário: <strong>${fmtS(saldoAberto)}</strong></div>
     </div>
   `;
 }
@@ -13702,6 +13703,11 @@ function parseCashFlow(buf){
         const meta = makeScenarioMeta(pair);
         gapAcc[meta.key] = {emp:{recebido:0}, marck:{recebido:0}, grattano:{recebido:0}};
       });
+      const recebidoPorAno = {
+        emp: {[prevYear]:{[prevYear]:0, [refYear]:0}, [refYear]:{[prevYear]:0, [refYear]:0}},
+        marck: {[prevYear]:{[prevYear]:0, [refYear]:0}, [refYear]:{[prevYear]:0, [refYear]:0}},
+        grattano: {[prevYear]:{[prevYear]:0, [refYear]:0}, [refYear]:{[prevYear]:0, [refYear]:0}}
+      };
 
       const faturadoByYear = {
         emp: {[prevYear]:0, [refYear]:0},
@@ -13787,7 +13793,7 @@ function parseCashFlow(buf){
       faturadoByYear.marck[refYear] = Number(acum_marck?.fat_liquido || faturadoByYear.marck[refYear] || 0);
       faturadoByYear.grattano[refYear] = Number(acum_grattano?.fat_liquido || faturadoByYear.grattano[refYear] || 0);
 
-      recRows.forEach((row, idx) => {
+      recRows.forEach(row => {
         const bucket = getEmpresaBucket(row);
         if(!bucket) return;
         if(!isInvoiceGapRow(row)) return;
@@ -13808,6 +13814,12 @@ function parseCashFlow(buf){
 
         gapAcc[scenarioKey].emp.recebido += recebido;
         gapAcc[scenarioKey][bucket].recebido += recebido;
+        if(recebidoPorAno.emp?.[emitYear]?.[recYear] != null){
+          recebidoPorAno.emp[emitYear][recYear] += recebido;
+        }
+        if(recebidoPorAno[bucket]?.[emitYear]?.[recYear] != null){
+          recebidoPorAno[bucket][emitYear][recYear] += recebido;
+        }
       });
 
       scenarioPairs.forEach(pair => {
@@ -13818,11 +13830,15 @@ function parseCashFlow(buf){
         ['emp','marck','grattano'].forEach(key => {
           const faturado = Math.round((Number(faturadoByYear[key]?.[emitYear]) || 0) * 100) / 100;
           const recebido = Math.round((Number(gapAcc[scenarioKey][key].recebido) || 0) * 100) / 100;
-          const gap = Math.round((faturado - recebido) * 100) / 100;
+          const recebidoAcumulado = Math.round((Object.entries(recebidoPorAno[key]?.[emitYear] || {})
+            .filter(([year]) => Number(year) <= meta.rec_year)
+            .reduce((sum, [,value]) => sum + (Number(value) || 0), 0)) * 100) / 100;
+          const gap = Math.round((faturado - recebidoAcumulado) * 100) / 100;
           const pctRecebido = faturado > 0 ? Math.round((recebido / faturado) * 1000) / 10 : 0;
           kpis.gap_fat_receb.scenarios[scenarioKey][key] = {
             faturado,
             recebido,
+            recebido_acumulado: recebidoAcumulado,
             gap,
             pct_recebido: pctRecebido,
             emit_year: meta.emit_year,
