@@ -270,13 +270,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--nav
 /* AGENDA OPERACIONAL */
 .ag-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;margin-top:16px}
 .ag-head{padding:16px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ag-head-top{width:100%;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
 .ag-title{font-size:13px;font-weight:700;color:var(--navy)}
 .ag-subtitle{font-size:11px;color:var(--gray-400);margin-top:2px}
+.ag-month-switch{display:inline-flex;gap:6px;background:#eef1f6;padding:4px;border-radius:12px;align-self:flex-start}
+.ag-month-btn{border:0;background:transparent;color:var(--gray-600);font-size:12px;font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer;transition:all .18s ease}
+.ag-month-btn:hover{background:#e3e8f2;color:var(--navy)}
+.ag-month-btn.active{background:var(--gold);color:var(--navy);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .ag-body{padding:16px 20px 20px}
 .ag-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .ag-pill{font-size:11px;padding:5px 10px;border-radius:999px;background:#fff;border:1px solid var(--gray-200)}
 .ag-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .ag-grid.single{grid-template-columns:1fr}
+@media(max-width:768px){.ag-head-top{flex-direction:column;align-items:flex-start}.ag-month-switch{width:100%;justify-content:flex-start;overflow:auto}}
 .ag-panel{background:#fff;border:1px solid var(--gray-200);border-radius:14px;overflow:hidden}
 .ag-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .ag-company-chip{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800;background:#e8ecf4;color:var(--navy);white-space:nowrap}
@@ -422,6 +428,124 @@ html,body{max-width:100%;overflow-x:hidden}
 .pred-title{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:4px}
 .pred-text{font-size:12px;line-height:1.6;color:var(--gray-600)}
 @media(max-width:1100px){.pred-grid{grid-template-columns:1fr}}
+
+
+.gap-kpi-card{
+  position:relative;
+  overflow:hidden;
+}
+.gap-kpi-card::after{
+  content:'';
+  position:absolute;
+  inset:auto -28px -28px auto;
+  width:96px;
+  height:96px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(212,175,55,.16) 0%, rgba(212,175,55,0) 72%);
+  pointer-events:none;
+}
+.gap-kpi-card .kpi-label{
+  margin-bottom:8px;
+}
+.gap-kpi-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:6px;
+}
+.gap-kpi-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--gray-600);
+}
+.gap-kpi-switch{
+  margin:4px 0 12px;
+  width:100%;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.gap-kpi-switch .ag-month-btn{
+  padding:6px 10px;
+  font-size:11px;
+  border-radius:8px;
+}
+.gap-kpi-main{
+  display:grid;
+  gap:2px;
+}
+.gap-kpi-caption{
+  font-size:11px;
+  color:var(--gray-500);
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  font-weight:700;
+}
+.gap-kpi-card .kpi-value{
+  line-height:1.05;
+  margin-bottom:0;
+}
+.gap-kpi-card .kpi-value.pos{
+  color:#2f855a;
+}
+.gap-kpi-subvalue{
+  font-size:12px;
+  color:var(--gray-600);
+}
+.gap-kpi-subvalue strong{
+  color:var(--navy,#14284b);
+}
+.gap-kpi-divider{
+  height:1px;
+  background:linear-gradient(90deg, rgba(20,40,75,.12), rgba(20,40,75,.04));
+  margin:10px 0;
+}
+.gap-kpi-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.gap-kpi-stat{
+  display:grid;
+  gap:3px;
+}
+.gap-kpi-stat-label{
+  font-size:11px;
+  color:var(--gray-500);
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  font-weight:700;
+}
+.gap-kpi-stat-value{
+  font-size:18px;
+  font-weight:800;
+  color:var(--navy,#14284b);
+  line-height:1.1;
+}
+.gap-kpi-stat-value.is-percent{
+  color:#2f855a;
+}
+.gap-kpi-foot{
+  margin-top:10px;
+  font-size:12px;
+  line-height:1.35;
+  color:var(--ink-2,#56627a);
+}
+.gap-kpi-foot strong{
+  color:var(--navy,#14284b);
+}
+@media(max-width:1100px){
+  .gap-kpi-grid{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+}
 
 </style>
 </head>
@@ -1316,9 +1440,12 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 <div class="ag-card">
 <div class="ag-head">
+<div class="ag-head-top">
 <div>
-<div class="ag-title">🗓️ Agenda Operacional do Mês</div>
-<div class="ag-subtitle">Visualização por semana e dia, com abertura dos lançamentos previstos e indicação da conta corrente</div>
+<div class="ag-title">🗓️ Agenda Operacional</div>
+<div class="ag-subtitle">Visualização por semana e dia dos lançamentos previstos no trimestre móvel, com abertura dos lançamentos e indicação da conta corrente</div>
+</div>
+<div class="ag-month-switch" id="agendaReceitasMonthSwitch"></div>
 </div>
 </div>
 <div class="ag-body">
@@ -3898,9 +4025,12 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 <div class="ag-card">
 <div class="ag-head">
+<div class="ag-head-top">
 <div>
-<div class="ag-title">🗓️ Agenda Operacional do Mês</div>
-<div class="ag-subtitle">Visualização por semana e dia, com abertura dos lançamentos previstos e indicação da conta corrente</div>
+<div class="ag-title">🗓️ Agenda Operacional</div>
+<div class="ag-subtitle">Visualização por semana e dia dos lançamentos previstos no trimestre móvel, com abertura dos lançamentos e indicação da conta corrente</div>
+</div>
+<div class="ag-month-switch" id="agendaDespesasMonthSwitch"></div>
 </div>
 </div>
 <div class="ag-body">
@@ -11078,10 +11208,16 @@ function renderResumoKpisFinanceiros(
     leituraCaixa = `Na ótica de caixa, os recebimentos de venda já sustentam a operação, com resultado operacional de <b>${fmtS(caixa.ebitdaAjustado || 0)}</b> e margem de <b>${pct(caixa.margemEbitda || 0)}</b>.`;
   }
 
+  const sinalDre = (dre.ebitda || 0) >= 0 ? 'positivo' : 'pressionado';
+  const sinalCaixa = (caixa.ebitdaAjustado || 0) >= 0 ? 'positivo' : 'negativo';
+  const leituraGap = gapBase >= 0
+    ? `o caixa está <b>${fmtS(gapBase)}</b> abaixo do faturado no período`
+    : `o caixa está <b>${fmtS(Math.abs(gapBase))}</b> acima do faturado no período`;
+
   el.innerHTML = `
-    <b>Bloco 1 — Resultado (DRE / Faturamento):</b> Este bloco usa <b>faturamento líquido</b> como base de receita, mantendo competência e DRE na mesma linguagem. Hoje o faturamento acumulado está em <b>${fmtS(dre.faturamentoAcum || 0)}</b>, enquanto o EBITDA DRE gerencial está em <b>${fmtS(dre.ebitda || 0)}</b> e a margem líquida DRE em <b>${pct(dre.margemLiquida || 0)}</b>. ${leituraDre}<br><br>
-    <b>Bloco 2 — Caixa (Recebimento):</b> Este bloco usa <b>recebimentos totais</b> como base de caixa. Hoje os recebimentos acumulados estão em <b>${fmtS(caixa.recAcum || 0)}</b>, com resultado operacional caixa de <b>${fmtS(caixa.ebitdaAjustado || 0)}</b> e margem líquida caixa de <b>${pct(caixa.margemLiquida || 0)}</b>. ${leituraCaixa}<br><br>
-    <b>Conciliação executiva:</b> A diferença entre <b>faturado</b> e <b>recebido</b> no período soma <b>${fmtS(gapBase)}</b>, mostrando que competência e caixa contam histórias diferentes no curto prazo. É por isso que os dois blocos coexistem: um para bater com o DRE da diretoria e outro para medir liquidez e conversão em caixa sem distorção.`;
+    <b>Resultado:</b> EBITDA DRE <b>${sinalDre}</b> em <b>${fmtS(dre.ebitda || 0)}</b>, com margem líquida de <b>${pct(dre.margemLiquida || 0)}</b> sobre faturamento acumulado de <b>${fmtS(dre.faturamentoAcum || 0)}</b>.<br><br>
+    <b>Caixa:</b> Resultado operacional de caixa <b>${sinalCaixa}</b> em <b>${fmtS(caixa.ebitdaAjustado || 0)}</b>, com margem de <b>${pct(caixa.margemLiquida || 0)}</b> sobre recebimentos acumulados de <b>${fmtS(caixa.recAcum || 0)}</b>.<br><br>
+    <b>Conciliação:</b> A diferença entre faturamento e recebimento mostra que <b>${leituraGap}</b>, então resultado e liquidez seguem leituras distintas no curto prazo.`;
 }
 
 
@@ -11110,10 +11246,10 @@ function renderAlertasExecutivos(){
 
   alerts.push({
     cls: riscoIdx >= 0 ? 'danger' : 'success',
-    title:'Pressão de caixa projetada',
+    title:'Caixa projetado',
     text: riscoIdx >= 0
-      ? `O fluxo projetado indica saldo negativo a partir de <b>${D.months[riscoIdx]}</b>, com piso estimado em <b>${fmtS(menorSaldo)}</b>.`
-      : `A projeção de caixa não indica saldo negativo no horizonte visível, preservando folga financeira mais confortável.`
+      ? `O fluxo projetado indica saldo negativo a partir de <b>${D.months[riscoIdx]}</b>, com piso em <b>${fmtS(menorSaldo)}</b>.`
+      : `A projeção de caixa não indica saldo negativo no horizonte visível.`
   });
 
   alerts.push({
@@ -11180,27 +11316,33 @@ function renderAlertasSaldos(){
   const alerts = [];
   alerts.push({
     cls: variacao < 0 ? 'warn' : 'success',
-    title:'Trajetória do caixa no mês',
+    title:'Fechamento do mês',
     text: variacao < 0
-      ? `A projeção de fechamento cai <b>${fmtS(Math.abs(variacao))}</b> frente à posição atual, sinalizando consumo de caixa ao longo do mês.`
-      : `A projeção de fechamento adiciona <b>${fmtS(variacao)}</b> à posição atual, reforçando ganho de liquidez no período.`
+      ? `A projeção indica redução de <b>${fmtS(Math.abs(variacao))}</b> até o fechamento.`
+      : `A projeção indica aumento de <b>${fmtS(variacao)}</b> até o fechamento.`
   });
   alerts.push({
     cls: cobertura > 100 ? 'danger' : cobertura > 75 ? 'warn' : 'success',
-    title:'Cobertura dos desembolsos previstos',
-    text: `As saídas previstas consomem <b>${pct(cobertura)}</b> do caixa disponível. ${cobertura > 100 ? 'Sem reforço de entradas, a posição atual não cobre integralmente o mês.' : cobertura > 75 ? 'A folga existe, mas ficou mais estreita e pede disciplina na agenda.' : 'A folga de curto prazo permanece administrável.'}`
+    title:'Cobertura das saídas',
+    text: cobertura > 100
+      ? `As saídas previstas consomem <b>${pct(cobertura)}</b> do caixa atual e já excedem a cobertura disponível.`
+      : cobertura > 75
+        ? `As saídas previstas consomem <b>${pct(cobertura)}</b> do caixa atual, com folga curta no mês.`
+        : `As saídas previstas consomem <b>${pct(cobertura)}</b> do caixa atual, mantendo cobertura administrável.`
   });
   alerts.push({
     cls: conc.pct > 40 ? 'warn' : 'success',
     title:'Concentração bancária',
-    text: `A maior exposição continua em <b>${conc.top?.nome || '—'}</b>, concentrando <b>${pct(conc.pct)}</b> do caixa consolidado. ${conc.pct > 40 ? 'Vale revisar diversificação para reduzir risco operacional e bancário.' : 'A distribuição entre contas permanece em patamar mais equilibrado.'}`
+    text: conc.pct > 40
+      ? `A principal exposição está em <b>${conc.top?.nome || '—'}</b>, com <b>${pct(conc.pct)}</b> do caixa consolidado.`
+      : `A distribuição entre contas segue mais equilibrada, com pico de <b>${pct(conc.pct)}</b> em <b>${conc.top?.nome || '—'}</b>.`
   });
   alerts.push({
     cls: entradasMes < despesasMes ? 'warn' : 'success',
-    title:'Leitura operacional das entradas',
+    title:'Equilíbrio do mês',
     text: entradasMes < despesasMes
-      ? `As entradas previstas do mês ainda não superam as saídas, o que aumenta a dependência da posição de caixa já formada.`
-      : `As entradas previstas superam as saídas do mês, sustentando a leitura de liquidez mais confortável no curto prazo.`
+      ? `As entradas previstas ainda não cobrem as saídas do mês.`
+      : `As entradas previstas já cobrem as saídas do mês.`
   });
   renderAlertGrid('alertasSaldos', alerts);
 }
@@ -11219,31 +11361,31 @@ function renderAlertasFluxo(){
 
   alerts.push({
     cls: saldo >= 0 ? 'success' : 'danger',
-    title:'Resultado acumulado do fluxo',
+    title:'Fluxo acumulado',
     text: saldo >= 0
-      ? `O fluxo acumulado segue positivo em <b>${fmtS(saldo)}</b>, mas essa leitura precisa ser validada junto da relação entre entradas e saídas do período.`
-      : `O fluxo acumulado está negativo em <b>${fmtS(Math.abs(saldo))}</b>, configurando consumo líquido de caixa no período.`
+      ? `O fluxo acumulado permanece positivo em <b>${fmtS(saldo)}</b>.`
+      : `O fluxo acumulado está negativo em <b>${fmtS(Math.abs(saldo))}</b>.`
   });
   alerts.push({
     cls: desp > rec ? 'danger' : 'success',
     title:'Geração operacional',
     text: desp > rec
-      ? `As saídas acumuladas superam as entradas em <b>${fmtS(desp-rec)}</b>, indicando que o caixa atual está sendo sustentado por saldo trazido de períodos anteriores.`
-      : `As entradas acumuladas superam as saídas em <b>${fmtS(rec-desp)}</b>, sustentando geração operacional positiva de caixa.`
+      ? `As saídas acumuladas superam as entradas em <b>${fmtS(desp-rec)}</b>.`
+      : `As entradas acumuladas superam as saídas em <b>${fmtS(rec-desp)}</b>.`
   });
   alerts.push({
     cls: riscoIdx >= 0 ? 'danger' : 'success',
-    title:'Pressão futura de liquidez',
+    title:'Risco projetado',
     text: riscoIdx >= 0
-      ? `A projeção aponta saldo negativo a partir de <b>${D.months[riscoIdx]}</b>, com piso estimado em <b>${fmtS(menor)}</b>.`
-      : `O cenário atual não projeta meses com saldo negativo; o menor saldo esperado permanece em <b>${fmtS(menor)}</b>.`
+      ? `A projeção indica saldo negativo a partir de <b>${D.months[riscoIdx]}</b>, com piso em <b>${fmtS(menor)}</b>.`
+      : `O cenário atual não projeta meses com saldo negativo; o menor saldo esperado é <b>${fmtS(menor)}</b>.`
   });
   alerts.push({
     cls: gap >= 0 ? 'success' : 'warn',
-    title:`Aderência ao ${nomeCenarioAtual()}`,
+    title:`Desvio vs ${nomeCenarioAtual()}`,
     text: gap >= 0
-      ? `O realizado está <b>${fmtS(gap)}</b> acima da referência do cenário, reforçando execução melhor que o esperado.`
-      : `O realizado está <b>${fmtS(Math.abs(gap))}</b> abaixo da referência do cenário, recomendando acompanhamento mais próximo das próximas competências.`
+      ? `O realizado está <b>${fmtS(gap)}</b> acima da referência do cenário.`
+      : `O realizado está <b>${fmtS(Math.abs(gap))}</b> abaixo da referência do cenário.`
   });
   renderAlertGrid('alertasFluxo', alerts);
 }
@@ -11268,30 +11410,30 @@ function renderAlertasReceitas(){
   const alerts = [];
   alerts.push({
     cls: assertiv >= 99 ? 'success' : assertiv >= 97 ? 'warn' : 'danger',
-    title:'Qualidade do faturamento',
-    text:`As devoluções e cancelamentos somam <b>${fmtS(devol)}</b>, mantendo conversão líquida de <b>${pct(assertiv)}</b> sobre o faturamento bruto.`
+    title:'Conversão do faturamento',
+    text:`Devoluções e cancelamentos somam <b>${fmtS(devol)}</b>, mantendo conversão líquida de <b>${pct(assertiv)}</b>.`
   });
   if(superacao !== null){
     alerts.push({
       cls: superacao < 0 ? 'warn' : superacao > 30 ? 'success' : 'success',
-      title:'Receita frente à base histórica',
+      title:'Receita vs base',
       text: superacao >= 0
-        ? `A receita recebida supera a base pessimista do período em <b>${pct(superacao)}</b>, o que sustenta leitura favorável da execução comercial.`
-        : `A receita recebida está <b>${pct(Math.abs(superacao))}</b> abaixo da base pessimista do período, pedindo aceleração das próximas competências.`
+        ? `A receita recebida supera a base pessimista do período em <b>${pct(superacao)}</b>.`
+        : `A receita recebida está <b>${pct(Math.abs(superacao))}</b> abaixo da base pessimista do período.`
     });
   }
   if(evo !== null){
     alerts.push({
       cls: evo < -10 ? 'warn' : evo > 10 ? 'success' : 'success',
-      title:'Ritmo mensal mais recente',
-      text:`A última variação mensal disponível foi de <b>${pct(evo)}</b>. ${evo < -10 ? 'O ritmo recente perdeu força e merece acompanhamento de curto prazo.' : 'O comportamento recente permanece compatível com continuidade operacional.'}`
+      title:'Ritmo recente',
+      text:`A última variação mensal disponível foi de <b>${pct(evo)}</b>. ${evo < -10 ? 'O ritmo perdeu força no curto prazo.' : 'O comportamento recente segue compatível com a operação.'}`
     });
   }
   if(cresc !== null){
     alerts.push({
       cls: cresc < 0 ? 'warn' : 'success',
       title:'Comparação anual',
-      text:`Na comparação com o mesmo período do ano anterior, a receita registra <b>${pct(cresc)}</b>. ${cresc < 0 ? 'A base comparativa ficou mais desafiadora.' : 'Há ganho de tração frente ao ano anterior.'}`
+      text:`Na comparação com o mesmo período do ano anterior, a receita registra <b>${pct(cresc)}</b>. ${cresc < 0 ? 'A base anual ficou mais pressionada.' : 'Há ganho de tração frente ao ano anterior.'}`
     });
   }
   renderAlertGrid('alertasReceitas', alerts.slice(0,4));
@@ -11313,27 +11455,27 @@ function renderAlertasDespesas(){
   const alerts = [];
   alerts.push({
     cls: percTop > 75 ? 'warn' : 'success',
-    title:'Concentração da estrutura gerenciável',
-    text:`As três principais linhas — <b>${top3.map(c=>c.nome).join(', ') || '—'}</b> — representam <b>${pct(percTop)}</b> do total monitorado. ${percTop > 75 ? 'A pressão está muito concentrada e facilita priorização.' : 'A estrutura está mais distribuída entre categorias.'}`
+    title:'Concentração das despesas',
+    text:`As três principais linhas — <b>${top3.map(c=>c.nome).join(', ') || '—'}</b> — representam <b>${pct(percTop)}</b> do total monitorado. ${percTop > 75 ? 'A pressão está concentrada em poucas frentes.' : 'A estrutura está mais distribuída entre categorias.'}`
   });
   if(top3[0]){
     alerts.push({
       cls: 'warn',
-      title:'Primeira frente de atuação',
-      text:`A maior pressão individual está em <b>${top3[0].nome}</b>, com acumulado de <b>${fmtS(top3[0].acum)}</b>. É a principal alavanca para renegociação ou ganho de eficiência.`
+      title:'Maior frente de pressão',
+      text:`A maior linha individual está em <b>${top3[0].nome}</b>, com acumulado de <b>${fmtS(top3[0].acum)}</b>.`
     });
   }
   if(foraPadrao.length){
     alerts.push({
       cls:'danger',
-      title:'Categorias fora do padrão',
-      text:`Há desvio relevante em <b>${foraPadrao.map(c=>c.nome).join(' e ')}</b>, considerando %Evo M/M e %Cresc. vs AA. Isso merece validação imediata da causa.`
+      title:'Desvio de categoria',
+      text:`Há desvio relevante em <b>${foraPadrao.map(c=>c.nome).join(' e ')}</b>, considerando evolução mensal e comparação anual.`
     });
   } else {
     alerts.push({
       cls:'success',
-      title:'Comportamento recente sob controle',
-      text:`As categorias monitoradas não apresentam desvio relevante nas leituras de evolução mensal e comparação anual.`
+      title:'Comportamento recente',
+      text:`As categorias monitoradas não apresentam desvio relevante nas leituras recentes.`
     });
   }
   const fin = cats.find(c=>c.nome==='Financeira');
@@ -11397,14 +11539,14 @@ function renderInsightsSaldos(){
   const cards = [];
   cards.push(insightCard('Leitura de liquidez',
     variacao >= 0
-      ? `A posição atual não apenas sustenta a operação, como projeta acréscimo de <b>${fmtS(variacao)}</b> até o fechamento do mês.`
-      : `A projeção aponta redução de <b>${fmtS(Math.abs(variacao))}</b> até o fechamento, o que transforma a gestão diária de pagamentos em ponto central.`));
-  cards.push(insightCard('Dependência das entradas futuras',
+      ? `A posição atual sustenta a operação e ainda projeta ganho de caixa até o fechamento.`
+      : `O mês está sendo absorvido pelo caixa já disponível, com redução projetada até o fechamento.`));
+  cards.push(insightCard('Conversão do mês',
     entradasMes >= despesasMes
-      ? `As entradas previstas já cobrem as saídas do mês, reduzindo dependência do caixa parado em conta.`
-      : `As saídas previstas seguem acima das entradas do mês, então a folga atual depende da posição de caixa já acumulada.`));
-  cards.push(insightCard('Risco de concentração',
-    `A principal exposição está em <b>${conc.top?.nome || '—'}</b>, com <b>${pct(conc.pct)}</b> do caixa consolidado. Esse ponto merece monitoramento sob a ótica de diversificação e contingência.`));
+      ? `A agenda projetada indica equilíbrio operacional entre entradas e saídas no curto prazo.`
+      : `A agenda do mês ainda depende de conversão de entradas e disciplina na agenda de pagamentos.`));
+  cards.push(insightCard('Estrutura bancária',
+    `A liquidez permanece concentrada em <b>${conc.top?.nome || '—'}</b>, o que reforça a leitura de dependência de poucas contas para sustentação do caixa.`));
   const el = document.getElementById('insightsSaldos');
   if(el) el.innerHTML = cards.join('');
 }
@@ -11419,18 +11561,18 @@ function renderInsightsFluxo(){
   const riscoIdx = saldoPrev.findIndex(v => Number(v)<0);
   const menor = saldoPrev.length ? Math.min(...saldoPrev) : 0;
   const cards = [];
-  cards.push(insightCard('Motor do resultado',
+  cards.push(insightCard('Leitura operacional',
     desp>rec
-      ? `A operação está consumindo caixa: as saídas já superam as entradas em <b>${fmtS(desp-rec)}</b>.`
-      : `A operação está gerando caixa: as entradas superam as saídas em <b>${fmtS(rec-desp)}</b>.`));
-  cards.push(insightCard('Comparação com a referência',
+      ? `A operação do período ainda consome caixa e depende de saldo trazido para sustentar o fechamento.`
+      : `A operação do período já gera caixa e melhora a sustentação do saldo ao longo dos meses.`));
+  cards.push(insightCard('Leitura do cenário',
     gap>=0
-      ? `O realizado está <b>${fmtS(gap)}</b> acima do ${nomeCenarioAtual()}, sugerindo execução melhor do que a referência adotada.`
-      : `O realizado está <b>${fmtS(Math.abs(gap))}</b> abaixo do ${nomeCenarioAtual()}, pedindo atenção maior sobre os próximos meses.`));
-  cards.push(insightCard('Próximo gatilho de decisão',
+      ? `O realizado opera acima da referência adotada, indicando execução melhor que o cenário base.`
+      : `O realizado opera abaixo da referência adotada, mostrando distância entre o cenário e a entrega atual.`));
+  cards.push(insightCard('Ponto de atenção futuro',
     riscoIdx>=0
-      ? `O mês crítico projetado é <b>${D.months[riscoIdx]}</b>, quando o saldo estimado chega a <b>${fmtS(menor)}</b>. Esse é o ponto para antecipar decisões de cobertura.`
-      : `Sem meses negativos no cenário atual, o foco pode migrar de sobrevivência para eficiência e preservação do saldo mínimo.`));
+      ? `O primeiro mês crítico projetado é <b>${D.months[riscoIdx]}</b>, antecipando a janela em que a cobertura precisará ser reforçada.`
+      : `Sem meses negativos no cenário atual, a discussão pode migrar de cobertura para eficiência do caixa mínimo.`));
   const el = document.getElementById('insightsFluxo');
   if(el) el.innerHTML = cards.join('');
 }
@@ -11450,20 +11592,20 @@ function renderInsightsReceitas(){
   const assertiv = bruto > 0 ? (liq / bruto * 100) : 0;
   const cards = [];
   if(superacao !== null){
-    cards.push(insightCard('Força da execução comercial',
+    cards.push(insightCard('Leitura da execução comercial',
       superacao>=0
-        ? `A receita entregue já está <b>${pct(superacao)}</b> acima da base pessimista do período, sugerindo execução melhor que a referência histórica.`
-        : `A receita ainda está <b>${pct(Math.abs(superacao))}</b> abaixo da base pessimista, o que torna as próximas competências decisivas.`));
+        ? `A execução comercial roda acima da referência histórica mais conservadora.`
+        : `A execução comercial ainda está abaixo da referência histórica mais conservadora.`));
   }
   if(evo !== null){
-    cards.push(insightCard('Tração de curtíssimo prazo',
-      `A última variação mensal de receita foi de <b>${pct(evo)}</b>, indicador útil para captar aceleração ou perda de fôlego comercial antes do fechamento.`));
+    cards.push(insightCard('Tração de curto prazo',
+      `A última variação mensal de receita foi de <b>${pct(evo)}</b>, sinalizando o ritmo recente de conversão comercial.`));
   }
-  cards.push(insightCard('Conversão do faturamento',
-    `A assertividade entre faturamento bruto e líquido está em <b>${pct(assertiv)}</b>. Quanto maior esse índice, menor a erosão de receita por devoluções e cancelamentos.`));
+  cards.push(insightCard('Qualidade da receita',
+    `A conversão entre faturamento bruto e líquido está em <b>${pct(assertiv)}</b>, mostrando o nível de erosão por devoluções e cancelamentos.`));
   if(cresc !== null){
-    cards.push(insightCard('Leitura contra a base anual',
-      `Frente ao mesmo período do ano anterior, a receita varia <b>${pct(cresc)}</b>, o que ajuda a separar crescimento estrutural de oscilações pontuais.`));
+    cards.push(insightCard('Base anual',
+      `A comparação com o mesmo período do ano anterior ajuda a separar ganho estrutural de oscilação pontual da receita.`));
   }
   const el = document.getElementById('insightsReceitas');
   if(el) el.innerHTML = cards.slice(0,4).join('');
@@ -11483,19 +11625,19 @@ function renderInsightsDespesas(){
   const fora = cats.filter(c => (c.evo!==null && c.evo>20) || (c.cresc!==null && c.cresc>30));
   const cards = [];
   if(top3.length){
-    cards.push(insightCard('Onde está a pressão estrutural',
-      `As linhas <b>${top3.map(c=>c.nome).join(', ')}</b> concentram <b>${pct(percTop)}</b> do total monitorado. É nelas que a gestão captura maior impacto com menor dispersão.`));
+    cards.push(insightCard('Leitura da estrutura',
+      `As linhas <b>${top3.map(c=>c.nome).join(', ')}</b> concentram <b>${pct(percTop)}</b> do total monitorado, definindo onde a gestão captura maior impacto.`));
   }
   if(fora.length){
-    cards.push(insightCard('Sinal de desvio',
-      `As categorias <b>${fora.map(c=>c.nome).join(' e ')}</b> exibem leitura fora do padrão em evolução mensal ou comparação anual, o que sugere causa específica e não apenas efeito de mix.`));
+    cards.push(insightCard('Leitura do desvio',
+      `As categorias <b>${fora.map(c=>c.nome).join(' e ')}</b> saem do padrão recente, indicando causa específica e não apenas efeito de mix.`));
   } else {
-    cards.push(insightCard('Estrutura mais estável',
-      `Sem desvios relevantes nas leituras recentes, a discussão pode migrar de contenção emergencial para eficiência contínua.`));
+    cards.push(insightCard('Estrutura estável',
+      `Sem desvios relevantes nas leituras recentes, a discussão pode migrar de contenção para eficiência contínua.`));
   }
   if(top3[0]){
-    cards.push(insightCard('Prioridade de negociação',
-      `A maior linha individual é <b>${top3[0].nome}</b>, com <b>${fmtS(top3[0].acum)}</b>. Esse é o melhor ponto de partida para renegociação ou revisão de processo.`));
+    cards.push(insightCard('Alavanca principal',
+      `A maior linha individual é <b>${top3[0].nome}</b>, o que define a principal alavanca de eficiência da estrutura.`));
   }
   const el = document.getElementById('insightsDespesas');
   if(el) el.innerHTML = cards.slice(0,3).join('');
@@ -11506,16 +11648,16 @@ function renderInsightsResultado(){
   const d = resultadoMetricas(emp);
   const rec = d.recAcum || 0;
   const cards = [];
-  cards.push(insightCard('Qualidade do resultado operacional',
-    `O EBITDA operacional recorrente soma <b>${fmtS(d.ebitdaAjustado)}</b>, com margem EBITDA operacional de <b>${pct(d.margemEbitda)}</b>, calculado sobre a receita recorrente de venda e a estrutura operacional elegível.`));
+  cards.push(insightCard('Qualidade do resultado',
+    `O EBITDA operacional recorrente soma <b>${fmtS(d.ebitdaAjustado)}</b>, mostrando a capacidade da operação de gerar resultado antes das despesas não operacionais.`));
   if(d.pontoEquilibrio){
-    cards.push(insightCard('Distância do equilíbrio',
+    cards.push(insightCard('Ponto de equilíbrio',
       rec >= d.pontoEquilibrio
-        ? `A receita de venda já supera o ponto de equilíbrio estimado em <b>${fmtS(d.pontoEquilibrio)}</b>, o que melhora a sustentação econômica do negócio.`
-        : `A receita de venda ainda não alcança o ponto de equilíbrio estimado em <b>${fmtS(d.pontoEquilibrio)}</b>, mantendo a estrutura pressionada.`));
+        ? `A receita de venda já supera o ponto de equilíbrio estimado em <b>${fmtS(d.pontoEquilibrio)}</b>.`
+        : `A receita de venda ainda não alcança o ponto de equilíbrio estimado em <b>${fmtS(d.pontoEquilibrio)}</b>.`));
   }
-  cards.push(insightCard('Estrutura considerada nos KPIs',
-    `No EBITDA entram <b>Despesa Relativas a Venda</b>, <b>Impostos</b> e as despesas operacionais elegíveis de <b>Fixa</b>, <b>Pessoal</b>, <b>Variável</b>, <b>Despesa Comercial</b> e <b>Despesa Logística</b>. Na margem líquida entram também <b>Consultoria</b>, <b>Despesa de Sócios</b>, <b>Despesa Financeira</b> e <b>Outras Despesas</b>. <b>Imobilizado</b> permanece fora para não misturar investimento com resultado do período.`));
+  cards.push(insightCard('Escopo dos KPIs',
+    `Os KPIs de resultado isolam operação recorrente e evitam misturar investimento com desempenho do período.`));
   const el = document.getElementById('insightsResultado');
   if(el) el.innerHTML = cards.join('');
 }
@@ -11977,6 +12119,93 @@ function renderFluxo(){
 // ════════════════════════════════════════
 // 3. RECEITAS
 // ════════════════════════════════════════
+function getReceitasGapRefYear(){
+  try{
+    const parts = String(data_atualizacao||'').split('/');
+    const y = parseInt(parts[2],10);
+    return isNaN(y) ? (new Date()).getFullYear() : y;
+  }catch(e){
+    return (new Date()).getFullYear();
+  }
+}
+let _receitasGapScenarioKey = null;
+function getReceitasGapOptions(){
+  const fromData = D.kpis?.gap_fat_receb?.options;
+  if(Array.isArray(fromData) && fromData.length) return fromData;
+  const refYear = getReceitasGapRefYear();
+  return [
+    {key:`${refYear-1}x${refYear-1}`, emit_year:refYear-1, rec_year:refYear-1, label:`${refYear-1}x${refYear-1}`},
+    {key:`${refYear-1}x${refYear}`, emit_year:refYear-1, rec_year:refYear, label:`${refYear-1}x${refYear}`},
+    {key:`${refYear}x${refYear}`, emit_year:refYear, rec_year:refYear, label:`${refYear}x${refYear}`}
+  ];
+}
+function ensureReceitasGapScenario(){
+  const options = getReceitasGapOptions();
+  if(!options.length) return null;
+  const valid = options.some(opt => opt.key === _receitasGapScenarioKey);
+  if(!valid){
+    const refYear = getReceitasGapRefYear();
+    const current = options.find(opt => opt.emit_year === refYear && opt.rec_year === refYear);
+    _receitasGapScenarioKey = (current || options[0]).key;
+  }
+  return _receitasGapScenarioKey;
+}
+function buildReceitasGapSwitch(){
+  const container = document.getElementById('gapReceitasSwitch');
+  if(!container) return;
+  const options = getReceitasGapOptions();
+  const activeKey = ensureReceitasGapScenario();
+  container.innerHTML = options.map(opt => `
+    <button
+      class="ag-month-btn ${opt.key === activeKey ? 'active' : ''}"
+      onclick="setReceitasGapScenario('${opt.key}')"
+      type="button"
+    >${opt.label}</button>
+  `).join('');
+}
+function setReceitasGapScenario(key){
+  _receitasGapScenarioKey = key;
+  renderReceitas();
+}
+function receitaGapCard(info){
+  const gap = Number(info?.gap) || 0;
+  const recebido = Number(info?.recebido) || 0;
+  const faturado = Number(info?.faturado) || 0;
+  const pctRecebido = Number(info?.pct_recebido) || 0;
+  const saldoAberto = Math.max(0, faturado - recebido);
+  return `
+    <div class="kpi-card orange gap-kpi-card">
+      <div class="gap-kpi-head">
+        <div class="kpi-icon">🔄</div>
+        <div class="gap-kpi-badge">Cenário de recebimento</div>
+      </div>
+      <div class="kpi-label">Gap Faturado x Recebido</div>
+      <div class="ag-month-switch gap-kpi-switch" id="gapReceitasSwitch"></div>
+
+      <div class="gap-kpi-main">
+        <div class="gap-kpi-caption">Gap apurado</div>
+        <div class="kpi-value ${gap <= 0 ? 'pos' : ''}">${fmtS(gap)}</div>
+        <div class="gap-kpi-subvalue">Saldo ainda não convertido em caixa sobre <strong>${fmtS(faturado)}</strong> faturados</div>
+      </div>
+
+      <div class="gap-kpi-divider"></div>
+
+      <div class="gap-kpi-grid">
+        <div class="gap-kpi-stat">
+          <div class="gap-kpi-stat-label">Recebido</div>
+          <div class="gap-kpi-stat-value">${fmtS(recebido)}</div>
+        </div>
+        <div class="gap-kpi-stat">
+          <div class="gap-kpi-stat-label">Cobertura</div>
+          <div class="gap-kpi-stat-value is-percent">${pct(pctRecebido)}</div>
+        </div>
+      </div>
+
+      <div class="gap-kpi-foot">Em aberto no cenário: <strong>${fmtS(saldoAberto)}</strong></div>
+    </div>
+  `;
+}
+
 function renderReceitas(){
   updateScenarioTexts();
   const emp = _emp.receitas;
@@ -11998,12 +12227,18 @@ function renderReceitas(){
   const outrasRec = a.outras_receitas;
   const recMeses = m.receita_total.real.filter(v=>v>0);
   const mediaRec = recMeses.length>0?recMeses.reduce((a,b)=>a+b,0)/recMeses.length:0;
+  const gapScenarioKey = ensureReceitasGapScenario();
+  const gapInfo = D.kpis?.gap_fat_receb?.scenarios?.[gapScenarioKey]?.[emp]
+    || D.kpis?.gap_fat_receb?.scenarios?.[gapScenarioKey]?.emp
+    || {gap:0, recebido:0, faturado:0, pct_recebido:0};
 
   document.getElementById('kpiReceitas').innerHTML =
     kpiCard('gold','💰','Fat. Bruto Acumulado',fmtS(fatBruto),'2026 YTD') +
     kpiCard('green','✅','Fat. Líquido Acumulado',fmtS(fatLiq),'Após devoluções') +
     kpiCard('teal','📥','Receita Total Recebida',fmtS(recAcum),'Entradas realizadas') +
-    kpiCard('navy','📊','Média Mensal',fmtS(mediaRec),`Sobre ${recMeses.length} meses com dados`);
+    kpiCard('navy','📊','Média Mensal',fmtS(mediaRec),`Sobre ${recMeses.length} meses com dados`) +
+    receitaGapCard(gapInfo);
+  buildReceitasGapSwitch();
 
   // Receita mensal
   killChart('chartReceitaMensal');
@@ -13433,7 +13668,7 @@ function parseCashFlow(buf){
   }catch(e){}
 
 
-  // ── KPI: GAP faturado x recebido (somente recebimentos de notas emitidas no ano de referência) ──
+  // ── KPI: GAP faturado x recebido (cenários por ano de emissão × ano de recebimento) ──
   try{
     const wsRec = wb.Sheets['Base Recebimentos'];
     if(wsRec){
@@ -13445,11 +13680,34 @@ function parseCashFlow(buf){
           return isNaN(y) ? (new Date()).getFullYear() : y;
         }catch(e){ return (new Date()).getFullYear(); }
       })();
+      const prevYear = refYear - 1;
+      const scenarioPairs = [
+        [prevYear, prevYear],
+        [prevYear, refYear],
+        [refYear, refYear]
+      ];
+      const makeScenarioMeta = ([emitYear, recYear]) => ({
+        key: `${emitYear}x${recYear}`,
+        emit_year: emitYear,
+        rec_year: recYear,
+        label: `${emitYear}x${recYear}`
+      });
 
-      const gapAcc = {
-        emp:{recebido:0, monthly:new Array(12).fill(0)},
-        marck:{recebido:0, monthly:new Array(12).fill(0)},
-        grattano:{recebido:0, monthly:new Array(12).fill(0)}
+      kpis.gap_fat_receb = {
+        options: scenarioPairs.map(makeScenarioMeta),
+        scenarios: {}
+      };
+
+      const gapAcc = {};
+      scenarioPairs.forEach(pair => {
+        const meta = makeScenarioMeta(pair);
+        gapAcc[meta.key] = {emp:{recebido:0}, marck:{recebido:0}, grattano:{recebido:0}};
+      });
+
+      const emittedMaps = {
+        emp: {[prevYear]:new Map(), [refYear]:new Map()},
+        marck: {[prevYear]:new Map(), [refYear]:new Map()},
+        grattano: {[prevYear]:new Map(), [refYear]:new Map()}
       };
 
       const toNumGap = x => {
@@ -13462,48 +13720,142 @@ function parseCashFlow(buf){
         const n = parseFloat(x);
         return isNaN(n) ? 0 : n;
       };
-
-      recRows.forEach(row=>{
+      const normKey = s => String(s||'')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g,'')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g,' ')
+        .trim();
+      const pickRowValue = (row, aliases) => {
+        const wanted = aliases.map(normKey);
+        const keys = Object.keys(row||{});
+        for(let i=0;i<keys.length;i++){
+          if(wanted.includes(normKey(keys[i]))) return row[keys[i]];
+        }
+        return null;
+      };
+      const getEmpresaBucket = row => {
         const empresa = String(row['Minha Empresa (Nome Fantasia)']||'').toUpperCase();
-        const bucket = empresa.includes('GRATTANO') ? 'grattano' : empresa.includes('MARCK') ? 'marck' : null;
+        return empresa.includes('GRATTANO') ? 'grattano' : empresa.includes('MARCK') ? 'marck' : null;
+      };
+      const getInvoiceAmount = row => {
+        const aliases = [
+          'Faturado',
+          'Valor da Nota',
+          'Valor Nota',
+          'Valor Total da Nota',
+          'Valor Total',
+          'Valor Original',
+          'Valor Bruto',
+          'Valor NF',
+          'Total NF',
+          'Total da Nota',
+          'Total do Documento',
+          'Receita Bruta',
+          'A Receber'
+        ];
+        for(let i=0;i<aliases.length;i++){
+          const raw = pickRowValue(row,[aliases[i]]);
+          const val = Math.abs(toNumGap(raw));
+          if(val > 0) return val;
+        }
+        return 0;
+      };
+      const getDocId = row => String(
+        pickRowValue(row,[
+          'Número da Nota',
+          'Numero da Nota',
+          'Nº da Nota',
+          'NF',
+          'Nota Fiscal',
+          'Número NF',
+          'Numero NF',
+          'Número Nota',
+          'Numero Nota',
+          'Documento',
+          'N Documento',
+          'Número do Documento',
+          'Numero do Documento',
+          'Origem'
+        ]) || ''
+      ).trim();
+      const getClientName = row => String(
+        pickRowValue(row,[
+          'Cliente ou Fornecedor (Nome Fantasia)',
+          'Cliente',
+          'Fornecedor',
+          'Razão Social',
+          'Razao Social',
+          'Nome Fantasia'
+        ]) || ''
+      ).trim();
+      const getRecebido = row => Math.abs(toNumGap(
+        pickRowValue(row,['Recebido','Pago ou Recebido','Valor Recebido'])
+      ));
+
+      recRows.forEach((row, idx) => {
+        const bucket = getEmpresaBucket(row);
         if(!bucket) return;
 
-        const dtRec = _xlDate(row['Data de Crédito ou Débito (No Extrato)']);
-        const dtEm = _xlDate(row['Emissão']);
-        const recebido = Math.abs(toNumGap(row['Recebido'] || row['Pago ou Recebido']));
+        const dtEm = _xlDate(pickRowValue(row,['Emissão','Data Emissão','Dt Emissão']));
+        if(!(dtEm instanceof Date)) return;
 
-        if(!(dtRec instanceof Date) || !(dtEm instanceof Date) || recebido <= 0) return;
-        if(dtRec.getFullYear() !== refYear) return;
-        if(dtEm.getFullYear() !== refYear) return;
+        const emitYear = dtEm.getFullYear();
+        if(![prevYear, refYear].includes(emitYear)) return;
 
-        gapAcc.emp.recebido += recebido;
-        gapAcc.emp.monthly[dtRec.getMonth()] += recebido;
-        gapAcc[bucket].recebido += recebido;
-        gapAcc[bucket].monthly[dtRec.getMonth()] += recebido;
+        const invoiceAmount = getInvoiceAmount(row);
+        const clientName = getClientName(row);
+        const docId = getDocId(row);
+        const invoiceKey = [
+          bucket,
+          emitYear,
+          docId || `row-${idx}`,
+          clientName,
+          dtEm.toISOString().slice(0,10),
+          invoiceAmount > 0 ? invoiceAmount.toFixed(2) : '0.00'
+        ].join('|');
+
+        if(invoiceAmount > 0){
+          if(!emittedMaps.emp[emitYear].has(invoiceKey)) emittedMaps.emp[emitYear].set(invoiceKey, invoiceAmount);
+          if(!emittedMaps[bucket][emitYear].has(invoiceKey)) emittedMaps[bucket][emitYear].set(invoiceKey, invoiceAmount);
+        }
+
+        const dtRec = _xlDate(pickRowValue(row,['Data de Crédito ou Débito (No Extrato)','Data Crédito ou Débito','Data Recebimento','Recebimento']));
+        const recebido = getRecebido(row);
+        if(!(dtRec instanceof Date) || !(recebido > 0)) return;
+
+        const recYear = dtRec.getFullYear();
+        const scenarioKey = `${emitYear}x${recYear}`;
+        if(!gapAcc[scenarioKey]) return;
+
+        gapAcc[scenarioKey].emp.recebido += recebido;
+        gapAcc[scenarioKey][bucket].recebido += recebido;
       });
 
-      const fatAcumByBucket = {
-        emp: (acum?.fat_bruto || 0),
-        marck: (acum_marck?.fat_bruto || 0),
-        grattano: (acum_grattano?.fat_bruto || 0)
-      };
-      const fatMonthlyByBucket = {
-        emp: (monthly?.fat_bruto?.real || new Array(12).fill(0)),
-        marck: (monthly_marck?.fat_bruto?.real || new Array(12).fill(0)),
-        grattano: (monthly_grattano?.fat_bruto?.real || new Array(12).fill(0))
-      };
-
-      ['emp','marck','grattano'].forEach(key=>{
-        const faturado = Number(fatAcumByBucket[key]) || 0;
-        const recebido = Math.round((gapAcc[key].recebido || 0) * 100) / 100;
-        const monthlyGap = new Array(12).fill(0).map((_,i)=> ((Number(fatMonthlyByBucket[key]?.[i]) || 0) - (Number(gapAcc[key].monthly?.[i]) || 0)));
-        kpis.gap_fat_receb_2026[key] = {
-          faturado: Math.round(faturado * 100) / 100,
-          recebido,
-          gap: Math.round((faturado - recebido) * 100) / 100,
-          monthly_gap: monthlyGap.map(v=>Math.round(v * 100) / 100),
-          monthly_recebido: gapAcc[key].monthly.map(v=>Math.round(v * 100) / 100)
+      scenarioPairs.forEach(pair => {
+        const meta = makeScenarioMeta(pair);
+        const emitYear = meta.emit_year;
+        const scenarioKey = meta.key;
+        const faturadoByBucket = {
+          emp: Array.from(emittedMaps.emp[emitYear].values()).reduce((s,v)=>s+(Number(v)||0),0),
+          marck: Array.from(emittedMaps.marck[emitYear].values()).reduce((s,v)=>s+(Number(v)||0),0),
+          grattano: Array.from(emittedMaps.grattano[emitYear].values()).reduce((s,v)=>s+(Number(v)||0),0)
         };
+        kpis.gap_fat_receb.scenarios[scenarioKey] = {};
+        ['emp','marck','grattano'].forEach(key => {
+          const faturado = Math.round((Number(faturadoByBucket[key]) || 0) * 100) / 100;
+          const recebido = Math.round((Number(gapAcc[scenarioKey][key].recebido) || 0) * 100) / 100;
+          const gap = Math.round((faturado - recebido) * 100) / 100;
+          const pctRecebido = faturado > 0 ? Math.round((recebido / faturado) * 1000) / 10 : 0;
+          kpis.gap_fat_receb.scenarios[scenarioKey][key] = {
+            faturado,
+            recebido,
+            gap,
+            pct_recebido: pctRecebido,
+            emit_year: meta.emit_year,
+            rec_year: meta.rec_year
+          };
+        });
       });
     }
   }catch(e){}
@@ -13649,7 +14001,9 @@ function parseCashFlow(buf){
         else if(type==='pagamentos_prev') dt = _xlDate(row['Previsão']||row['Vencimento']);
         else if(type==='recebimentos_real') dt = _xlDate(row['Data de Crédito ou Débito (No Extrato)']);
         else dt = _xlDate(row['Previsão']||row['Vencimento']);
-        if(!dt||dt.getMonth()!==_curMonth||dt.getFullYear()!==_curYear) return;
+        if(!dt) return;
+        const monthDistance = (dt.getFullYear() - _curYear) * 12 + (dt.getMonth() - _curMonth);
+        if(monthDistance < 0 || monthDistance > 2) return;
 
         // Valor
         let valor = 0;
@@ -14096,6 +14450,91 @@ function agNormalizeData(data){
 }
 AG_DATA = agNormalizeData(AG_DATA);
 
+const AG_MONTH_STATE = {
+  receitas: 0,
+  despesas: 0
+};
+
+function agGetRollingQuarterMonths(baseDate = new Date()){
+  const months = [];
+  const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+  for(let i=0;i<3;i++){
+    const d = new Date(start.getFullYear(), start.getMonth()+i, 1);
+    months.push({
+      offset: i,
+      month: d.getMonth(),
+      year: d.getFullYear(),
+      key: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,
+      shortLabel: d.toLocaleDateString('pt-BR', {month:'short'}).replace('.','').replace(/^./, c => c.toUpperCase()),
+      fullLabel: d.toLocaleDateString('pt-BR', {month:'long', year:'numeric'}).replace(/^./, c => c.toUpperCase())
+    });
+  }
+  return months;
+}
+
+function agGetSelectedMonthMeta(offset = 0){
+  return agGetRollingQuarterMonths().find(m => m.offset === offset) || agGetRollingQuarterMonths()[0];
+}
+
+function agBuildMonthSwitch(type){
+  const containerId = type === 'receitas' ? 'agendaReceitasMonthSwitch' : 'agendaDespesasMonthSwitch';
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  const activeOffset = Number(AG_MONTH_STATE[type] || 0);
+  container.innerHTML = agGetRollingQuarterMonths().map(month => `
+    <button
+      type="button"
+      class="ag-month-btn ${month.offset === activeOffset ? 'active' : ''}"
+      onclick="agSetMonth('${type}', ${month.offset})"
+      aria-pressed="${month.offset === activeOffset ? 'true' : 'false'}"
+    >${month.shortLabel}</button>
+  `).join('');
+}
+
+function agSetMonth(type, offset){
+  AG_MONTH_STATE[type] = Number(offset || 0);
+  agRenderAgenda(type, type === 'receitas' ? 'agendaReceitasContainer' : 'agendaDespesasContainer');
+}
+
+function agFilterCompanyDataByMonth(companyData, offset = 0){
+  const selected = agGetSelectedMonthMeta(offset);
+  if(!companyData?.weeks?.length || !selected){
+    return agNormalizeCompanyData({weeks:[]});
+  }
+
+  const filteredWeeks = [];
+  (companyData.weeks || []).forEach(week => {
+    const days = (week.days || []).map(day => {
+      const items = (day.items || []).filter(item => {
+        if(item?._placeholder) return false;
+        const ref = agToISODate(item.ref_date || item.previsao || item.venc_original || item.venc || item.date || day.date);
+        if(!ref) return false;
+        return ref.slice(0,7) === selected.key;
+      });
+      if(!items.length) return null;
+      return {
+        date: day.date,
+        items,
+        count: items.length,
+        total: Math.round(items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0) * 100) / 100
+      };
+    }).filter(Boolean);
+
+    if(days.length){
+      filteredWeeks.push({
+        week: week.week,
+        start: week.start,
+        end: week.end,
+        days,
+        count: days.reduce((sum, day) => sum + (day.count || 0), 0),
+        total: Math.round(days.reduce((sum, day) => sum + (day.total || 0), 0) * 100) / 100
+      });
+    }
+  });
+
+  return agNormalizeCompanyData({weeks: filteredWeeks});
+}
+
 
 function agFmtMoney(v){
   return new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL', minimumFractionDigits:2}).format(v||0);
@@ -14454,7 +14893,9 @@ function agMergeCompanyData(type){
 function agRenderPanel(type, companyKey, companyData, opts={}){
 
   const cls = type === 'receitas' ? 'ag-receita' : 'ag-despesa';
-  const label = type === 'receitas' ? 'A RECEBER NO MÊS' : 'A PAGAR NO MÊS';
+  const selectedMonth = agGetSelectedMonthMeta(AG_MONTH_STATE[type] || 0);
+  const monthLabel = selectedMonth ? selectedMonth.fullLabel : 'Mês selecionado';
+  const label = type === 'receitas' ? `A RECEBER EM ${monthLabel}` : `A PAGAR EM ${monthLabel}`;
   const topDay = companyData.summary.largest_day;
   const topAccount = companyData.summary.top_account;
   const statusSub = type === 'despesas'
@@ -14591,14 +15032,14 @@ function agRenderPanel(type, companyKey, companyData, opts={}){
       <div class="ag-summary">
         <div class="ag-summary-grid">
           <div class="ag-kpi">
-            <div class="ag-kpi-label">Total do mês</div>
+            <div class="ag-kpi-label">Total do mês selecionado</div>
             <div class="ag-kpi-value">${agFmtShort(companyData.summary.total)}</div>
-            <div class="ag-kpi-sub">${companyData.summary.count} lançamentos do mês</div>
+            <div class="ag-kpi-sub">${companyData.summary.count} lançamentos no período exibido</div>
           </div>
           <div class="ag-kpi">
             <div class="ag-kpi-label">Dias com movimento</div>
             <div class="ag-kpi-value">${companyData.summary.days}</div>
-            <div class="ag-kpi-sub">datas com movimento no mês</div>
+            <div class="ag-kpi-sub">datas com movimento no mês selecionado</div>
           </div>
           <div class="ag-kpi">
             <div class="ag-kpi-label">Maior concentração diária</div>
@@ -14628,21 +15069,25 @@ function agRenderPanel(type, companyKey, companyData, opts={}){
 function agRenderAgenda(type, containerId){
   const root = document.getElementById(containerId);
   if(!root) return;
+  agBuildMonthSwitch(type);
   const emp = (_emp && _emp[type]) || 'emp';
+  const selectedOffset = Number(AG_MONTH_STATE[type] || 0);
 
   if(emp === 'marck' || emp === 'grattano'){
+    const companyData = agFilterCompanyDataByMonth(AG_DATA[type][emp], selectedOffset);
     root.innerHTML = `
       <div class="ag-grid single">
-        ${agRenderPanel(type, emp, AG_DATA[type][emp])}
+        ${agRenderPanel(type, emp, companyData)}
       </div>
     `;
     return;
   }
 
   const merged = agMergeCompanyData(type);
+  const mergedFiltered = agFilterCompanyDataByMonth(merged, selectedOffset);
   root.innerHTML = `
     <div class="ag-grid single">
-      ${agRenderPanel(type, 'emp', merged, {showCompanyCol:true, titleOverride:'Consolidado'})}
+      ${agRenderPanel(type, 'emp', mergedFiltered, {showCompanyCol:true, titleOverride:'Consolidado'})}
     </div>
   `;
 }
