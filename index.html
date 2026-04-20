@@ -13714,6 +13714,11 @@ function parseCashFlow(buf){
         marck: {[prevYear]:0, [refYear]:0},
         grattano: {[prevYear]:0, [refYear]:0}
       };
+      const emittedMaps = {
+        emp: {[prevYear]:new Map(), [refYear]:new Map()},
+        marck: {[prevYear]:new Map(), [refYear]:new Map()},
+        grattano: {[prevYear]:new Map(), [refYear]:new Map()}
+      };
 
       const toNumGap = x => {
         if(x===null||x===undefined||x==='') return 0;
@@ -13748,6 +13753,58 @@ function parseCashFlow(buf){
         const notaFiscal = String(pickRowValue(row,['Nota Fiscal','NF','Numero da Nota']) || '').trim().toUpperCase();
         return categoria === 'clientes revenda de mercadoria' || (notaFiscal && notaFiscal !== 'N/D');
       };
+      const getInvoiceAmount = row => {
+        const aliases = [
+          'Faturado',
+          'Valor da Nota',
+          'Valor Nota',
+          'Valor Total da Nota',
+          'Valor Total',
+          'Valor Original',
+          'Valor Bruto',
+          'Valor NF',
+          'Total NF',
+          'Total da Nota',
+          'Total do Documento',
+          'Receita Bruta',
+          'A Receber',
+          'Valor da Conta'
+        ];
+        for(let i=0;i<aliases.length;i++){
+          const raw = pickRowValue(row,[aliases[i]]);
+          const val = Math.abs(toNumGap(raw));
+          if(val > 0) return val;
+        }
+        return 0;
+      };
+      const getDocId = row => String(
+        pickRowValue(row,[
+          'Número da Nota',
+          'Numero da Nota',
+          'Nº da Nota',
+          'NF',
+          'Nota Fiscal',
+          'Número NF',
+          'Numero NF',
+          'Número Nota',
+          'Numero Nota',
+          'Documento',
+          'N Documento',
+          'Número do Documento',
+          'Numero do Documento',
+          'Origem'
+        ]) || ''
+      ).trim();
+      const getClientName = row => String(
+        pickRowValue(row,[
+          'Cliente ou Fornecedor (Nome Fantasia)',
+          'Cliente',
+          'Fornecedor',
+          'Razão Social',
+          'Razao Social',
+          'Nome Fantasia'
+        ]) || ''
+      ).trim();
       const getRecebido = row => Math.abs(toNumGap(
         pickRowValue(row,['Recebido','Pago ou Recebido','Valor Recebido'])
       ));
@@ -13804,6 +13861,22 @@ function parseCashFlow(buf){
         const emitYear = dtEm.getFullYear();
         if(![prevYear, refYear].includes(emitYear)) return;
 
+        const invoiceAmount = getInvoiceAmount(row);
+        const clientName = getClientName(row);
+        const docId = getDocId(row);
+        const invoiceKey = [
+          bucket,
+          emitYear,
+          docId || `row-${emitYear}-${clientName}`,
+          clientName,
+          dtEm.toISOString().slice(0,10),
+          invoiceAmount > 0 ? invoiceAmount.toFixed(2) : '0.00'
+        ].join('|');
+        if(invoiceAmount > 0){
+          if(!emittedMaps.emp[emitYear].has(invoiceKey)) emittedMaps.emp[emitYear].set(invoiceKey, invoiceAmount);
+          if(!emittedMaps[bucket][emitYear].has(invoiceKey)) emittedMaps[bucket][emitYear].set(invoiceKey, invoiceAmount);
+        }
+
         const dtRec = _xlDate(pickRowValue(row,['Data de Crédito ou Débito (No Extrato)','Data Crédito ou Débito','Data Recebimento','Recebimento']));
         const recebido = getRecebido(row);
         if(!(dtRec instanceof Date) || !(recebido > 0)) return;
@@ -13822,6 +13895,13 @@ function parseCashFlow(buf){
         }
       });
 
+      // Para 2025/ano histórico, usamos a própria base de recebimentos por nota emitida,
+      // pois é a mesma régua usada para relacionar emissão x recebimento.
+      ['emp','marck','grattano'].forEach(key => {
+        faturadoByYear[key][prevYear] = Array.from(emittedMaps[key][prevYear].values())
+          .reduce((sum, value) => sum + (Number(value) || 0), 0);
+      });
+
       scenarioPairs.forEach(pair => {
         const meta = makeScenarioMeta(pair);
         const emitYear = meta.emit_year;
@@ -13834,7 +13914,7 @@ function parseCashFlow(buf){
             .filter(([year]) => Number(year) <= meta.rec_year)
             .reduce((sum, [,value]) => sum + (Number(value) || 0), 0)) * 100) / 100;
           const gap = Math.round((faturado - recebidoAcumulado) * 100) / 100;
-          const pctRecebido = faturado > 0 ? Math.round((recebido / faturado) * 1000) / 10 : 0;
+          const pctRecebido = faturado > 0 ? Math.round((recebidoAcumulado / faturado) * 1000) / 10 : 0;
           kpis.gap_fat_receb.scenarios[scenarioKey][key] = {
             faturado,
             recebido,
