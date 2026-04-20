@@ -12144,9 +12144,7 @@ function ensureReceitasGapScenario(){
   if(!options.length) return null;
   const valid = options.some(opt => opt.key === _receitasGapScenarioKey);
   if(!valid){
-    const refYear = getReceitasGapRefYear();
-    const current = options.find(opt => opt.emit_year === refYear && opt.rec_year === refYear);
-    _receitasGapScenarioKey = (current || options[0]).key;
+    _receitasGapScenarioKey = options[0].key;
   }
   return _receitasGapScenarioKey;
 }
@@ -12168,11 +12166,11 @@ function setReceitasGapScenario(key){
   renderReceitas();
 }
 function receitaGapCard(info){
-  const gap = Number(info?.gap) || 0;
   const recebido = Number(info?.recebido) || 0;
   const faturado = Number(info?.faturado) || 0;
   const pctRecebido = Number(info?.pct_recebido) || 0;
   const saldoAberto = Math.max(0, faturado - recebido);
+  const gapDisplay = saldoAberto > 0 ? -saldoAberto : Math.max(0, recebido - faturado);
   return `
     <div class="kpi-card orange gap-kpi-card">
       <div class="gap-kpi-head">
@@ -12184,7 +12182,7 @@ function receitaGapCard(info){
 
       <div class="gap-kpi-main">
         <div class="gap-kpi-caption">Gap apurado</div>
-        <div class="kpi-value ${gap <= 0 ? 'pos' : ''}">${fmtS(gap)}</div>
+        <div class="kpi-value ${gapDisplay >= 0 ? 'pos' : ''}">${fmtS(gapDisplay)}</div>
         <div class="gap-kpi-subvalue">Saldo ainda não convertido em caixa sobre <strong>${fmtS(faturado)}</strong> faturados</div>
       </div>
 
@@ -13738,6 +13736,11 @@ function parseCashFlow(buf){
         const empresa = String(row['Minha Empresa (Nome Fantasia)']||'').toUpperCase();
         return empresa.includes('GRATTANO') ? 'grattano' : empresa.includes('MARCK') ? 'marck' : null;
       };
+      const isInvoiceGapRow = row => {
+        const categoria = normKey(pickRowValue(row,['Categoria']));
+        const notaFiscal = String(pickRowValue(row,['Nota Fiscal','NF','Numero da Nota']) || '').trim().toUpperCase();
+        return categoria === 'clientes revenda de mercadoria' || (notaFiscal && notaFiscal !== 'N/D');
+      };
       const getInvoiceAmount = row => {
         const aliases = [
           'Faturado',
@@ -13752,7 +13755,8 @@ function parseCashFlow(buf){
           'Total da Nota',
           'Total do Documento',
           'Receita Bruta',
-          'A Receber'
+          'A Receber',
+          'Valor da Conta'
         ];
         for(let i=0;i<aliases.length;i++){
           const raw = pickRowValue(row,[aliases[i]]);
@@ -13796,6 +13800,7 @@ function parseCashFlow(buf){
       recRows.forEach((row, idx) => {
         const bucket = getEmpresaBucket(row);
         if(!bucket) return;
+        if(!isInvoiceGapRow(row)) return;
 
         const dtEm = _xlDate(pickRowValue(row,['Emissão','Data Emissão','Dt Emissão']));
         if(!(dtEm instanceof Date)) return;
