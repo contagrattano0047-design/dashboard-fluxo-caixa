@@ -13669,6 +13669,7 @@ function parseCashFlow(buf){
   // ── KPI: GAP faturado x recebido (cenários por ano de emissão × ano de recebimento) ──
   try{
     const wsRec = wb.Sheets['Base Recebimentos'];
+    const wsFat = wb.Sheets['Base Faturamentos'];
     if(wsRec){
       const recRows = XLSX.utils.sheet_to_json(wsRec,{defval:null, raw:true});
       const refYear = (()=> {
@@ -13702,10 +13703,10 @@ function parseCashFlow(buf){
         gapAcc[meta.key] = {emp:{recebido:0}, marck:{recebido:0}, grattano:{recebido:0}};
       });
 
-      const emittedMaps = {
-        emp: {[prevYear]:new Map(), [refYear]:new Map()},
-        marck: {[prevYear]:new Map(), [refYear]:new Map()},
-        grattano: {[prevYear]:new Map(), [refYear]:new Map()}
+      const faturadoByYear = {
+        emp: {[prevYear]:0, [refYear]:0},
+        marck: {[prevYear]:0, [refYear]:0},
+        grattano: {[prevYear]:0, [refYear]:0}
       };
 
       const toNumGap = x => {
@@ -13741,61 +13742,50 @@ function parseCashFlow(buf){
         const notaFiscal = String(pickRowValue(row,['Nota Fiscal','NF','Numero da Nota']) || '').trim().toUpperCase();
         return categoria === 'clientes revenda de mercadoria' || (notaFiscal && notaFiscal !== 'N/D');
       };
-      const getInvoiceAmount = row => {
-        const aliases = [
-          'Faturado',
-          'Valor da Nota',
-          'Valor Nota',
-          'Valor Total da Nota',
-          'Valor Total',
-          'Valor Original',
-          'Valor Bruto',
-          'Valor NF',
-          'Total NF',
-          'Total da Nota',
-          'Total do Documento',
-          'Receita Bruta',
-          'A Receber',
-          'Valor da Conta'
-        ];
-        for(let i=0;i<aliases.length;i++){
-          const raw = pickRowValue(row,[aliases[i]]);
-          const val = Math.abs(toNumGap(raw));
-          if(val > 0) return val;
-        }
-        return 0;
-      };
-      const getDocId = row => String(
-        pickRowValue(row,[
-          'Número da Nota',
-          'Numero da Nota',
-          'Nº da Nota',
-          'NF',
-          'Nota Fiscal',
-          'Número NF',
-          'Numero NF',
-          'Número Nota',
-          'Numero Nota',
-          'Documento',
-          'N Documento',
-          'Número do Documento',
-          'Numero do Documento',
-          'Origem'
-        ]) || ''
-      ).trim();
-      const getClientName = row => String(
-        pickRowValue(row,[
-          'Cliente ou Fornecedor (Nome Fantasia)',
-          'Cliente',
-          'Fornecedor',
-          'Razão Social',
-          'Razao Social',
-          'Nome Fantasia'
-        ]) || ''
-      ).trim();
       const getRecebido = row => Math.abs(toNumGap(
         pickRowValue(row,['Recebido','Pago ou Recebido','Valor Recebido'])
       ));
+
+      if(wsFat){
+        const fatRows = XLSX.utils.sheet_to_json(wsFat,{defval:null, raw:true});
+        const getFatBucket = row => {
+          const empresa = String(pickRowValue(row,['Minha Empresa (Nome Fantasia)']) || '').toUpperCase();
+          return empresa.includes('GRATTANO') ? 'grattano' : empresa.includes('MARCK') ? 'marck' : null;
+        };
+        const getFatStatus = row => normKey(pickRowValue(row,['Status','Situação','Situacao']));
+        const getFatDate = row => _xlDate(pickRowValue(row,['Data de Emissão (completa)','Data Emissão','Emissão','Ano']));
+        const getFatTotal = row => Math.abs(toNumGap(
+          pickRowValue(row,['Total da Nota Fiscal','Valor da Nota','Valor Nota','Valor Total','Faturado'])
+        ));
+
+        fatRows.forEach(row => {
+          const bucket = getFatBucket(row);
+          if(!bucket) return;
+
+          const dtEm = getFatDate(row);
+          if(!(dtEm instanceof Date)) return;
+
+          const emitYear = dtEm.getFullYear();
+          if(![prevYear, refYear].includes(emitYear)) return;
+
+          const total = getFatTotal(row);
+          if(!(total > 0)) return;
+
+          const status = getFatStatus(row);
+          let sinal = 0;
+          if(status === 'faturado') sinal = 1;
+          else if(status === 'cancelado' || status === 'devolvido') sinal = -1;
+          else return;
+
+          faturadoByYear.emp[emitYear] += sinal * total;
+          faturadoByYear[bucket][emitYear] += sinal * total;
+        });
+      }
+
+      // Para o ano corrente, usamos exatamente a mesma leitura do KPI de faturamento líquido do dashboard.
+      faturadoByYear.emp[refYear] = Number(acum?.fat_liquido || faturadoByYear.emp[refYear] || 0);
+      faturadoByYear.marck[refYear] = Number(acum_marck?.fat_liquido || faturadoByYear.marck[refYear] || 0);
+      faturadoByYear.grattano[refYear] = Number(acum_grattano?.fat_liquido || faturadoByYear.grattano[refYear] || 0);
 
       recRows.forEach((row, idx) => {
         const bucket = getEmpresaBucket(row);
@@ -13807,23 +13797,6 @@ function parseCashFlow(buf){
 
         const emitYear = dtEm.getFullYear();
         if(![prevYear, refYear].includes(emitYear)) return;
-
-        const invoiceAmount = getInvoiceAmount(row);
-        const clientName = getClientName(row);
-        const docId = getDocId(row);
-        const invoiceKey = [
-          bucket,
-          emitYear,
-          docId || `row-${idx}`,
-          clientName,
-          dtEm.toISOString().slice(0,10),
-          invoiceAmount > 0 ? invoiceAmount.toFixed(2) : '0.00'
-        ].join('|');
-
-        if(invoiceAmount > 0){
-          if(!emittedMaps.emp[emitYear].has(invoiceKey)) emittedMaps.emp[emitYear].set(invoiceKey, invoiceAmount);
-          if(!emittedMaps[bucket][emitYear].has(invoiceKey)) emittedMaps[bucket][emitYear].set(invoiceKey, invoiceAmount);
-        }
 
         const dtRec = _xlDate(pickRowValue(row,['Data de Crédito ou Débito (No Extrato)','Data Crédito ou Débito','Data Recebimento','Recebimento']));
         const recebido = getRecebido(row);
@@ -13841,14 +13814,9 @@ function parseCashFlow(buf){
         const meta = makeScenarioMeta(pair);
         const emitYear = meta.emit_year;
         const scenarioKey = meta.key;
-        const faturadoByBucket = {
-          emp: Array.from(emittedMaps.emp[emitYear].values()).reduce((s,v)=>s+(Number(v)||0),0),
-          marck: Array.from(emittedMaps.marck[emitYear].values()).reduce((s,v)=>s+(Number(v)||0),0),
-          grattano: Array.from(emittedMaps.grattano[emitYear].values()).reduce((s,v)=>s+(Number(v)||0),0)
-        };
         kpis.gap_fat_receb.scenarios[scenarioKey] = {};
         ['emp','marck','grattano'].forEach(key => {
-          const faturado = Math.round((Number(faturadoByBucket[key]) || 0) * 100) / 100;
+          const faturado = Math.round((Number(faturadoByYear[key]?.[emitYear]) || 0) * 100) / 100;
           const recebido = Math.round((Number(gapAcc[scenarioKey][key].recebido) || 0) * 100) / 100;
           const gap = Math.round((faturado - recebido) * 100) / 100;
           const pctRecebido = faturado > 0 ? Math.round((recebido / faturado) * 1000) / 10 : 0;
