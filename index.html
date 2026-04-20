@@ -3472,6 +3472,7 @@ function parseSheet(rows, contratosRows=[]){
     rowsTela.forEach(r=>{
       const key=contratoLinkPart(r['Chave']||'');
       const status=String(r['STATUS']||'').trim()||'Sem cadastro';
+      const contractCode=getAtaNumero(r);
       if(key){
         itemMap[key]={
           key,
@@ -3482,7 +3483,6 @@ function parseSheet(rows, contratosRows=[]){
           status,
         };
       }
-      const contractCode=getAtaNumero(r);
       if(!hasContractId(contractCode)) return;
       const contractKey=contratoLinkPart(contractCode);
       if(!contractMap[contractKey]) contractMap[contractKey]={statuses:new Set(),ano:contratoAnoCodigo(contractCode)||contratoAnoCodigo(String(r['Nª DA ATA']||''))};
