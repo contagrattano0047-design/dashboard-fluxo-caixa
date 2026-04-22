@@ -434,6 +434,9 @@ html,body{max-width:100%;overflow-x:hidden}
   position:relative;
   overflow:hidden;
 }
+.gap-kpi-card.horizontal{
+  padding:20px 22px;
+}
 .gap-kpi-card::after{
   content:'';
   position:absolute;
@@ -450,14 +453,13 @@ html,body{max-width:100%;overflow-x:hidden}
 .gap-kpi-head{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:8px;
+  justify-content:flex-start;
+  gap:6px;
   margin-bottom:6px;
 }
 .gap-kpi-badge{
   display:inline-flex;
   align-items:center;
-  gap:6px;
   font-size:10px;
   font-weight:800;
   letter-spacing:.08em;
@@ -511,6 +513,38 @@ html,body{max-width:100%;overflow-x:hidden}
   grid-template-columns:1fr 1fr;
   gap:10px;
 }
+.gap-kpi-card.horizontal .gap-kpi-layout{
+  display:grid;
+  grid-template-columns:minmax(220px,280px) minmax(260px,1.2fr) minmax(220px,.9fr);
+  gap:18px;
+  align-items:center;
+}
+.gap-kpi-card.horizontal .gap-kpi-head{
+  margin-bottom:8px;
+}
+.gap-kpi-card.horizontal .gap-kpi-main{
+  gap:4px;
+}
+.gap-kpi-card.horizontal .gap-kpi-switch{
+  margin:10px 0 0;
+}
+.gap-kpi-card.horizontal .gap-kpi-divider{
+  width:1px;
+  height:100%;
+  min-height:92px;
+  margin:0;
+  background:linear-gradient(180deg, rgba(20,40,75,.12), rgba(20,40,75,.04));
+}
+.gap-kpi-card.horizontal .gap-kpi-grid{
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.gap-kpi-card.horizontal .gap-kpi-foot{
+  margin-top:12px;
+}
+.receitas-gap-wrap{
+  margin-bottom:16px;
+}
 .gap-kpi-stat{
   display:grid;
   gap:3px;
@@ -544,6 +578,16 @@ html,body{max-width:100%;overflow-x:hidden}
   .gap-kpi-grid{
     grid-template-columns:1fr;
     gap:8px;
+  }
+  .gap-kpi-card.horizontal .gap-kpi-layout{
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  .gap-kpi-card.horizontal .gap-kpi-divider{
+    width:100%;
+    height:1px;
+    min-height:1px;
+    background:linear-gradient(90deg, rgba(20,40,75,.12), rgba(20,40,75,.04));
   }
 }
 
@@ -1410,6 +1454,7 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 </div>
 <div class="kpi-grid" id="kpiReceitas"><div class="kpi-card gold"><div class="kpi-icon">💰</div><div class="kpi-label">Fat. Bruto Acumulado</div><div class="kpi-value">R$ 6.68M</div><div class="kpi-sub">2026 YTD</div></div><div class="kpi-card green"><div class="kpi-icon">✅</div><div class="kpi-label">Fat. Líquido Acumulado</div><div class="kpi-value">R$ 6.66M</div><div class="kpi-sub">Após devoluções</div></div><div class="kpi-card teal"><div class="kpi-icon">📥</div><div class="kpi-label">Receita Total Recebida</div><div class="kpi-value">R$ 5.21M</div><div class="kpi-sub">Entradas realizadas</div></div><div class="kpi-card navy"><div class="kpi-icon">📊</div><div class="kpi-label">Média Mensal</div><div class="kpi-value">R$ 1.30M</div><div class="kpi-sub">Sobre 4 meses com dados</div></div></div>
+<div class="receitas-gap-wrap" id="receitasGapCardWrap"></div>
 <div class="card" style="margin-bottom:16px">
 <div class="card-header">
 <div>
@@ -12204,6 +12249,46 @@ function receitaGapCard(info){
     </div>
   `;
 }
+function receitaGapCardHorizontal(info){
+  const recebido = Number(info?.recebido) || 0;
+  const recebidoAcumulado = Number(info?.recebido_acumulado) || recebido;
+  const faturado = Number(info?.faturado) || 0;
+  const pctRecebido = Number(info?.pct_recebido) || 0;
+  const saldoAberto = Math.max(0, faturado - recebidoAcumulado);
+  const gapDisplay = saldoAberto > 0 ? -saldoAberto : Math.max(0, recebidoAcumulado - faturado);
+  return `
+    <div class="card gap-kpi-card horizontal">
+      <div class="gap-kpi-layout">
+        <div>
+          <div class="gap-kpi-head">
+            <div class="kpi-icon">🔄</div>
+            <div class="gap-kpi-badge">Cenário de recebimento</div>
+          </div>
+          <div class="kpi-label">Gap Faturado x Recebido</div>
+          <div class="ag-month-switch gap-kpi-switch" id="gapReceitasSwitch"></div>
+        </div>
+        <div class="gap-kpi-main">
+          <div class="gap-kpi-caption">Gap apurado</div>
+          <div class="kpi-value ${gapDisplay >= 0 ? 'pos' : ''}">${fmtS(gapDisplay)}</div>
+          <div class="gap-kpi-subvalue">Saldo ainda não convertido em caixa sobre <strong>${fmtS(faturado)}</strong> faturados</div>
+        </div>
+        <div>
+          <div class="gap-kpi-grid">
+            <div class="gap-kpi-stat">
+              <div class="gap-kpi-stat-label">Recebido</div>
+              <div class="gap-kpi-stat-value">${fmtS(recebido)}</div>
+            </div>
+            <div class="gap-kpi-stat">
+              <div class="gap-kpi-stat-label">Cobertura</div>
+              <div class="gap-kpi-stat-value is-percent">${pct(pctRecebido)}</div>
+            </div>
+          </div>
+          <div class="gap-kpi-foot">Em aberto no cenário: <strong>${fmtS(saldoAberto)}</strong></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
 
 function renderReceitas(){
   updateScenarioTexts();
@@ -12236,7 +12321,9 @@ function renderReceitas(){
     kpiCard('green','✅','Fat. Líquido Acumulado',fmtS(fatLiq),'Após devoluções') +
     kpiCard('teal','📥','Receita Total Recebida',fmtS(recAcum),'Entradas realizadas') +
     kpiCard('navy','📊','Média Mensal',fmtS(mediaRec),`Sobre ${recMeses.length} meses com dados`) +
-    receitaGapCard(gapInfo);
+    '';
+  const gapWrap = document.getElementById('receitasGapCardWrap');
+  if(gapWrap) gapWrap.innerHTML = receitaGapCardHorizontal(gapInfo);
   buildReceitasGapSwitch();
 
   // Receita mensal
