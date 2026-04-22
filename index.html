@@ -12200,7 +12200,7 @@ function receitaGapCard(info){
         </div>
       </div>
 
-      <div class="gap-kpi-foot">Em aberto após abatimento do cenário: <strong>${fmtS(saldoAberto)}</strong></div>
+      <div class="gap-kpi-foot">Em aberto no cenário: <strong>${fmtS(saldoAberto)}</strong></div>
     </div>
   `;
 }
@@ -13908,13 +13908,15 @@ function parseCashFlow(buf){
         const scenarioKey = meta.key;
         kpis.gap_fat_receb.scenarios[scenarioKey] = {};
         ['emp','marck','grattano'].forEach(key => {
-          const faturado = Math.round((Number(faturadoByYear[key]?.[emitYear]) || 0) * 100) / 100;
+          const faturadoTotal = Math.round((Number(faturadoByYear[key]?.[emitYear]) || 0) * 100) / 100;
           const recebido = Math.round((Number(gapAcc[scenarioKey][key].recebido) || 0) * 100) / 100;
-          const recebidoAcumulado = Math.round((Object.entries(recebidoPorAno[key]?.[emitYear] || {})
-            .filter(([year]) => Number(year) <= meta.rec_year)
-            .reduce((sum, [,value]) => sum + (Number(value) || 0), 0)) * 100) / 100;
-          const gap = Math.round((faturado - recebidoAcumulado) * 100) / 100;
-          const pctRecebido = faturado > 0 ? Math.round((recebidoAcumulado / faturado) * 1000) / 10 : 0;
+          const recebidoMesmoAno = Math.round((Number(recebidoPorAno[key]?.[emitYear]?.[emitYear]) || 0) * 100) / 100;
+          const faturado = (emitYear === prevYear && meta.rec_year === refYear)
+            ? Math.max(0, Math.round((faturadoTotal - recebidoMesmoAno) * 100) / 100)
+            : faturadoTotal;
+          const recebidoAcumulado = recebido;
+          const gap = Math.round((faturado - recebido) * 100) / 100;
+          const pctRecebido = faturado > 0 ? Math.round((recebido / faturado) * 1000) / 10 : 0;
           kpis.gap_fat_receb.scenarios[scenarioKey][key] = {
             faturado,
             recebido,
