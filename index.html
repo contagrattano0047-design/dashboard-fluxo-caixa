@@ -14665,13 +14665,13 @@ function agFilterCompanyDataByMonth(companyData, offset = 0){
     const days = (week.days || []).map(day => {
       const items = (day.items || []).filter(item => {
         if(item?._placeholder) return false;
-        const ref = agToISODate(item.ref_date || item.previsao || item.venc_original || item.venc || item.date || day.date);
-        if(!ref) return false;
-        return ref.slice(0,7) === selected.key;
+        const agendaDate = agToISODate(item.date || day.date);
+        if(!agendaDate) return false;
+        return agendaDate.slice(0,7) === selected.key;
       });
       if(!items.length) return null;
       return {
-        date: day.date,
+        date: agToISODate(day.date),
         items,
         count: items.length,
         total: Math.round(items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0) * 100) / 100
@@ -14690,7 +14690,25 @@ function agFilterCompanyDataByMonth(companyData, offset = 0){
     }
   });
 
-  return agNormalizeCompanyData({weeks: filteredWeeks});
+  const normalized = agNormalizeCompanyData({weeks: filteredWeeks});
+  const selectedMonthDays = (normalized.weeks || []).map(week => ({
+    ...week,
+    days: (week.days || []).filter(day => agToISODate(day.date).slice(0,7) === selected.key)
+  })).filter(week => week.days.length);
+
+  normalized.weeks = selectedMonthDays.map((week, index) => {
+    const dates = week.days.map(day => agToISODate(day.date)).filter(Boolean).sort();
+    return {
+      ...week,
+      week: index + 1,
+      start: dates[0] || week.start,
+      end: dates[dates.length - 1] || week.end,
+      count: week.days.reduce((sum, day) => sum + (day.count || 0), 0),
+      total: Math.round(week.days.reduce((sum, day) => sum + (day.total || 0), 0) * 100) / 100
+    };
+  });
+
+  return normalized;
 }
 
 
