@@ -10789,6 +10789,26 @@ function getSheetScenarioForEmp(emp){
   if(emp === 'grattano') return D.sheet_scenario_grattano || D.sheet_scenario || 'pessimista';
   return D.sheet_scenario || 'pessimista';
 }
+function ensureScenarioBaseForGroup(group, scenarioName){
+  if(!group) return;
+  const srcMult = CENARIO_MULT[scenarioName] ?? 1.0;
+  Object.values(group).forEach(series=>{
+    if(!series || !Array.isArray(series.prev)) return;
+    series.base_prev = series.prev.map(val=>{
+      const n = Number(val || 0);
+      if(!n) return 0;
+      return Math.round((n / srcMult) * 100) / 100;
+    });
+  });
+}
+function ensureScenarioBases(data=D){
+  if(!data) return data;
+  const scenario = data.sheet_scenario || 'pessimista';
+  ensureScenarioBaseForGroup(data.monthly, scenario);
+  ensureScenarioBaseForGroup(data.monthly_marck, data.sheet_scenario_marck || scenario);
+  ensureScenarioBaseForGroup(data.monthly_grattano, data.sheet_scenario_grattano || scenario);
+  return data;
+}
 function getScenarioRaw(emp, key){
   return getScenarioRawByName(emp, key, _cenario);
 }
@@ -13219,7 +13239,7 @@ async function readFromSharePoint(){
     setLoading(true,'Processando dados…');
     const parsed = parseCashFlow(buf);
     if(!parsed || !parsed.months || !parsed.monthly) throw new Error('Falha ao processar a planilha do SharePoint.');
-    D = {...parsed, demo_tree: parsed.demo_tree || D.demo_tree || DEFAULT_DATA.demo_tree};
+    D = ensureScenarioBases({...parsed, demo_tree: parsed.demo_tree || D.demo_tree || DEFAULT_DATA.demo_tree});
 
     if(parsed.agendaData){
       AG_DATA.despesas = parsed.agendaData.despesas;
@@ -13247,7 +13267,7 @@ async function readFromSharePoint(){
 }
 
 function usePreloaded(){
-  D = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  D = ensureScenarioBases(JSON.parse(JSON.stringify(DEFAULT_DATA)));
   if(D.agendaData){
     AG_DATA.despesas = D.agendaData.despesas;
     AG_DATA.receitas = D.agendaData.receitas;
@@ -14390,7 +14410,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   Chart.defaults.font.family='DM Sans';
   ensureHostedEnvironment();
   updateConnectionState('idle');
-  D = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  D = ensureScenarioBases(JSON.parse(JSON.stringify(DEFAULT_DATA)));
   renderAll();
   forceReflowCharts(8, 120);
 
