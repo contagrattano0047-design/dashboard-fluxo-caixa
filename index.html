@@ -10790,17 +10790,27 @@ function getSheetScenarioForEmp(emp){
   return D.sheet_scenario || 'pessimista';
 }
 function getScenarioRaw(emp, key){
+  return getScenarioRawByName(emp, key, _cenario);
+}
+function getScenarioRawByName(emp, key, scenarioName='otimista'){
   const base = getM(emp, key);
   const months = D.months || [];
-  if(_cenario === 'atual'){
+  if(scenarioName === 'atual'){
     const ma = (emp==='marck' ? D.monthly_atual_marck : emp==='grattano' ? D.monthly_atual_grattano : D.monthly_atual)?.[key];
     if(ma && Array.isArray(ma.prev)) return months.map((_,i)=>Number(ma.prev[i] ?? 0));
     if(D.monthly_atual?.[key]?.prev) return months.map((_,i)=>Number(D.monthly_atual[key].prev[i] ?? 0));
     return months.map((_,i)=>Number(base.prev?.[i] ?? 0));
   }
+  if(Array.isArray(base.base_prev)){
+    const targetMult = CENARIO_MULT[scenarioName] ?? 1.0;
+    return months.map((_,i)=>{
+      const v = Number(base.base_prev?.[i] ?? 0);
+      return v === 0 ? 0 : Math.round(v * targetMult * 100) / 100;
+    });
+  }
   const srcScenario = getSheetScenarioForEmp(emp);
   const srcMult = CENARIO_MULT[srcScenario] ?? 1.0;
-  const targetMult = CENARIO_MULT[_cenario] ?? 1.0;
+  const targetMult = CENARIO_MULT[scenarioName] ?? 1.0;
   const ratio = srcMult > 0 ? (targetMult / srcMult) : targetMult;
   return months.map((_,i)=>{
     const v = Number(base.prev?.[i] ?? 0);
@@ -10834,17 +10844,6 @@ function getPrevAcum(emp, key){
   return getPrev(emp, key).reduce((s,v)=>s+(Number(v)||0), 0);
 }
 
-function getScenarioRawByName(emp, key, scenarioName='otimista'){
-  const base = getM(emp, key);
-  if(scenarioName === 'atual'){
-    return D.months.map((_,i)=>Number(base.prev?.[i] ?? 0));
-  }
-  const mult = CENARIO_MULT[scenarioName] ?? 1.0;
-  return D.months.map((_,i)=>{
-    const v = Number(base.prev?.[i] ?? 0);
-    return v === 0 ? 0 : Math.round(v * mult * 100) / 100;
-  });
-}
 function getLastRealizedMonthIndex(emp){
   const keys = ['receita_total','despesa_venda','despesa_total','impostos','saldo'];
   let idx = -1;
@@ -11091,18 +11090,20 @@ function renderResumoReceitas(){
   const assertiv = aBruto > 0 ? (aLiq / aBruto * 100) : 0;
 
   const mesesRealizados = (rec.real || []).map(v => (Number(v) || 0) !== 0);
-  const basePessPeriodo = (rec.prev || []).reduce((acc,v,i)=>acc + (mesesRealizados[i] ? (Number(v)||0) : 0), 0);
-  const superPess = basePessPeriodo > 0 ? ((aRec - basePessPeriodo) / basePessPeriodo * 100) : 0;
+  const baseCenarioPeriodo = getScenarioRawByName(emp,'receita_total',_cenario)
+    .reduce((acc,v,i)=>acc + (mesesRealizados[i] ? (Number(v)||0) : 0), 0);
+  const desvioCenario = baseCenarioPeriodo > 0 ? ((aRec - baseCenarioPeriodo) / baseCenarioPeriodo * 100) : 0;
+  const nomeBaseCenario = nomeCenarioAtual().toLowerCase();
   const evolucao = lastFinite(getM(emp,'receita_total').evo);
-  const acao = superPess < 0
-    ? 'Reforçar cobrança e conversão das competências seguintes para reaproximar a receita da base histórica do período.'
+  const acao = desvioCenario < 0
+    ? 'Reforçar cobrança e conversão das competências seguintes para reaproximar a receita do cenário selecionado.'
     : assertiv < 98
       ? 'Priorizar análise de devoluções, cancelamentos e qualidade da carteira faturada.'
       : 'Manter o ritmo comercial e a disciplina de faturamento para preservar a conversão em caixa.';
 
   const texto = `
     <b>Situação:</b> A receita recebida acumula <b>${fmtS(aRec)}</b>, com faturamento bruto de <b>${fmtS(aBruto)}</b> e faturamento líquido de <b>${fmtS(aLiq)}</b>.<br><br>
-    <b>Causa:</b> A receita está <b>${superPess>=0?'acima':'abaixo'}</b> da base pessimista do período em <b>${pct(Math.abs(superPess))}</b>. As devoluções e cancelamentos somam <b>${fmtS(cancelDev)}</b>, mantendo assertividade de <b>${pct(assertiv)}</b>${evolucao!==null ? ` e variação mensal mais recente de <b>${pct(evolucao)}</b>.` : '.'}<br><br>
+    <b>Causa:</b> A receita está <b>${desvioCenario>=0?'acima':'abaixo'}</b> do ${nomeBaseCenario} no período em <b>${pct(Math.abs(desvioCenario))}</b>. As devoluções e cancelamentos somam <b>${fmtS(cancelDev)}</b>, mantendo assertividade de <b>${pct(assertiv)}</b>${evolucao!==null ? ` e variação mensal mais recente de <b>${pct(evolucao)}</b>.` : '.'}<br><br>
     <b>Ação:</b> ${acao}
   `;
   const el = document.getElementById('resumoReceitas');
@@ -11444,11 +11445,9 @@ function renderAlertasReceitas(){
   const devol = Math.max(0, bruto - liq);
   const assertiv = bruto > 0 ? (liq / bruto * 100) : 0;
 
-  const cenarioAtual = _cenario;
-  _cenario = 'pessimista';
-  const basePess = getPrevAcum(emp,'receita_total');
-  _cenario = cenarioAtual;
-  const superacao = basePess > 0 ? ((rec - basePess) / basePess * 100) : null;
+  const baseCenario = getScenarioAccumSamePeriod(emp,'receita_total',_cenario);
+  const superacao = baseCenario > 0 ? ((rec - baseCenario) / baseCenario * 100) : null;
+  const nomeBaseCenario = nomeCenarioAtual().toLowerCase();
   const evo = lastFinite(getM(emp,'receita_total').evo);
   const cresc = lastFinite(getM(emp,'receita_total').cresc);
 
@@ -11463,8 +11462,8 @@ function renderAlertasReceitas(){
       cls: superacao < 0 ? 'warn' : superacao > 30 ? 'success' : 'success',
       title:'Receita vs base',
       text: superacao >= 0
-        ? `A receita recebida supera a base pessimista do período em <b>${pct(superacao)}</b>.`
-        : `A receita recebida está <b>${pct(Math.abs(superacao))}</b> abaixo da base pessimista do período.`
+        ? `A receita recebida supera o ${nomeBaseCenario} no período em <b>${pct(superacao)}</b>.`
+        : `A receita recebida está <b>${pct(Math.abs(superacao))}</b> abaixo do ${nomeBaseCenario} no período.`
     });
   }
   if(evo !== null){
