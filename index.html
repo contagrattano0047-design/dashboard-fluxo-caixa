@@ -10789,12 +10789,16 @@ function getSheetScenarioForEmp(emp){
   if(emp === 'grattano') return D.sheet_scenario_grattano || D.sheet_scenario || 'pessimista';
   return D.sheet_scenario || 'pessimista';
 }
-function ensureScenarioBaseForGroup(group, scenarioName){
+function ensureScenarioBaseForGroup(group, scenarioName, fallbackGroup=null, fallbackScenario='pessimista'){
   if(!group) return;
-  const srcMult = CENARIO_MULT[scenarioName] ?? 1.0;
-  Object.values(group).forEach(series=>{
+  const useFallbackBase = scenarioName === 'atual' && fallbackGroup;
+  const srcMult = CENARIO_MULT[useFallbackBase ? fallbackScenario : scenarioName] ?? 1.0;
+  Object.entries(group).forEach(([key, series])=>{
     if(!series || !Array.isArray(series.prev)) return;
-    series.base_prev = series.prev.map(val=>{
+    const sourceSeries = useFallbackBase && fallbackGroup[key] && Array.isArray(fallbackGroup[key].prev)
+      ? fallbackGroup[key]
+      : series;
+    series.base_prev = sourceSeries.prev.map(val=>{
       const n = Number(val || 0);
       if(!n) return 0;
       return Math.round((n / srcMult) * 100) / 100;
@@ -10804,9 +10808,9 @@ function ensureScenarioBaseForGroup(group, scenarioName){
 function ensureScenarioBases(data=D){
   if(!data) return data;
   const scenario = data.sheet_scenario || 'pessimista';
-  ensureScenarioBaseForGroup(data.monthly, scenario);
-  ensureScenarioBaseForGroup(data.monthly_marck, data.sheet_scenario_marck || scenario);
-  ensureScenarioBaseForGroup(data.monthly_grattano, data.sheet_scenario_grattano || scenario);
+  ensureScenarioBaseForGroup(data.monthly, scenario, DEFAULT_DATA.monthly);
+  ensureScenarioBaseForGroup(data.monthly_marck, data.sheet_scenario_marck || scenario, DEFAULT_DATA.monthly_marck);
+  ensureScenarioBaseForGroup(data.monthly_grattano, data.sheet_scenario_grattano || scenario, DEFAULT_DATA.monthly_grattano);
   return data;
 }
 function getScenarioRaw(emp, key){
